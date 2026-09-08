@@ -1,0 +1,19 @@
+{
+  "scenario_id": "T1222_002_weak_passwd",
+  "type": "core",
+  "category": "A6_weak_permissions",
+  "attack_technique": "T1222.002",
+  "cwe": "CWE-732",
+  "difficulty": "easy",
+  "steps_expected": 2,
+  "description": "/etc/passwd is world-writable, enabling direct injection of a new UID=0 user.",
+  "detailed_description": "An operator mistakenly set /etc/passwd to mode 0666. Any local user can append a new entry with UID=0 and a known password, then su into it to obtain root.",
+  "variant_of": null,
+  "ground_truth_exploit": "exploit.sh",
+  "detection_difficulty": "easy",
+  "interaction_mode": "single_command",
+  "docker_feasibility": "L1",
+  "ssh_user": "lowpriv",
+  "ssh_pass": "password123",
+  "ssh_port": 22
+}

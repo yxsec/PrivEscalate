@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_40488",
+  "category": "C2_systemd",
+  "attack_technique": "T1543.002",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Apache Tomcat 8/7/6 (RedHat Based Distros) - Local Privilege Escalation (CVE-2016-5425)\n\nExploit source code (40488.txt):\n```\n=============================================\n- Discovered by: Dawid Golunski\n- http://legalhackers.com\n- dawid (at) legalhackers.com\n\n- CVE-2016-5425\n- Release date: 10.10.2016\n- Revision: 1\n- Severity: High\n=============================================\n\n\nI. VULNERABILITY\n-------------------------\n\nApache Tomcat (packaging on RedHat-based distros) - Root Privilege Escalation\n\n\nII. BACKGROUND\n-------------------------\n\n\"The Apache TomcatÃ‚Â® software is an open source implementation of the\nJava Servlet, JavaServer Pages, Java Expression Language and Java WebSocket\ntechnologies. The Java Servlet, JavaServer Pages, Java Expression Language\nand Java WebSocket specifications are developed under the Java Community\nProcess.\n\nThe Apache Tomcat software is developed in an open and participatory\nenvironment and released under the Apache License version 2.\nThe Apache Tomcat project is intended to be a collaboration of the\nbest-of-breed developers from around the world.\n\nApache Tomcat software powers numerous large-scale, mission-critical web\napplications across a diverse range of industries and organizations.\nSome of these users and their stories are listed on the PoweredBy wiki page.\n\"\n\nhttp://tomcat.apache.org/\n\n\nIII. INTRODUCTION\n-------------------------\n\nApache Tomcat packages provided by default repositories of RedHat-based\ndistributions (including CentOS, RedHat, OracleLinux, Fedora,  etc.)\ncreate a tmpfiles.d configuration file with insecure permissions which\nallow attackers who are able to write files with tomcat user permissions\n(for example, through a vulnerability in web application hosted on Tomcat)\nto escalate their privileges from tomcat user to root and fully compromise\nthe target system.\n\n\nIV. DESCRIPTION\n-------------------------\n\nThe vulnerability stems from the tomcat.conf file installed by default\nby packages on RedHat-based systems with write permissions for the tomcat\ngroup:\n\n[root@centos7 ~]# ls -al /usr/lib/tmpfiles.d/tomcat.conf\n-rw-rw-r--. 1 root tomcat 361 Oct  9 23:58 /usr/lib/tmpfiles.d/tomcat.conf\n\nThe configuration files in tmpfiles.d are used by systemd-tmpfiles to manage\ntemporary files including their creation.\n\nAttackers could very easily exploit the weak permissions on tomcat.conf to\ninject configuration that creates a rootshell or remote reverse shell that\nallows them to execute arbitrary commands with root privileges.\n\nInjected malicious settings would be processed whenever\n/usr/bin/systemd-tmpfiles gets executed.\n\nsystemd-tmpfiles is executed by default on boot on RedHat-based systems\nthrough systemd-tmpfiles-setup.service service as can be seen below:\n\n\n---[ /usr/lib/systemd/system/systemd-tmpfiles-setup.service ]---\n\n[...]\nExecStart=/usr/bin/systemd-tmpfiles --create --remove --boot --exclude-prefix=/dev\n\n----------------------------------------------------------------\n\nDepending on the system in use, the execution of systemd-tmpfiles could also\nbe triggered by other services, cronjobs, startup scripts  etc.\n\n\nThe \n```",
+  "cve": "CVE-2016-5425",
+  "exploitdb_id": "40488",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_40488",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

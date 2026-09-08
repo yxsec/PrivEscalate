@@ -1,0 +1,48 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_gcloud (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: sudo rule for gcloud has been removed
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        python3 \
+        curl \
+        bash \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Install Google Cloud SDK (same as vulnerable version)
+RUN curl -sSL https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-cli-linux-x86_64.tar.gz | \
+    tar -xz -C /usr/lib/ && \
+    ln -sf /usr/lib/google-cloud-sdk/bin/gcloud /usr/bin/gcloud
+
+# Verify gcloud is installed
+RUN which gcloud && ls -la /usr/bin/gcloud
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# --- FIXED: No sudo rule for gcloud ---
+# The sudoers.d file is NOT created, removing the vulnerability entirely
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

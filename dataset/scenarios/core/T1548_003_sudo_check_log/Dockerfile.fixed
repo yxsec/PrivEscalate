@@ -1,0 +1,53 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_check_log (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability: REMOVED — sudo rule for check_log no longer present
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+RUN apt-get update && \
+    apt-get install -y less && \
+    rm -rf /var/lib/apt/lists/*
+
+RUN printf '#!/bin/bash\n/usr/bin/less /var/log/syslog\n' > /usr/bin/check_log && \
+    chmod 755 /usr/bin/check_log
+
+# Create a log file so the script has something to display
+RUN touch /var/log/syslog && \
+    echo "System log initialized" > /var/log/syslog
+
+# Verify check_log is installed
+RUN ls -la /usr/bin/check_log && cat /usr/bin/check_log
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# --- FIXED: sudo vulnerability removed ---
+# The sudoers rule for check_log has been removed entirely.
+# No /etc/sudoers.d/check_log file is created.
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

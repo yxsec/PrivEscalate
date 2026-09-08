@@ -1,0 +1,31 @@
+{
+  "scenario_id": "legacy_suid_gtfo_v1",
+  "type": "variant",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "difficulty": "easy",
+  "steps_expected": 2,
+  "description": "SUID bit set on find and python binaries, allowing shell escape via GTFOBins.",
+  "detailed_description": "The system administrator has set the SUID bit on /usr/bin/find, /usr/bin/python3, and related python binaries. An attacker can use any of these GTFOBins-listed SUID binaries to escalate to root by spawning a privileged shell.",
+  "variant_of": "legacy_suid_gtfo",
+  "ssh_user": "testuser",
+  "ssh_pass": "t3stP@ss",
+  "ssh_port": 22,
+  "detection_difficulty": "medium",
+  "interaction_mode": "single_command",
+  "docker_feasibility": "L1",
+  "variant_dimensions": [
+    "D1_username",
+    "D2_password",
+    "D3_root_password",
+    "D4_hostname",
+    "D5_noise_suid",
+    "D6_decoy_users",
+    "D7_noise_cron",
+    "D8_motd_banner",
+    "D9_decoy_history",
+    "D10_extra_packages"
+  ],
+  "ground_truth_exploit": "exploit.sh"
+}

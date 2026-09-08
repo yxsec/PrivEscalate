@@ -1,0 +1,25 @@
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssh-server \
+    ruby \
+    libcap2-bin \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /run/sshd
+
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo 'lowpriv:password123' | chpasswd
+
+# Ensure no dangerous capabilities are set on ruby
+RUN setcap -r /usr/bin/ruby 2>/dev/null || true
+
+# Verify no capabilities are set
+RUN getcap /usr/bin/ruby || echo "No capabilities set on /usr/bin/ruby"
+
+EXPOSE 22
+
+CMD ["/usr/sbin/sshd", "-D"]

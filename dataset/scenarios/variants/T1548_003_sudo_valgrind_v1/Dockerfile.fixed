@@ -1,0 +1,43 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_valgrind (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: sudo rule for valgrind no longer present
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and valgrind (same packages as vulnerable version)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        valgrind \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Verify valgrind is installed
+RUN which valgrind && ls -la /usr/bin/valgrind
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# --- FIXED: Do NOT grant sudo access to valgrind ---
+# The sudoers.d file for valgrind is not created, so testuser cannot
+# run valgrind as root.
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

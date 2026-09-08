@@ -1,0 +1,49 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo heap corruption CVE-2001-0279 (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-122
+# The vulnerable sudo configuration has been removed.
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and build tools (same packages as vulnerable)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        gcc \
+        libc6-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Verify sudo is installed
+RUN which sudo && ls -la /usr/bin/sudo
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# --- FIX: Do NOT create the vulnerable sudoers entry ---
+# The vuln-sudo sudoers.d file is not created, so testuser has no sudo privileges
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Ensure SUID on sudo (standard)
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+# Verify fix is in place - no vulnerable sudoers file
+RUN echo "=== Fixed: no vuln-sudo config ===" && \
+    ls -la /etc/sudoers.d/ && \
+    ! test -f /etc/sudoers.d/vuln-sudo && \
+    echo "Vulnerability removed successfully"
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

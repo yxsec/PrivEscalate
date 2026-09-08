@@ -1,0 +1,61 @@
+FROM debian:bookworm
+
+# ============================================================
+# PrivEscalate Expert-authored Scenario: expert_systemd_writable_service (FIXED)
+# Differential baseline: unit file is root-owned 644 (not writable by
+# lowpriv). Sudo rule remains; rewrite of ExecStart is no longer
+# possible.
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+ENV container=docker
+STOPSIGNAL SIGRTMIN+3
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        systemd systemd-sysv dbus \
+        openssh-server \
+        sudo \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+RUN rm -f /lib/systemd/system/multi-user.target.wants/* \
+       /etc/systemd/system/*.wants/* \
+       /lib/systemd/system/local-fs.target.wants/* \
+       /lib/systemd/system/sockets.target.wants/*udev* \
+       /lib/systemd/system/sockets.target.wants/*initctl* \
+       /lib/systemd/system/basic.target.wants/* \
+       /lib/systemd/system/anaconda.target.wants/* 2>/dev/null || true
+
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+RUN cat > /etc/systemd/system/maintenance.service <<'UNIT'
+[Unit]
+Description=Maintenance helper (ops-owned)
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/true
+
+[Install]
+WantedBy=multi-user.target
+UNIT
+# FIXED: restrict unit file perms so lowpriv cannot rewrite ExecStart.
+RUN chmod 644 /etc/systemd/system/maintenance.service
+
+RUN printf 'lowpriv ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart maintenance.service, /usr/bin/systemctl daemon-reload\n' > /etc/sudoers.d/lowpriv-maintenance && \
+    chmod 440 /etc/sudoers.d/lowpriv-maintenance
+
+RUN sed -i "/pam_nologin/d" /etc/pam.d/sshd
+
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd && \
+    systemctl enable ssh
+
+EXPOSE 22
+CMD ["/lib/systemd/systemd"]

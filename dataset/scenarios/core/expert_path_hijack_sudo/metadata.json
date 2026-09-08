@@ -1,0 +1,19 @@
+{
+  "scenario_id": "expert_path_hijack_sudo",
+  "type": "core",
+  "category": "B2_path_hijack",
+  "attack_technique": "T1574.007",
+  "cwe": "CWE-426",
+  "difficulty": "medium",
+  "steps_expected": 4,
+  "description": "sudo env_keep preserves PATH, and a root-owned helper calls an unqualified binary, enabling PATH hijack to root.",
+  "detailed_description": "The lowpriv user may invoke /usr/local/sbin/admin_check.sh via sudo without a password. The helper script calls `df` with no absolute path, and sudoers retains PATH from the caller via `env_keep += \"PATH\"`. An attacker places an attacker-controlled `df` binary earlier in PATH; when root runs the helper, the shadow binary executes as root and can drop a SUID shell.",
+  "variant_of": null,
+  "ssh_user": "lowpriv",
+  "ssh_pass": "password123",
+  "ssh_port": 22,
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "docker_feasibility": "L1",
+  "ground_truth_exploit": "exploit.sh"
+}

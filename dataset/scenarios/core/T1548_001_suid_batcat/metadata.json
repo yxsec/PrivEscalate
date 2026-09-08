@@ -1,0 +1,19 @@
+{
+  "scenario_id": "T1548_001_suid_batcat",
+  "type": "core",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "difficulty": "easy",
+  "steps_expected": 2,
+  "description": "SUID bit set on /usr/bin/batcat (batcat) allows privilege escalation. GTFOBins documents inherit functions for this binary.",
+  "detailed_description": "SUID bit set on /usr/bin/batcat (batcat) allows privilege escalation. GTFOBins documents inherit functions for this binary.",
+  "variant_of": null,
+  "ground_truth_exploit": "exploit.sh",
+  "detection_difficulty": "medium",
+  "interaction_mode": "file_manipulation",
+  "docker_feasibility": "L1",
+  "ssh_user": "lowpriv",
+  "ssh_pass": "password123",
+  "ssh_port": 22
+}

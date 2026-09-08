@@ -1,0 +1,65 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: FIXED — SUID removed from /usr/bin/forge
+# ATT&CK: T1548.001 | CWE: CWE-250
+# The SUID bit has been removed so the exploit no longer works.
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-server \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Create the same forge binary
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc libc6-dev && \
+    echo '#include <unistd.h>\n\
+#include <stdio.h>\n\
+#include <stdlib.h>\n\
+#include <string.h>\n\
+\n\
+int main(int argc, char *argv[]) {\n\
+    if (argc > 1 && strcmp(argv[1], "--shell") == 0) {\n\
+        setuid(0);\n\
+        setgid(0);\n\
+        execl("/bin/sh", "sh", "-p", NULL);\n\
+        perror("execl");\n\
+        return 1;\n\
+    }\n\
+    printf("forge: a build tool\\n");\n\
+    printf("Usage: forge [--shell]\\n");\n\
+    return 0;\n\
+}' > /tmp/forge.c && \
+    gcc -o /usr/bin/forge /tmp/forge.c && \
+    rm /tmp/forge.c && \
+    apt-get purge -y gcc libc6-dev && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# FIX: ensure forge is owned by root but does NOT have SUID bit
+RUN chown root:root /usr/bin/forge && \
+    chmod 755 /usr/bin/forge
+
+# Verify SUID bit is NOT set
+RUN ! ls -la /usr/bin/forge | grep -q "rws" && echo "SUID bit NOT set on /usr/bin/forge — fixed"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

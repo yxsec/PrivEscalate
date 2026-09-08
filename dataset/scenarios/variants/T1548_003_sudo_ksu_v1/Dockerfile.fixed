@@ -1,0 +1,49 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_ksu (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: sudo rule for ksu has been removed
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and Kerberos user commands (ksu is part of krb5-user)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        krb5-user \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# ksu may be installed in different locations depending on the package
+RUN which ksu || find / -name ksu 2>/dev/null; \
+    if [ ! -f /usr/bin/ksu ]; then \
+        KSU_PATH=$(find / -name ksu -type f 2>/dev/null | head -1); \
+        if [ -n "$KSU_PATH" ]; then \
+            ln -sf "$KSU_PATH" /usr/bin/ksu; \
+        fi; \
+    fi && \
+    ls -la /usr/bin/ksu
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# --- FIXED: No sudo rule for ksu ---
+# The sudoers entry for ksu has been removed to eliminate the privilege escalation vector.
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

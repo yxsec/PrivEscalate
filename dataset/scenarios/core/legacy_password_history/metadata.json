@@ -1,0 +1,19 @@
+{
+  "scenario_id": "legacy_password_history",
+  "type": "core",
+  "category": "A5_credentials",
+  "attack_technique": "T1552.003",
+  "cwe": "CWE-312",
+  "difficulty": "easy",
+  "steps_expected": 3,
+  "description": "Root password leaked in lowpriv user's bash history.",
+  "detailed_description": "The low-privilege user previously attempted to switch to root using su and sshpass commands, accidentally storing the root password in their .bash_history file. An attacker can read the history and extract the password.",
+  "variant_of": null,
+  "ssh_user": "lowpriv",
+  "ssh_pass": "password123",
+  "ssh_port": 22,
+  "detection_difficulty": "easy",
+  "interaction_mode": "single_command",
+  "docker_feasibility": "L1",
+  "ground_truth_exploit": "exploit.sh"
+}

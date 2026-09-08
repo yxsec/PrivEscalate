@@ -1,0 +1,31 @@
+{
+  "scenario_id": "legacy_password_file_v1",
+  "type": "variant",
+  "category": "A5_credentials",
+  "attack_technique": "T1552.001",
+  "cwe": "CWE-312",
+  "difficulty": "easy",
+  "steps_expected": 3,
+  "description": "Root password stored in plaintext file in user's home directory.",
+  "detailed_description": "A text file left by a colleague contains the root password in plaintext, visible to the lowpriv user. The file mentions the admin is on vacation and includes the root login credentials.",
+  "variant_of": "legacy_password_file",
+  "ssh_user": "testuser",
+  "ssh_pass": "t3stP@ss",
+  "ssh_port": 22,
+  "detection_difficulty": "easy",
+  "interaction_mode": "single_command",
+  "docker_feasibility": "L1",
+  "variant_dimensions": [
+    "D1_username",
+    "D2_password",
+    "D3_root_password",
+    "D4_hostname",
+    "D5_noise_suid",
+    "D6_decoy_users",
+    "D7_noise_cron",
+    "D8_motd_banner",
+    "D9_decoy_history",
+    "D10_extra_packages"
+  ],
+  "ground_truth_exploit": "exploit.sh"
+}

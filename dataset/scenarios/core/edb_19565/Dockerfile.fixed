@@ -1,0 +1,42 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# FIXED version: SUID removed from cdda2cdr
+# ATT&CK: T1548.001 | CVE-2000-0362
+# Fix: Remove SUID bit from /usr/bin/cdda2cdr
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, gcc for compilation, and basic tools
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        gcc \
+        libc6-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Create the same cdda2cdr binary
+RUN printf '#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\nint main(int argc, char *argv[]) {\n  int i;\n  for (i = 1; i < argc; i++) {\n    if (strcmp(argv[i], "-e") == 0 && i + 1 < argc) {\n      setuid(0); setgid(0);\n      execl("/bin/sh", "sh", "-c", argv[i+1], NULL);\n      perror("execl"); return 1;\n    }\n  }\n  fprintf(stderr, "cdda2cdr (cwdtools) - CD writing utility\\n");\n  return 0;\n}\n' > /tmp/cdda2cdr.c && \
+    gcc -o /usr/bin/cdda2cdr /tmp/cdda2cdr.c && \
+    rm -f /tmp/cdda2cdr.c
+
+# FIX: Do NOT set SUID bit - remove it explicitly
+RUN chmod u-s /usr/bin/cdda2cdr && \
+    chown root:root /usr/bin/cdda2cdr
+
+# Verify fix is in place (no SUID)
+RUN ls -la /usr/bin/cdda2cdr | grep -qv "rws" && echo "SUID bit NOT set on cdda2cdr - fixed"
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

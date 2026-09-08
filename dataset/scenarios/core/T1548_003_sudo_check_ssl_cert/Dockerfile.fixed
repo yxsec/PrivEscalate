@@ -1,0 +1,67 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_check_ssl_cert (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: sudo rule for check_ssl_cert removed
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and check_ssl_cert (same packages as vulnerable)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        monitoring-plugins-basic \
+        nagios-plugins-contrib \
+        curl \
+        openssl \
+        bc \
+        file \
+        bind9-dnsutils \
+        coreutils \
+        nmap \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# check_ssl_cert may be installed in /usr/lib/nagios/plugins/ - create symlink if needed
+RUN if [ ! -f /usr/bin/check_ssl_cert ]; then \
+        find / -name "check_ssl_cert" -type f 2>/dev/null; \
+        if [ -f /usr/lib/nagios/plugins/check_ssl_cert ]; then \
+            ln -s /usr/lib/nagios/plugins/check_ssl_cert /usr/bin/check_ssl_cert; \
+        fi; \
+    fi
+
+# If check_ssl_cert is not available from packages, install it manually
+RUN if [ ! -f /usr/bin/check_ssl_cert ] && [ ! -f /usr/lib/nagios/plugins/check_ssl_cert ]; then \
+        apt-get update && apt-get install -y wget && \
+        wget -O /usr/bin/check_ssl_cert https://raw.githubusercontent.com/matteocorti/check_ssl_cert/v2.80.0/check_ssl_cert && \
+        chmod +x /usr/bin/check_ssl_cert && \
+        rm -rf /var/lib/apt/lists/*; \
+    fi
+
+# Verify check_ssl_cert is available
+RUN ls -la /usr/bin/check_ssl_cert || ls -la /usr/lib/nagios/plugins/check_ssl_cert
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# --- FIXED: No sudo rule for check_ssl_cert ---
+# The sudoers.d file is NOT created, removing the privilege escalation vector
+# (No /etc/sudoers.d/check_ssl_cert file)
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

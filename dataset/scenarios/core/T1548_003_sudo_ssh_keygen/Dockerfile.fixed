@@ -1,0 +1,46 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_ssh-keygen (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: sudo rule for ssh-keygen has been removed
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, openssh-client (for ssh-keygen), and build tools
+# Keeping all packages identical to the vulnerable version
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        openssh-client \
+        sudo \
+        gcc \
+        libc6-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Verify ssh-keygen is installed
+RUN which ssh-keygen && ls -la /usr/bin/ssh-keygen
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# --- FIXED: sudo vulnerability removed ---
+# The sudoers rule for ssh-keygen has been removed entirely.
+# No sudoers.d file is created for lowpriv.
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

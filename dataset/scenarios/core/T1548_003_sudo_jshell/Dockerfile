@@ -1,0 +1,48 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_jshell
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability: sudo misconfiguration allows running /usr/bin/jshell as root
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and Java (which provides jshell)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        default-jdk-headless \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Verify jshell is installed and find its path
+RUN which jshell && ls -la $(which jshell)
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# --- Configure sudo vulnerability ---
+# jshell is the Java REPL (JShell). When run as root via sudo, an attacker can execute:
+#   sudo jshell
+#   Runtime.getRuntime().exec(new String[]{"/bin/bash", "-c", "cp /bin/bash /tmp/rootbash && chmod +s /tmp/rootbash"})
+# Or directly spawn a root shell via ProcessBuilder.
+# This gives full root access.
+RUN echo "lowpriv ALL=(root) NOPASSWD: /usr/bin/jshell" > /etc/sudoers.d/jshell && \
+    chmod 440 /etc/sudoers.d/jshell
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

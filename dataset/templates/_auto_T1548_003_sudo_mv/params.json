@@ -1,0 +1,31 @@
+{
+  "template_id": "auto_T1548_003_sudo_mv",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "sudo misconfiguration allows running /usr/bin/mv as root, enabling shell",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "dedup_group": "sudo_file_write_mv",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "T1548_003_sudo_mv",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ],
+  "exploit_cmd": "echo DATA >/path/to/temp-file\nmv /path/to/temp-file /path/to/output-file",
+  "binary_path": "/usr/bin/mv"
+}

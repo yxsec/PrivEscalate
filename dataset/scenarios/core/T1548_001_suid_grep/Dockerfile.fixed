@@ -1,0 +1,41 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: SUID on grep — FIXED VERSION
+# ATT&CK: T1548.001 | CWE: CWE-250
+# Fix: SUID bit removed from /usr/bin/grep
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and grep
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-server \
+        grep \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# Set a known root password (same as vulnerable version for consistency)
+RUN echo "root:root" | chpasswd
+
+# FIXED: Ensure NO SUID bit on /usr/bin/grep
+RUN chmod u-s /usr/bin/grep
+
+# Verify fix is in place (no SUID)
+RUN test ! -u /usr/bin/grep && echo "SUID bit NOT set on grep — fixed"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

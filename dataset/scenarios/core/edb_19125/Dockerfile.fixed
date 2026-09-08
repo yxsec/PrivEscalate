@@ -1,0 +1,37 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# FIXED: SUID on oratclsh removed (CVE-1999-0711 patched)
+# The oratclsh binary is still present but without SUID bit.
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and tcl (provides tclsh, simulating oratclsh)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        tcl \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# Create oratclsh binary WITHOUT SUID (fixed)
+RUN TCLSH_PATH=$(readlink -f $(which tclsh)) && \
+    cp "$TCLSH_PATH" /usr/local/bin/oratclsh && \
+    chown root:root /usr/local/bin/oratclsh && \
+    chmod 755 /usr/local/bin/oratclsh
+
+# Verify fix: no SUID bit
+RUN ls -la /usr/local/bin/oratclsh | grep -qv "rws" && echo "SUID bit NOT set on oratclsh (fixed)"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

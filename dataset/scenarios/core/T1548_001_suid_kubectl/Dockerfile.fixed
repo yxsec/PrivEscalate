@@ -1,0 +1,45 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: SUID on kubectl (FIXED)
+# ATT&CK: T1548.001 | CWE: CWE-250
+# Fixed: SUID bit removed from /usr/bin/kubectl
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and dependencies
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-server \
+        curl \
+        ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Install kubectl binary (not available in Debian repos, download from upstream)
+RUN curl -LO "https://dl.k8s.io/release/v1.28.4/bin/linux/amd64/kubectl" && \
+    install -o root -g root -m 0755 kubectl /usr/bin/kubectl && \
+    rm kubectl
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# No SUID bit on kubectl — ensure normal permissions
+RUN chmod 0755 /usr/bin/kubectl
+
+# Verify vulnerability is NOT in place
+RUN ls -la /usr/bin/kubectl | grep -qv "rws" && echo "No SUID bit on kubectl (fixed)"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

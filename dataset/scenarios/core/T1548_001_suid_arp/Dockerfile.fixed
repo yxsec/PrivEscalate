@@ -1,0 +1,45 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: SUID on arp (FIXED)
+# ATT&CK: T1548.001 | CWE: CWE-250
+# Vulnerability REMOVED: No SUID bit on /usr/bin/arp
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and net-tools (provides /usr/sbin/arp)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-server \
+        net-tools \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# arp may be at /usr/sbin/arp in net-tools on Debian bookworm
+# Create a copy at /usr/bin/arp if it doesn't exist there
+RUN if [ ! -f /usr/bin/arp ] && [ -f /usr/sbin/arp ]; then \
+        cp /usr/sbin/arp /usr/bin/arp; \
+    fi
+
+# FIXED: Ensure NO SUID bit on /usr/bin/arp
+RUN chmod u-s /usr/bin/arp
+
+# Verify fix is in place (no SUID)
+RUN ls -la /usr/bin/arp | grep -q "rwx" && echo "No SUID bit on /usr/bin/arp (fixed)"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

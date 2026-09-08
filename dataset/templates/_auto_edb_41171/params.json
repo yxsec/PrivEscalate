@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_41171",
+  "category": "C2_systemd",
+  "attack_technique": "T1543.002",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Systemd 228 (SUSE 12 SP2 / Ubuntu Touch 15.04) - Local Privilege Escalation (CVE-2016-10156)\n\nExploit source code (41171.txt):\n```\n/*\nsource: http://www.openwall.com/lists/oss-security/2017/01/24/4\n\nThis is a heads up for a trivial systemd local root exploit, that\nwas silently fixed in the upstream git as:\n\ncommit 06eeacb6fe029804f296b065b3ce91e796e1cd0e\nAuthor: ....\nDate:   Fri Jan 29 23:36:08 2016 +0200\n\n    basic: fix touch() creating files with 07777 mode\n\n    mode_t is unsigned, so MODE_INVALID < 0 can never be true.\n\n    This fixes a possible DoS where any user could fill /run by writing to\n    a world-writable /run/systemd/show-status.\n\nThe analysis says that is a \"possible DoS\", but its a local root\nexploit indeed. Mode 07777 also contains the suid bit, so files\ncreated by touch() are world writable suids, root owned. Such\nas /var/lib/systemd/timers/stamp-fstrim.timer thats found on a non-nosuid mount.\n\nThis is trivially exploited by something like:\n\nhttp://www.halfdog.net/Security/2015/SetgidDirectoryPrivilegeEscalation/CreateSetgidBinary.c\n\nwith minimal changes, so I wont provide a PoC here.\n\nThe bug was possibly introduced via:\n\ncommit ee735086f8670be1591fa9593e80dd60163a7a2f\nAuthor: ...\nDate:   Wed Nov 11 22:54:56 2015 +0100\n\n    util-lib: use MODE_INVALID as invalid value for mode_t everywhere\n\n\nSo we believe that this mostly affects v228 of systemd, but its recommended\nthat distributors cross-check their systemd versions for vulnerable\ntouch_*() functions. We requested\na CVE for this issue from MITRE by ourselfs: CVE-2016-10156\n\nWe would like to see that systemd upstream retrieves CVE's themself\nfor their own bugs, even if its believed that its just a local DoS.\nThis would make distributors life much easier when we read the git logs\nto spot potential issues. The systemd git log is really huge, with\nlots of commits each week (\"new services as a service\").\n\nSebastian\n*/\n\n\n\n// Source: http://www.halfdog.net/Security/2015/SetgidDirectoryPrivilegeEscalation/CreateSetgidBinary.c\n\n/** This software is provided by the copyright owner \"as is\" and any\n *  expressed or implied warranties, including, but not limited to,\n *  the implied warranties of merchantability and fitness for a particular\n *  purpose are disclaimed. In no event shall the copyright owner be\n *  liable for any direct, indirect, incidential, special, exemplary or\n *  consequential damages, including, but not limited to, procurement\n *  of substitute goods or services, loss of use, data or profits or\n *  business interruption, however caused and on any theory of liability,\n *  whether in contract, strict liability, or tort, including negligence\n *  or otherwise, arising in any way out of the use of this software,\n *  even if advised of the possibility of such damage.\n *\n *  This tool allows to create a setgid binary in appropriate directory\n *  to escalate to the group of this directory.\n *\n *  Compile: gcc -o CreateSetgidBinary CreateSetgidBinary.c\n *\n *  Usage: CreateSetgidBinary [targetfile] [suid-binary] [placeholder] [args]\n *\n *  Example:\n *\n *  # ./CreateSetgidBinary ./escalate /bin/mount x nonexis\n```",
+  "cve": "CVE-2016-10156",
+  "exploitdb_id": "41171",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_41171",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

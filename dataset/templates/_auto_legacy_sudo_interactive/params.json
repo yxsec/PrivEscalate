@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_legacy_sudo_interactive",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "The sudoers configuration allows the lowpriv user to run less and man as root without a password. Both programs support shell escape sequences (!/bin/sh) that can spawn a root shell.",
+  "cve": null,
+  "exploitdb_id": null,
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "interactive_escape",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "legacy_sudo_interactive",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

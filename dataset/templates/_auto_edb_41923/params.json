@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_41923",
+  "category": "B2_path_hijack",
+  "attack_technique": "T1574.007",
+  "cwe": "CWE-426",
+  "description": "Linux privilege escalation: LightDM (Ubuntu 16.04/16.10) - 'Guest Account' Local Privilege Escalation (CVE-2017-7358)\n\nExploit source code (41923.txt):\n```\nSource: https://blogs.securiteam.com/index.php/archives/3134\n\nVulnerability Summary\nThe following advisory describes a local privilege escalation via LightDM\nfound in Ubuntu versions 16.10 / 16.04 LTS.\n\nUbuntu is an open source software platform that runs everywhere from IoT\ndevices, the smartphone, the tablet and the PC to the server and the\ncloud. LightDM is an X display manager that aims to be lightweight, fast,\nextensible and multi-desktop. It uses various front-ends to draw login\ninterfaces, also called Greeters.\n\n\nCredit\nAn independent security researcher, G. Geshev (@munmap), has reported this\nvulnerability to Beyond Security’s SecuriTeam Secure Disclosure program\n\n\nVendor Responses\nThe vendor has released a patch to address this issue.\nFor more information: https://www.ubuntu.com/usn/usn-3255-1/\n\n\nCVE Details\nCVE-2017-7358 <https://nvd.nist.gov/vuln/detail/CVE-2017-7358>\n\n\nVulnerability Details\nThe vulnerability is found in *LightDM*, which is the Ubuntu’s default\ndesktop manager, more specifically in the guest login feature. By default\n*LightDM* allows you to log into a session as a temporary user. This is\nimplemented in a script called ‘*guest-account*‘.\n\n@ubuntu:~$ ls -l /usr/sbin/guest-account\n-rwxr-xr-x 1 root root 6516 Sep 29 18:56 /usr/sbin/guest-account\n\n@ubuntu:~$ dpkg -S /usr/sbin/guest-account\nlightdm: /usr/sbin/guest-account\n\n@ubuntu:~$ dpkg -s lightdm\nPackage: lightdm\nStatus: install ok installed\nPriority: optional\nSection: x11\nInstalled-Size: 672\nMaintainer: Robert Ancell <robert.ancell@ubuntu.com>\nArchitecture: amd64\nVersion: 1.19.5-0ubuntu1\nProvides: x-display-manager\nDepends: debconf (>= 0.5) | debconf-2.0, libc6 (>= 2.14), libgcrypt20 (>=\n1.7.0), libglib2.0-0 (>= 2.39.4), libpam0g (>= 0.99.7.1), libxcb1, libxdmcp6\n, adduser, bash (>= 4.3), dbus, libglib2.0-bin, libpam-runtime (>= 0.76-14),\nlibpam-modules, plymouth (>= 0.8.8-0ubuntu18)\nPre-Depends: dpkg (>= 1.15.7.2)\nRecommends: xserver-xorg, unity-greeter | lightdm-greeter | lightdm-kde-\ngreeter\nSuggests: bindfs\nConflicts: liblightdm-gobject-0-0, liblightdm-qt-0-0\nConffiles:\n/etc/apparmor.d/abstractions/lightdm a715707411c3cb670a68a4ad738077bf\n/etc/apparmor.d/abstractions/lightdm_chromium-browser\ne1195e34922a67fa219b8b95eaf9c305\n/etc/apparmor.d/lightdm-guest-session 3c7812f49f27e733ad9b5d413c4d14cb\n/etc/dbus-1/system.d/org.freedesktop.DisplayManager.conf\nb76b6b45d7f7ff533c51d7fc02be32f4\n/etc/init.d/lightdm be2b1b20bec52a04c1a877477864e188\n/etc/init/lightdm.conf 07304e5b3265b4fb82a2c94beb9b577e\n/etc/lightdm/users.conf 1de1a7e321b98e5d472aa818893a2a3e\n/etc/logrotate.d/lightdm b6068c54606c0499db9a39a05df76ce9\n/etc/pam.d/lightdm 1abe2be7a999b42517c82511d9e9ba22\n/etc/pam.d/lightdm-autologin 28dd060554d1103ff847866658431ecf\n/etc/pam.d/lightdm-greeter 65ed119ce8f4079f6388b09ad9d8b2f9\nDescription: Display Manager\nLightDM is a X display manager that:\n  * Has a lightweight codebase\n  * Is standards compliant (PAM, ConsoleKit, etc)\n  * Has a well defined interface between the serve\n```",
+  "cve": "CVE-2017-7358",
+  "exploitdb_id": "41923",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_41923",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

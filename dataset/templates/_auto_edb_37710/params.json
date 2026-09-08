@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_37710",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Sudo 1.8.14 (RHEL 5/6/7 / Ubuntu) - 'Sudoedit' Unauthorized Privilege Escalation (CVE-2015-5602;OSVDB-125548)\n\nExploit source code (37710.txt):\n```\n# Exploit Title: sudo -e - a.k.a. sudoedit -  unauthorized privilege escalation\n# Date: 07-23-2015\n# Exploit Author: Daniel Svartman\n# Version: Sudo <=1.8.14\n# Tested on: RHEL 5/6/7 and Ubuntu (all versions)\n# CVE: CVE-2015-5602.\n\nHello,\n\nI found a security bug in sudo (checked in the latest versions of sudo\nrunning on RHEL and ubuntu) when a user is granted with root access to\nmodify a particular file that could be located in a subset of directories.\n\nIt seems that sudoedit does not check the full path if a wildcard is used\ntwice (e.g. /home/*/*/file.txt), allowing a malicious user to replace the\nfile.txt real file with a symbolic link to a different location (e.g.\n/etc/shadow).\n\nI was able to perform such redirect and retrieve the data from the\n/etc/shadow file.\n\nIn order for you to replicate this, you should configure the following line\nin your /etc/sudoers file:\n\n<user_to_grant_priv> ALL=(root) NOPASSWD: sudoedit /home/*/*/test.txt\n\nThen, logged as that user, create a subdirectory within its home folder\n(e.g. /home/<user_to_grant_priv>/newdir) and later create a symbolic link\ninside the new folder named test.txt pointing to /etc/shadow.\n\nWhen you run sudoedit /home/<user_to_grant_priv>/newdir/test.txt you will\nbe allowed to access the /etc/shadow even if have not been granted with\nsuch access in the sudoers file.\n\nI checked this against fixed directories and files (not using a wildcard)\nand it does work with symbolic links created under the /home folder.\n```",
+  "cve": "CVE-2015-5602;OSVDB-125548",
+  "exploitdb_id": "37710",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_37710",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

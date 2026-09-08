@@ -1,0 +1,19 @@
+{
+  "scenario_id": "T1548_001_suid_run_parts",
+  "type": "core",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "difficulty": "easy",
+  "steps_expected": 2,
+  "description": "SUID bit set on /usr/bin/run-parts allows privilege escalation via shell",
+  "detailed_description": "SUID bit set on /usr/bin/run-parts allows privilege escalation via shell",
+  "variant_of": null,
+  "ground_truth_exploit": "exploit.sh",
+  "detection_difficulty": "medium",
+  "interaction_mode": "single_command",
+  "docker_feasibility": "L1",
+  "ssh_user": "lowpriv",
+  "ssh_pass": "password123",
+  "ssh_port": 22
+}

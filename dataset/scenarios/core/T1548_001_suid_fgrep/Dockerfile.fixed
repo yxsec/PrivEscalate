@@ -1,0 +1,44 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: FIXED — no SUID on /usr/bin/fgrep
+# ATT&CK: T1548.001 | CWE: CWE-250
+# Vulnerability REMOVED: SUID bit removed from fgrep
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and grep (provides fgrep)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-server \
+        grep \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# Same setup as vulnerable version but WITHOUT the SUID bit
+RUN if [ -L /usr/bin/fgrep ] || file /usr/bin/fgrep | grep -q "shell script\|text"; then \
+        rm -f /usr/bin/fgrep && \
+        cp /usr/bin/grep /usr/bin/fgrep; \
+    fi && \
+    chmod u-s /usr/bin/fgrep && \
+    chown root:root /usr/bin/fgrep
+
+# Verify SUID is NOT set
+RUN ! ls -la /usr/bin/fgrep | grep -q "rws" && echo "SUID bit NOT set on fgrep (fixed)"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

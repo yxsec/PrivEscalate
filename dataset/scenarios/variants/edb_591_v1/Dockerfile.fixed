@@ -1,0 +1,49 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# FIXED: SUID on socat REMOVED
+# ATT&CK: T1548.001 | CWE: CWE-250
+# The SUID bit has been removed from socat, preventing
+# privilege escalation.
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, socat, and supporting tools (identical packages)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        socat \
+        binutils \
+        gcc \
+        grep \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# Place the exploit source code in the user's home directory for reference
+COPY --chmod=644 <<'EXPLOIT' /home/testuser/591.c
+/* socat_exp.c - Socat Format String Vulnerability
+   socat <= 1.4.0.2 local exploit (Proof of Concept)
+   Original CVE-2004-1484 / OSVDB-11035
+   Modern exploitation with SUID socat:
+     socat stdin exec:/bin/sh,pty,stderr,setsid,sigint,sane
+*/
+EXPLOIT
+
+# FIX: Ensure SUID bit is NOT set on socat
+RUN chmod u-s /usr/bin/socat
+
+# Verify fix is in place - no SUID bit
+RUN ls -la /usr/bin/socat | grep -qv "rws" && echo "SUID bit confirmed REMOVED from socat"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

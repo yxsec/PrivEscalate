@@ -1,0 +1,50 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: SUID on /usr/bin/bee — FIXED
+# ATT&CK: T1548.001 | CWE: CWE-250
+# Fix: SUID bit removed from /usr/bin/bee
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        nodejs \
+        npm \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+RUN printf '#!/usr/bin/env node\n\
+const args = process.argv.slice(2);\n\
+if (args[0] === "-e" && args[1]) {\n\
+  eval(args[1]);\n\
+} else if (args.length > 0) {\n\
+  require(require("path").resolve(args[0]));\n\
+} else {\n\
+  require("repl").start("> ");\n\
+}\n' > /usr/bin/bee && \
+    chmod 755 /usr/bin/bee
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# NO SUID bit on bee — this is the fix
+RUN chmod u-s /usr/bin/bee
+
+# Verify fix is in place
+RUN ls -la /usr/bin/bee | grep -qv "rws" && echo "SUID bit NOT set on bee — fixed"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

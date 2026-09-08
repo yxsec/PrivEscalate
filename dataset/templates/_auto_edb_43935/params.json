@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_43935",
+  "category": "C2_systemd",
+  "attack_technique": "T1543.002",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: systemd (systemd-tmpfiles) < 236 - 'fs.protected_hardlinks=0' Local Privilege Escalation (CVE-2017-18078)\n\nExploit source code (43935.txt):\n```\nProduct: systemd (systemd-tmpfiles)\nVersions-affected: 236 and earlier\nAuthor: Michael Orlitzky\nFixed-in: commit 5579f85 , version 237\nBug-report: https://github.com/systemd/systemd/issues/7736\nAcknowledgments: Lennart Poettering who, instead of calling me an idiot\n  for not realizing that systemd enables fs.protected_hardlinks by\n  default, went out of his way to harden the non-default configuration.\n\n\n== Summary ==\n\nBefore version 237, the systemd-tmpfiles program will change the\npermissions and ownership of hard links. If the administrator disables\nthe fs.protected_hardlinks sysctl, then an attacker can create hard\nlinks to sensitive files and subvert systemd-tmpfiles, particularly\nwith \"Z\" type entries.\n\nSystemd as PID 1 with the default fs.protected_hardlinks=1 is safe.\n\n\n== Details ==\n\nWhen running as PID 1, systemd enables the fs.protected_hardlinks\nsysctl by default; that prevents an attacker from creating hard links\nto files that he can't write to. If, however, the administrator should\ndecide to disable that sysctl, then hard links may be created to any\nfile (on the same filesystem).\n\nBefore version 237, the systemd-tmpfiles program will voluntarily\nchange the permissions and ownership of a hard link, and that is\nexploitable in a few scenarios. The most problematic and easiest to\nexploit is the \"Z\" type tmpfiles.d entry, which changes ownership and\npermissions recursively. For an example, consider the following\ntmpfiles.d entries,\n\n  d /var/lib/systemd-exploit-recursive 0755 mjo mjo\n  Z /var/lib/systemd-exploit-recursive 0755 mjo mjo\n\nWhenever systemd-tmpfiles is run, those entries make mjo the owner of\neverything under and including /var/lib/systemd-exploit-recursive. After\nthe first run, mjo can create a hard link inside that directory pointing\nto /etc/passwd. The next run (after a reboot, for example) changes the\nownership of /etc/passwd.\n\nA proof-of-concept can be run from the systemd source tree, using\neither two separate terminals or sudo:\n\n  root # sysctl -w fs.protected_hardlinks=0\n  root # sysctl -w kernel.grsecurity.linking_restrictions=0\n  root # ./build/systemd-tmpfiles --create\n  mjo $ ln /etc/passwd /var/lib/systemd-exploit-recursive/x\n  root # ./build/systemd-tmpfiles --create\n  mjo $ /bin/ls -l /etc/passwd\n  -rwxr-xr-x 2 mjo mjo 1504 Dec 20 14:27 /etc/passwd\n\nMore elaborate exploits are possible, and not only the \"Z\" type is\nvulnerable.\n\n\n== Resolution ==\n\nThe recursive change of ownership/permissions does not seem to be safely\ndoable without fs.protected_hardlinks enabled.\n\nIn version 237 and later, systemd-tmpfiles calls fstatat() immediately\nafter obtaining a file descriptor from open():\n\n  fd = open(path, O_NOFOLLOW|O_CLOEXEC|O_PATH);\n  if (fd < 0) {\n    ...\n  }\n  if (fstatat(fd, \"\", &st, AT_EMPTY_PATH) < 0)\n\nThe st->st_nlink field is then checked to determine whether or not fd\ndescribes a hard link. If it does, the ownership/permissions are not\nchanged, and an error is displayed:\n\n  if (hardlink_vulnerable(&st)) {\n  \n```",
+  "cve": "CVE-2017-18078",
+  "exploitdb_id": "43935",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_43935",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

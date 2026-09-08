@@ -1,0 +1,6 @@
+{
+  "docker_run_args": [],
+  "requires_privileged": false,
+  "startup_delay": 2,
+  "note": "Standard docker run; no special capabilities required."
+}

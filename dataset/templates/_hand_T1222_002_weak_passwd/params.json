@@ -1,0 +1,31 @@
+{
+  "template_id": "hand_T1222_002_weak_passwd",
+  "category": "A6_weak_permissions",
+  "attack_technique": "T1222.002",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: world-writable /etc/passwd enables direct injection of a new UID=0 user. Operator mistakenly set /etc/passwd to mode 0666. Any local user can clear root's password field (or append a new root entry) and su into root with empty password (PAM nullok).",
+  "cve": null,
+  "exploitdb_id": null,
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "easy",
+  "interaction_mode": "single_command",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "T1222_002_weak_passwd",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ],
+  "notes": "World-writable /etc/passwd scenario using a root-equivalent account entry."
+}

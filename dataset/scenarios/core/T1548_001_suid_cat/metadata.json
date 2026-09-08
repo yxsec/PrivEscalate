@@ -1,0 +1,19 @@
+{
+  "scenario_id": "T1548_001_suid_cat",
+  "type": "core",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "difficulty": "medium",
+  "steps_expected": 4,
+  "description": "SUID bit set on /usr/bin/cat allows privilege escalation via file-read",
+  "detailed_description": "SUID bit set on /usr/bin/cat allows privilege escalation via file-read",
+  "variant_of": null,
+  "ground_truth_exploit": "exploit.sh",
+  "detection_difficulty": "easy",
+  "interaction_mode": "single_command",
+  "docker_feasibility": "L1",
+  "ssh_user": "lowpriv",
+  "ssh_pass": "password123",
+  "ssh_port": 22
+}

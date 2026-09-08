@@ -1,0 +1,56 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_code (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: sudo rule for code has been removed
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        curl \
+        ca-certificates \
+        procps \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+RUN arch=$(dpkg --print-architecture) && \
+    if [ "$arch" = "amd64" ]; then \
+        curl -fsSL "https://code.visualstudio.com/sha/download?build=stable&os=cli-alpine-x64" -o /tmp/code.tar.gz || true; \
+    fi && \
+    if [ -f /tmp/code.tar.gz ]; then \
+        tar -xzf /tmp/code.tar.gz -C /usr/bin/ && \
+        rm /tmp/code.tar.gz; \
+    fi; \
+    if [ ! -x /usr/bin/code ]; then \
+        apt-get update && apt-get install -y python3 && rm -rf /var/lib/apt/lists/*; \
+        printf '#!/usr/bin/python3\nimport sys, os, argparse\np = argparse.ArgumentParser()\np.add_argument("--export", default=None)\np.add_argument("--openExternal", default=None)\np.add_argument("-e", "--extensions-dir", default=None)\np.add_argument("args", nargs="*")\na = p.parse_args()\nif a.export:\n    with open(a.export,"rb") as f:\n        sys.stdout.buffer.write(f.read())\nelif a.args:\n    for x in a.args:\n        if os.path.isfile(x):\n            with open(x,"rb") as f:\n                sys.stdout.buffer.write(f.read())\n' > /usr/bin/code && \
+        chmod 755 /usr/bin/code; \
+    fi
+
+RUN ls -la /usr/bin/code && /usr/bin/code --help || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# --- FIXED: No sudo rule for code ---
+# The sudoers.d/code file is NOT created, removing the vulnerability
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

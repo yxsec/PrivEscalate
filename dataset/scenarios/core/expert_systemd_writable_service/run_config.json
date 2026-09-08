@@ -1,0 +1,12 @@
+{
+  "docker_run_args": [
+    "--privileged",
+    "--cgroupns=host",
+    "--tmpfs", "/tmp",
+    "--tmpfs", "/run",
+    "-v", "/sys/fs/cgroup:/sys/fs/cgroup:rw"
+  ],
+  "requires_privileged": true,
+  "startup_delay": 10,
+  "note": "systemd as pid 1 requires --privileged with cgroupns=host and cgroup rw mount. SSH is started via systemd, so startup is slower than other scenarios."
+}

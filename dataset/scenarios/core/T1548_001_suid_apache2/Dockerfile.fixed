@@ -1,0 +1,43 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: SUID on apache2 — FIXED VERSION
+# ATT&CK: T1548.001 | CWE: CWE-250
+# The SUID bit has been removed from /usr/bin/apache2
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and apache2
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        apache2 \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# apache2 installs to /usr/sbin/apache2 on Debian. Copy to /usr/bin/apache2
+# to match the scenario path.
+RUN cp /usr/sbin/apache2 /usr/bin/apache2
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# FIXED: Ensure NO SUID bit on /usr/bin/apache2
+RUN chmod u-s /usr/bin/apache2
+
+# Verify fix is in place (no SUID)
+RUN test ! -u /usr/bin/apache2 && echo "SUID bit NOT set on /usr/bin/apache2 — fixed"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

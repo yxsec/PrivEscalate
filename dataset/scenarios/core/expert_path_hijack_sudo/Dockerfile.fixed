@@ -1,0 +1,38 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Expert-authored Scenario: expert_path_hijack_sudo (FIXED)
+# Differential baseline: sudo no longer preserves PATH, and helper uses
+# absolute paths. Same behaviour for legitimate use, no PATH hijack.
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-server \
+        sudo \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# --- PrivEscalate: harden base image ---
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# FIXED: helper invokes df by absolute path; sudo does NOT env_keep PATH
+# (default sudo behaviour uses secure_path).
+RUN printf '#!/bin/bash\necho "[admin_check] host=$(hostname)"\n/usr/bin/df -h /\necho "[admin_check] done"\n' > /usr/local/sbin/admin_check.sh && \
+    chown root:root /usr/local/sbin/admin_check.sh && \
+    chmod 755 /usr/local/sbin/admin_check.sh
+
+RUN printf 'lowpriv ALL=(ALL) NOPASSWD: /usr/local/sbin/admin_check.sh\n' > /etc/sudoers.d/lowpriv-admincheck && \
+    chmod 440 /etc/sudoers.d/lowpriv-admincheck
+
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

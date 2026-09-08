@@ -1,0 +1,44 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: SUID on /usr/bin/ip (FIXED)
+# ATT&CK: T1548.001 | CWE: CWE-250
+# Vulnerability REMOVED: SUID bit NOT set on /usr/bin/ip
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and iproute2 (provides /usr/sbin/ip or /usr/bin/ip)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-server \
+        iproute2 \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# Ensure /usr/bin/ip exists (on bookworm it may be at /usr/sbin/ip)
+RUN if [ ! -f /usr/bin/ip ]; then \
+        ln -s /usr/sbin/ip /usr/bin/ip 2>/dev/null || true; \
+    fi
+
+# FIXED: Ensure NO SUID bit on ip binary
+RUN chmod u-s $(readlink -f /usr/bin/ip)
+
+# Verify fix is in place (no SUID)
+RUN ! ls -la $(readlink -f /usr/bin/ip) | grep -q "rws" && echo "SUID bit NOT set on ip (fixed)"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

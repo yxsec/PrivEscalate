@@ -1,0 +1,31 @@
+{
+  "template_id": "hand_T1222_002_weak_shadow",
+  "category": "A6_weak_permissions",
+  "attack_technique": "T1222.002",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: world-writable /etc/shadow enables root password hash replacement. Operator mistakenly set /etc/shadow to mode 0666. Any local user can overwrite root's password hash (or clear it) and su into root with the known / empty password (PAM nullok).",
+  "cve": null,
+  "exploitdb_id": null,
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "easy",
+  "interaction_mode": "single_command",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "T1222_002_weak_shadow",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ],
+  "notes": "Requires replacing root's hash without truncating the shadow file."
+}

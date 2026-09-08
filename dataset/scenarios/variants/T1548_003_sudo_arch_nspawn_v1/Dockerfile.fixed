@@ -1,0 +1,59 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_arch-nspawn (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: sudo rule for arch-nspawn removed
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and required packages
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        systemd-container \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Create the same arch-nspawn binary (kept installed, just not exploitable)
+RUN printf '#!/bin/bash\n\
+# arch-nspawn - simplified version mimicking Arch Linux devtools arch-nspawn\n\
+# Usage: arch-nspawn <root-dir> [command...]\n\
+if [ $# -lt 1 ]; then\n\
+    echo "Usage: arch-nspawn <root-dir> [command...]" >&2\n\
+    exit 1\n\
+fi\n\
+CHROOT="$1"\n\
+shift\n\
+if [ $# -eq 0 ]; then\n\
+    exec /bin/bash\n\
+else\n\
+    exec "$@"\n\
+fi\n' > /usr/bin/arch-nspawn && \
+    chmod 755 /usr/bin/arch-nspawn
+
+# Verify arch-nspawn is installed
+RUN which arch-nspawn && ls -la /usr/bin/arch-nspawn
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# --- FIXED: No sudo rule for arch-nspawn ---
+# The sudoers.d entry is NOT created, so testuser cannot run arch-nspawn as root
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

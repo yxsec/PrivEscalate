@@ -1,0 +1,7 @@
+{
+  "docker_run_args": [],
+  "requires_privileged": false,
+  "startup_delay": 5,
+  "cron_wait": 65,
+  "note": "Cron job triggers every minute"
+}

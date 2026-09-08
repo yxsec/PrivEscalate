@@ -1,0 +1,31 @@
+{
+  "template_id": "auto_T1548_003_sudo_strings",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "sudo misconfiguration allows running /usr/bin/strings as root, enabling shell",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "easy",
+  "interaction_mode": "file_manipulation",
+  "dedup_group": "sudo_file_read",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "T1548_003_sudo_strings",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ],
+  "exploit_cmd": "strings /path/to/input-file",
+  "binary_path": "/usr/bin/strings"
+}

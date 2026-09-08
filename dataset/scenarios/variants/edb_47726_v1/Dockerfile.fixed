@@ -1,0 +1,38 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# FIXED: SUID on /bin/bash removed
+# ATT&CK: T1548.001 | CWE: CWE-273
+# The SUID bit is NOT set on /bin/bash, so bash -p does not
+# grant elevated privileges and the exploit fails.
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, gcc (same packages as vulnerable version), and bash
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        bash \
+        gcc \
+        libc6-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# FIXED: Ensure NO SUID bit on /bin/bash
+RUN chmod u-s /bin/bash
+
+# Verify fix is in place (no SUID)
+RUN test ! -u /bin/bash && echo "SUID bit NOT set on /bin/bash - fixed"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

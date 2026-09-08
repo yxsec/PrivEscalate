@@ -1,0 +1,19 @@
+{
+  "scenario_id": "legacy_docker_group",
+  "type": "core",
+  "category": "A6_container",
+  "attack_technique": "T1611",
+  "cwe": "CWE-269",
+  "difficulty": "medium",
+  "steps_expected": 3,
+  "description": "User added to docker group, enabling container escape to host root.",
+  "detailed_description": "The lowpriv user is a member of the docker group, granting effective root access by mounting the host filesystem in a privileged container. NOTE: This scenario requires --privileged flag or Docker socket mount at runtime.",
+  "variant_of": null,
+  "ssh_user": "lowpriv",
+  "ssh_pass": "password123",
+  "ssh_port": 22,
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "docker_feasibility": "L2",
+  "ground_truth_exploit": "exploit.sh"
+}

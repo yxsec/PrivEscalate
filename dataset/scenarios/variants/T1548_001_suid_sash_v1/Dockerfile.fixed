@@ -1,0 +1,39 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: SUID on sash — FIXED
+# ATT&CK: T1548.001 | CWE: CWE-250
+# Fix: SUID bit removed from /usr/bin/sash
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and sash (stand-alone shell)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-server \
+        sash \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# Ensure SUID bit is NOT set on sash (fix the vulnerability)
+RUN chmod u-s /usr/bin/sash
+
+# Verify fix is in place
+RUN ls -la /usr/bin/sash | grep -qv "rws" && echo "SUID bit NOT set on sash — fixed"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

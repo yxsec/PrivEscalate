@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_21420",
+  "category": "D1_credential",
+  "attack_technique": "T1552.001",
+  "cwe": "CWE-256",
+  "description": "Linux privilege escalation: Sudo 1.6.x - Password Prompt Heap Overflow (CVE-2002-0184;OSVDB-5344)\n\nExploit source code (21420.c):\n```\n// source: https://www.securityfocus.com/bid/4593/info\n\nSudo is a widely used Linux/Unix utility allow users to securely run commands as other users.\n\nSudo is vulnerable to a heap overflow condition related to it's customizable password prompt feature. The nature of the sudo utility requires that it be installed setuid root. Successful exploitation may allow for local attackers to gain root privileges.\n\n/*\n * Created: November 1, 2001\n * Updated: August 8, 2002\n * Updated-2: November 4, 2002 by Eds and Dexter_Man\n *   ______\n *  /   ___\\ __ _  ____  ____  ____ ____ ____  __ _\n *  \\____  \\/  / \\/    \\/    \\/  _ \\    \\ _  \\/  / \\\n * /        \\___  \\  \\  \\  \\  \\ ___/  \\_/___  \\___  \\\n * \\______  / ____/__/  /__/  /___ \\__/ / ____/ ____/\n *        \\/\\/        \\/    \\/    \\/    \\/    \\/\n *\n * Hudo versus Linux/Intel Sudo\n * \"Another object superstitiously believed to embody magical powers\"\n * Copyright (C) 2001 MaXX\n *\n * Okay.. I discovered a vulnerability in Sudo while I was working on\n * the Vudo exploit. All Sudo versions are vulnerable, even the latest\n * one. In the file check.c, function expand_prompt(), the author forgot\n * to reset the lastchar variable in the second loop. So if the last\n * character of the prompt (controlled by the attacker) is a '%', and if\n * the first character of the prompt is a 'u' or a 'h', the attacker can\n * trick expand_prompt() into performing an additional escape.\n *\n * But there was not enough memory allocated for this additional escape,\n * so the attacker effectively overflowed the new_prompt buffer (but the\n * severity of the overflow depends on the length of the username or\n * hostname). Quite a weird vulnerability.\n *\n * After a lot of research, I managed to exploit the bug.. the attacker\n * does not even need to know the password of the user used to run the\n * exploit (unlike the Vudo exploit.. exploiting the bug via nobody or\n * www-data works fine now). I transformed the whole overflow into a\n * one-byte heap overflow, which in this case was hard to exploit, but\n * was actually exploitable, and I managed to exploit the bug 7 times\n * out of the.. 7 times I tried the exploit.\n *\n * I wrote the most important comments in the hudo.c file, but will\n * explain the main technique, and also the most reliable way to find\n * out the two command line values needed in order to obtain a root\n * shell. BTW.. if you manage to exploit Sudo on other Linux/Intel\n * architectures, please update hudo.c and let me know.. thank you.\n *\n * Imagine you have a hole somewhere in the heap.. you store the\n * new_prompt buffer (whose size corresponds to the third command line\n * parameter of the Hudo exploit), which will be overflowed, at the\n * beginning of this hole. Now imagine that after new_prompt was stored\n * at the beginning of the hole, the size of the last_remainder chunk\n * (the rest of the hole) is equal to (0x100+16) bytes. If we overwrite\n * the LSByte of this size field with a NUL byte during the one-byte\n * overflow, \n```",
+  "cve": "CVE-2002-0184;OSVDB-5344",
+  "exploitdb_id": "21420",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_21420",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ]
+}

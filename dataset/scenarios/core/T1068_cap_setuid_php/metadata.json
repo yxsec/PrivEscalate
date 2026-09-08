@@ -1,0 +1,19 @@
+{
+  "scenario_id": "T1068_cap_setuid_php",
+  "type": "core",
+  "category": "A3_capabilities",
+  "attack_technique": "T1068",
+  "cwe": "CWE-266",
+  "difficulty": "medium",
+  "steps_expected": 4,
+  "description": "Linux capability cap_setuid+ep set on /usr/bin/php allows privilege escalation via setuid call",
+  "detailed_description": "Linux capability cap_setuid+ep set on /usr/bin/php allows privilege escalation via setuid call",
+  "variant_of": null,
+  "ground_truth_exploit": "exploit.sh",
+  "detection_difficulty": "hard",
+  "interaction_mode": "single_command",
+  "docker_feasibility": "L1",
+  "ssh_user": "lowpriv",
+  "ssh_pass": "password123",
+  "ssh_port": 22
+}

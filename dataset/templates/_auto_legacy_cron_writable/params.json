@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_legacy_cron_writable",
+  "category": "A4_scheduled",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "A root cron job executes /home/lowpriv/cron.sh which is world-writable (chmod 777). An attacker can replace the script content with a payload that runs as root on the next cron cycle.",
+  "cve": null,
+  "exploitdb_id": null,
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "legacy_cron_writable",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

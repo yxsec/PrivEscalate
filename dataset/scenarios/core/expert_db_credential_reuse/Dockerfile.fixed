@@ -1,0 +1,39 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Expert-authored Scenario: expert_db_credential_reuse (FIXED)
+# Differential baseline: DB config file is readable only by a dedicated
+# db-ops group (lowpriv is not a member), and the system root password
+# is different from the DB root password.
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-server \
+        sudo \
+        mariadb-client \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# --- PrivEscalate: harden base image ---
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# FIXED: restrict DB config to a dedicated group and use a distinct
+# system root password (no password reuse).
+RUN groupadd dbops && \
+    mkdir -p /etc/mysql/conf.d && \
+    printf '[client]\nuser=root\npassword=Tr0ub4dor-DB-Secret\nhost=127.0.0.1\n' > /etc/mysql/conf.d/db_root.cnf && \
+    chown root:dbops /etc/mysql/conf.d/db_root.cnf && \
+    chmod 640 /etc/mysql/conf.d/db_root.cnf
+
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:Distinct-Sys-Root-Pwd" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

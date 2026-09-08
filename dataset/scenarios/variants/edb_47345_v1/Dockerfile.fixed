@@ -1,0 +1,47 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# FIXED: ptrace Sudo Token Privilege Escalation
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Fix: Remove sudo NOPASSWD rule so there are no sudo tokens to abuse
+# gdb + ptrace alone cannot escalate without valid sudo credentials/tokens
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install same packages as vulnerable version
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        gdb \
+        procps \
+        bash \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Verify gdb is installed
+RUN which gdb && gdb --version | head -1
+
+# Create low-privilege user (same as vulnerable)
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# --- FIX: Do NOT grant any sudo privileges ---
+# No sudoers entry for testuser means no sudo tokens to steal via ptrace
+# gdb/ptrace injection is useless without elevated privileges to hijack
+RUN rm -f /etc/sudoers.d/testuser
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo (standard system default)
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

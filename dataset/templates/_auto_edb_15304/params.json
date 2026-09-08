@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_15304",
+  "category": "B1_ld_preload",
+  "attack_technique": "T1574.006",
+  "cwe": "CWE-427",
+  "description": "Linux privilege escalation: GNU C Library 2.x (libc6) - Dynamic Linker LD_AUDIT Arbitrary DSO Load Privilege Escalation (CVE-2010-3856;OSVDB-68920;CVE-2010-3847)\n\nExploit source code (15304.txt):\n```\nSource: http://marc.info/?l=full-disclosure&m=128776663124692&w=2\n\n\nThe GNU C library dynamic linker will dlopen arbitrary DSOs during setuid loads\n-------------------------------------------------------------------------------\n\nCzeÅ›Ä‡, This advisory describes CVE-2010-3856, an addendum to CVE-2010-3847.\n\nPlease see http://seclists.org/fulldisclosure/2010/Oct/257 for background\ninformation.\n\nFor obvious reasons, the dynamic linker will ignore requests to preload user\nspecified libraries for setuid/setgid programs. However, it is possible to\nimagine legitimate use cases for this functionality, so the glibc developers\nprovide an exception to this rule.\n\n LD_PRELOAD\n     A whitespace-separated list of additional, user-specified, ELF\n     shared libraries to be loaded before all others. This can be\n     used to selectively override functions in other shared\n     libraries. For set-user-ID/set-group-ID ELF binaries, only\n     libraries in the standard search directories that are also set-\n     user-ID will be loaded.\n\nIn order to be preloaded during the execution of a privileged program, a\nlibrary must be setuid and in the trusted library search path. This is a\nreasonable design, before a library will be loaded, the system administrator\nmust brand a library as safe to load across privilege boundaries.\n\nThis feature allows developers who design their programs to operate safely\nwhile running as setuid to opt-in to doing so. Bizarrely, the same conditions\ndo not apply to LD_AUDIT, which will load an arbitrary DSO, regardless of\nwhether it has been designed to operate safely or not.\n\nWhile the dynamic loader will only use a library that exports the dynamic\nsymbols required by the rtld-auditing API, it must first dlopen() the\nlibrary in order to examine the exported symbols. By definition, this must\nexecute any defined initialization routines.\n\nThis confusion can be exploited by locating a DSO in the trusted search path with\ninitialization code that has not been designed to operate safely while euid !=\nuid. See the Notes section below for additional discussion on this topic.\n\n--------------------\nAffected Software\n------------------------\n\nAt least the following versions have been tested\n\n    2.12.1, FC13\n    2.5, RHEL5 / CentOS5\n    2.11.1, Ubuntu 10\nEDB Note:    2.7, Debian 5\n\n--------------------\nConsequences\n-----------------------\n\nThis is a low impact issue that is only of interest to security\nprofessionals and system administrators, end users do not need to be\nconcerned.\n\nIt is possible to exploit this confusion to execute arbitrary code as root.\n\nThe exact steps required to exploit this vulnerability will vary from\ndistribution to distribution, but an example from Ubuntu 10.04 is given below.\n\n# The creation mask is inherited by children, and survives even a setuid\n# execve. Therefore, we can influence how files are created during\n# exploitation.\n$ umask 0\n\n# libpcprofile is distributed with the libc package.\n$ dpkg -S /lib/libpcprofile.so\nlibc6: \n```",
+  "cve": "CVE-2010-3856;OSVDB-68920;CVE-2010-3847",
+  "exploitdb_id": "15304",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_15304",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

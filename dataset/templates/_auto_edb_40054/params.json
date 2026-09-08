@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_40054",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Exim 4 (Debian 8 / Ubuntu 16.04) - Spool Privilege Escalation\n\nExploit source code (40054.c):\n```\n/*\n-----BEGIN PGP SIGNED MESSAGE-----\nHash: SHA512\n\nHello List,\n\nThis is just a minor issue in Exim, no replies so far, so publication\nshould be OK.\n\nIntroduction:\n============\nExim4 in some variants is started as root but switches to uid/gid\nDebian-exim/Debian-exim. But as Exim might need to store received\nmessages in user mailboxes, it has to have the ability to regain\nprivileges. This is also true when Exim is started as \"sendmail\".\nDuring internal operation, sendmail (Exim) will manipulate message\nspool files in directory structures owned by user \"Debian-exim\"\nwithout caring about symlink attacks. Thus execution of code as\nuser \"Debian-exim\" can be used to gain root privileges by invoking\n\"sendmail\" as user \"Debian-exim\".\n\n\nPOC:\n===\nhttp://www.halfdog.net/Security/2016/DebianEximSpoolLocalRoot/EximUpgrade.c\ndemonstrates the issue using a ELF file being both executable\nand shared library which is invoked multiple times by different\nprocesses.\n\n\nResults, Discussion:\n===================\nAs Exim4 process itself is already quite privileged - it has to\naccess the user mailboxes with different UIDs anyway - the having\nsuch problems is expectable and explainable. A change in documentation\nmight make sense, to indicate, that the special user \"Debian-exim\"\nis only intended to mark files being used by the daemon, but not\nto provide root/daemon user privilege separation.\n\nEven without this vulnerability, a \"Debian-exim\" process could\nuse http://www.halfdog.net/Security/2015/SetgidDirectoryPrivilegeEscalation/\nto escalate to \"adm\" group, which again makes it very likely to\nuse \"syslog\", \"apache\" or other components to escalate to root\nvia \"/var/log\". This is annoying, perhaps this should get a CVE\nto make daemon-to-root escalations harder in general.\n\n\nTimeline:\n========\n20160605: Discovery, report Debian security\n20160607: Writeup\n20160611: Also verified in Ubuntu, https://bugs.launchpad.net/ubuntu/+source/exim4/+bug/1580454/\n20160630: Publication\n\n\nReferences:\n==========\n* http://www.halfdog.net/Security/2016/DebianEximSpoolLocalRoot/\n* http://www.halfdog.net/Security/2015/SetgidDirectoryPrivilegeEscalation/\n* https://bugs.launchpad.net/ubuntu/+source/exim4/+bug/1580454/\n-----BEGIN PGP SIGNATURE-----\n\niEYEAREKAAYFAld0lPUACgkQxFmThv7tq+5MeACePVuh5CppGyhUudMfK7kjDXjj\n8mcAn2AcZFVEwUKSHadffJJyCNLP0X7H\n=4IJk\n-----END PGP SIGNATURE-----\n\n * This software is provided by the copyright owner \"as is\" and any\n *  expressed or implied warranties, including, but not limited to,\n *  the implied warranties of merchantability and fitness for a particular\n *  purpose are disclaimed. In no event shall the copyright owner be\n *  liable for any direct, indirect, incidential, special, exemplary or\n *  consequential damages, including, but not limited to, procurement\n *  of substitute goods or services, loss of use, data or profits or\n *  business interruption, however caused and on any theory of liability,\n *  whether in contract, strict liability, or tort, including neglig\n```",
+  "cve": "",
+  "exploitdb_id": "40054",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_40054",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

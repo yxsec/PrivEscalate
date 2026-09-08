@@ -1,0 +1,31 @@
+{
+  "scenario_id": "expert_ld_preload_sudo_v1",
+  "type": "variant",
+  "category": "B1_ld_preload",
+  "attack_technique": "T1574.006",
+  "cwe": "CWE-427",
+  "difficulty": "medium",
+  "steps_expected": 4,
+  "description": "sudo env_keep preserves LD_PRELOAD, enabling a preloaded shared object to execute as root.",
+  "detailed_description": "The lowpriv user is permitted to run /usr/bin/id via sudo without a password. The sudoers file also contains Defaults env_keep += \"LD_PRELOAD\", so sudo does not strip LD_PRELOAD from the environment. An attacker compiles a shared library whose _init() sets euid=0 and spawns a root-owned shell, then invokes the allowed sudo command with LD_PRELOAD pointing at the library.",
+  "variant_of": "expert_ld_preload_sudo",
+  "ssh_user": "testuser",
+  "ssh_pass": "t3stP@ss",
+  "ssh_port": 22,
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "docker_feasibility": "L1",
+  "variant_dimensions": [
+    "D1_username",
+    "D2_password",
+    "D3_root_password",
+    "D4_hostname",
+    "D5_noise_suid",
+    "D6_decoy_users",
+    "D7_noise_cron",
+    "D8_motd_banner",
+    "D9_decoy_history",
+    "D10_extra_packages"
+  ],
+  "ground_truth_exploit": "exploit.sh"
+}

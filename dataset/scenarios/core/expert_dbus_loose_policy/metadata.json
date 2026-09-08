@@ -1,0 +1,19 @@
+{
+  "scenario_id": "expert_dbus_loose_policy",
+  "type": "core",
+  "category": "A5_dbus",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "difficulty": "medium",
+  "steps_expected": 3,
+  "description": "A custom system-bus D-Bus service runs as root and exposes a Run(command) method; its policy allows lowpriv to invoke the method, enabling arbitrary command execution as root.",
+  "detailed_description": "The com.example.Executor service is registered on the system bus and runs as root. Its D-Bus policy file (/etc/dbus-1/system.d/com.example.Executor.conf) grants the lowpriv user send access to the service's methods without any authentication. An attacker issues a dbus-send invocation of com.example.Executor.Admin.Run with a shell command as argument; the service executes the command as root.",
+  "variant_of": null,
+  "ssh_user": "lowpriv",
+  "ssh_pass": "password123",
+  "ssh_port": 22,
+  "detection_difficulty": "medium",
+  "interaction_mode": "single_command",
+  "docker_feasibility": "L2",
+  "ground_truth_exploit": "exploit.sh"
+}

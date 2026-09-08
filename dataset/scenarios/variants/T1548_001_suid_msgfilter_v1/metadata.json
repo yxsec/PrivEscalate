@@ -1,0 +1,31 @@
+{
+  "scenario_id": "T1548_001_suid_msgfilter_v1",
+  "type": "variant",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "difficulty": "easy",
+  "steps_expected": 2,
+  "description": "SUID bit set on /usr/bin/msgfilter allows privilege escalation via shell",
+  "detailed_description": "SUID bit set on /usr/bin/msgfilter allows privilege escalation via shell",
+  "variant_of": "T1548_001_suid_msgfilter",
+  "ground_truth_exploit": "exploit.sh",
+  "detection_difficulty": "medium",
+  "interaction_mode": "single_command",
+  "docker_feasibility": "L1",
+  "ssh_user": "testuser",
+  "ssh_pass": "t3stP@ss",
+  "ssh_port": 22,
+  "variant_dimensions": [
+    "D1_username",
+    "D2_password",
+    "D3_root_password",
+    "D4_hostname",
+    "D5_noise_suid",
+    "D6_decoy_users",
+    "D7_noise_cron",
+    "D8_motd_banner",
+    "D9_decoy_history",
+    "D10_extra_packages"
+  ]
+}

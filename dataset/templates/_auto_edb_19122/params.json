@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19122",
+  "category": "D1_credential",
+  "attack_technique": "T1552.001",
+  "cwe": "CWE-256",
+  "description": "Linux privilege escalation: Slackware Linux 3.5 - '/etc/group' Local Privilege Escalation (CVE-1999-1434;OSVDB-13525)\n\nExploit source code (19122.txt):\n```\nsource: https://www.securityfocus.com/bid/155/info\n\nDue to the way /bin/login behaves when a /etc/group file is not present under Slackware's version of the password shadowing suite, users who log in while this file is not present will be given uid and gid 0. This will allow them unrestricted access to the machine. This vulnerability is present in all versions of Slackware which have shadow passwords, up to and including 3.5\n\nIf the call to initgroups() fails in setup_uid_gid(), the function immediately returns value of -1. However, the call to setup_uid_gid() in login.c fails to check this return value. Since the uid and gid were not checked, their value is still 0, and the user will be logged in with 0 as their uid and gid.\n\nRemove /etc/group and log in as a valid user. /etc/group must entirely not exist -- mode 000 is not sufficient.\n```",
+  "cve": "CVE-1999-1434;OSVDB-13525",
+  "exploitdb_id": "19122",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19122",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ]
+}

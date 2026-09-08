@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_47703",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: GNU Mailutils 3.7 - Privilege Escalation (CVE-2019-18862)\n\nExploit source code (47703.txt):\n```\n# Exploit Title: GNU Mailutils 3.7 - Local Privilege Escalation\n# Date: 2019-11-06\n# Exploit Author: Mike Gualtieri\n# Vendor Homepage: https://mailutils.org/\n# Software Link: https://ftp.gnu.org/gnu/mailutils/mailutils-3.7.tar.gz\n# Version: 2.0 <= 3.7\n# Tested on: Gentoo\n# CVE : CVE-2019-18862\n\nTitle   : GNU Mailutils / Maidag Local Privilege Escalation\nAuthor  : Mike Gualtieri :: https://www.mike-gualtieri.com\nDate    : 2019-11-06\nUpdated : 2019-11-20\n\nVendor Affected:   GNU Mailutils :: https://mailutils.org/\nVersions Affected: 2.0 - 3.7\nCVE Designator:    CVE-2019-18862\n\n\n1. Overview\n\nThe --url parameter included in the GNU Mailutils maidag utility (versions 2.0\nthrough 3.7) can abused to write to arbitrary files on the host operating\nsystem.  By default, maidag is set to execute with setuid root permissions,\nwhich can lead to local privilege escalation through code/command execution by\nwriting to the system's crontab or by writing to other root owned files on the\noperating system.\n\n\n\n2. Detail\n\nAs described by the project's homepage, \"GNU Mailutils is a swiss army knife of\nelectronic mail handling. It offers a rich set of utilities and daemons for\nprocessing e-mail\".\n\nMaidag, a mail delivery agent utility included in the suite, is by default\nmarked to execute with setuid (suid) root permissions.\n\nThe --url parameter of maidag can be abused to write to arbitrary files on the\noperating system.  Abusing this option while the binary is marked with suid\npermissions allows a low privileged user to write to arbitrary files on the\nsystem as root.  Writing to the crontab, for example, may lead to a root shell.\n\nThe flaw itself appears to date back to the 2008-10-19 commit, when the --url\nparameter was introduced to maidag.\n\n\t11637b0f - New maidag mode: --url\n\thttps://git.savannah.gnu.org/cgit/mailutils.git/commit/?id=11637b0f262db62b4dc466cefb9315098a1a995a\n\n\tmaidag/Makefile.am:\n    \tchmod 4755 $(DESTDIR)$(sbindir)/$$i;\\\n\n\nThe following payload will execute arbitrary commands as root and works with\nversions of maidag, through version 3.7.\n\n\tmaidag  --url /etc/crontab < /tmp/crontab.in\n\n\tThe file /tmp/crontab.in would contain a payload like the following.\n\n\tline 1:\n\tline 2: */1  *  * * *  root    /tmp/payload.sh\n\n\tPlease note: For the input to be accepted by maidag, the first line of the\n    file must be blank or be commented.\n\n\tIn the above example, the file /tmp/payload.sh would include arbitrary\n    commands to execute as root.\n\n\nOlder versions of GNU Mailutils (2.2 and previous) require a different syntax:\n\n\tmaidag --url 'mbox://user@localhost //etc/crontab' < /tmp/crontab.in\n\n\n\n3. Solution\n\nA fix for the flaw has been made in GNU Mailutils 3.8, which removes the maidag\nutility, and includes three new utilities that replace its functionality.\nDetails about the new features can be found in the project's release notes:\n\n\thttps://git.savannah.gnu.org/cgit/mailutils.git/tree/NEWS\n\nAnother workaround for those unable to upgrade, is to remove the suid bi\n```",
+  "cve": "CVE-2019-18862",
+  "exploitdb_id": "47703",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_47703",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

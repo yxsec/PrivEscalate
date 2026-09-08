@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_40270",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Watchguard Firewalls - 'ESCALATEPLOWMAN' ifconfig Privilege Escalation (CVE-2016-7089)\n\nExploit source code (40270.txt):\n```\n# Exploit Title: WatchGuard Firewalls - ifconfig Privilege Escalation (ESCALATEPLOWMAN)\n# Date: 19-08-2016\n# Exploit Author: Shadow Brokers\n# Vendor Homepage: http://www.watchguard.com/\n\n\nFull Exploit:\nhttps://gitlab.com/exploit-database/exploitdb-bin-sploits/-/raw/main/bin-sploits/40270.zip\n```",
+  "cve": "CVE-2016-7089",
+  "exploitdb_id": "40270",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_40270",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

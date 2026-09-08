@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_40450",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Apache Tomcat 8/7/6 (Debian-Based Distros) - Local Privilege Escalation (CVE-2016-1240)\n\nExploit source code (40450.txt):\n```\n=============================================\n- Discovered by: Dawid Golunski\n- http://legalhackers.com\n- dawid (at) legalhackers.com\n\n- CVE-2016-1240\n- Release date: 30.09.2016\n- Revision: 1\n- Severity: High\n=============================================\n\n\nI. VULNERABILITY\n-------------------------\n\nApache Tomcat packaging on Debian-based distros - Local Root Privilege Escalation\n\nAffected debian packages:\n\nTomcat 8 <= 8.0.36-2\nTomcat 7 <= 7.0.70-2\nTomcat 6 <= 6.0.45+dfsg-1~deb8u1\n\nUbuntu systems are also affected. See section VII. for details.\nOther systems using the affected debian packages may also be affected.\n\n\nII. BACKGROUND\n-------------------------\n\n\"The Apache TomcatÂ® software is an open source implementation of the\nJava Servlet, JavaServer Pages, Java Expression Language and Java WebSocket\ntechnologies. The Java Servlet, JavaServer Pages, Java Expression Language\nand Java WebSocket specifications are developed under the Java Community\nProcess.\n\nThe Apache Tomcat software is developed in an open and participatory\nenvironment and released under the Apache License version 2.\nThe Apache Tomcat project is intended to be a collaboration of the\nbest-of-breed developers from around the world.\n\nApache Tomcat software powers numerous large-scale, mission-critical web\napplications across a diverse range of industries and organizations.\nSome of these users and their stories are listed on the PoweredBy wiki page.\n\"\n\nhttp://tomcat.apache.org/\n\n\nIII. INTRODUCTION\n-------------------------\n\nTomcat (6, 7, 8) packages provided by default repositories on Debian-based\ndistributions (including Debian, Ubuntu etc.) provide a vulnerable\ntomcat init script that allows local attackers who have already gained access\nto the tomcat account (for example, by exploiting an RCE vulnerability\nin a java web application hosted on Tomcat, uploading a webshell etc.) to\nescalate their privileges from tomcat user to root and fully compromise the\ntarget system.\n\nIV. DESCRIPTION\n-------------------------\n\nThe vulnerability is located in the tomcat init script provided by affected\npackages, normally installed at /etc/init.d/tomcatN.\n\nThe script for tomcat7 contains the following lines:\n\n-----[tomcat7]----\n\n# Run the catalina.sh script as a daemon\nset +e\ntouch \"$CATALINA_PID\" \"$CATALINA_BASE\"/logs/catalina.out\nchown $TOMCAT7_USER \"$CATALINA_PID\" \"$CATALINA_BASE\"/logs/catalina.out\n\n-------[eof]------\n\nLocal attackers who have gained access to the server in the context of the\ntomcat user (for example, through a vulnerability in a web application) would\nbe able to replace the log file with a symlink to an arbitrary system file\nand escalate their privileges to root once Tomcat init script (running as root)\nre-opens the catalina.out file after a service restart, reboot etc.\n\nAs attackers would already have a tomcat account at the time of exploitation,\nthey could also kill the tomcat processes to introduce the need for a restart.\n\n\nV. PROOF OF CONCEPT EXPLOIT\n------------------------\n```",
+  "cve": "CVE-2016-1240",
+  "exploitdb_id": "40450",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_40450",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

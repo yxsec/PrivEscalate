@@ -1,0 +1,29 @@
+{
+  "template_id": "auto_T1068_cap_setuid_ruby",
+  "category": "A3_capabilities",
+  "attack_technique": "T1068",
+  "cwe": "CWE-266",
+  "description": "Linux capability cap_setuid+ep set on /usr/bin/ruby allows privilege escalation via setuid call",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "hard",
+  "interaction_mode": "single_command",
+  "dedup_group": "cap_setuid_shell_escape",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "T1068_cap_setuid_ruby",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

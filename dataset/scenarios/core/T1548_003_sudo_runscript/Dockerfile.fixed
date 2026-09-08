@@ -1,0 +1,55 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_runscript (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: sudo rule for runscript has been removed
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and openrc (which provides runscript)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        openrc \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Create the same runscript symlink as the vulnerable version
+RUN if [ ! -f /usr/bin/runscript ]; then \
+        if [ -f /sbin/openrc-run ]; then \
+            ln -s /sbin/openrc-run /usr/bin/runscript; \
+        elif [ -f /usr/sbin/openrc-run ]; then \
+            ln -s /usr/sbin/openrc-run /usr/bin/runscript; \
+        elif [ -f /sbin/runscript ]; then \
+            ln -s /sbin/runscript /usr/bin/runscript; \
+        else \
+            echo "ERROR: Cannot find openrc-run or runscript" && exit 1; \
+        fi; \
+    fi
+
+# Verify runscript is available
+RUN ls -la /usr/bin/runscript
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# --- FIXED: No sudo rule for runscript ---
+# The sudoers.d file is NOT created, removing the privilege escalation vector
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

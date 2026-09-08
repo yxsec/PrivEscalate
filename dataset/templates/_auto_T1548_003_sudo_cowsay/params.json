@@ -1,0 +1,29 @@
+{
+  "template_id": "auto_T1548_003_sudo_cowsay",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "sudo misconfiguration allows running /usr/bin/cowsay (cowsay) as root. GTFOBins documents inherit functions for this binary.",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "single_command",
+  "dedup_group": "sudo_shell_escape",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "T1548_003_sudo_cowsay",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ]
+}

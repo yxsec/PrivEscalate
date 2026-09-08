@@ -1,0 +1,31 @@
+{
+  "scenario_id": "legacy_password_mysql_v1",
+  "type": "variant",
+  "category": "A5_credentials",
+  "attack_technique": "T1552.001",
+  "cwe": "CWE-312",
+  "difficulty": "medium",
+  "steps_expected": 3,
+  "description": "Root password stored in MySQL client configuration file (.my.cnf).",
+  "detailed_description": "A MySQL/MariaDB client config file in the lowpriv user's home directory contains the root password in plaintext. The password is reused for the root system account, allowing direct su to root.",
+  "variant_of": "legacy_password_mysql",
+  "ssh_user": "testuser",
+  "ssh_pass": "t3stP@ss",
+  "ssh_port": 22,
+  "detection_difficulty": "easy",
+  "interaction_mode": "single_command",
+  "docker_feasibility": "L1",
+  "variant_dimensions": [
+    "D1_username",
+    "D2_password",
+    "D3_root_password",
+    "D4_hostname",
+    "D5_noise_suid",
+    "D6_decoy_users",
+    "D7_noise_cron",
+    "D8_motd_banner",
+    "D9_decoy_history",
+    "D10_extra_packages"
+  ],
+  "ground_truth_exploit": "exploit.sh"
+}

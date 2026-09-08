@@ -1,0 +1,23 @@
+FROM debian:bookworm-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    openssh-server \
+    gdb \
+    python3 \
+    libcap2-bin \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN mkdir -p /run/sshd
+
+RUN sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo 'lowpriv:password123' | chpasswd
+
+# Do NOT set any special capabilities on gdb — leave it with default permissions
+RUN getcap /usr/bin/gdb || echo "No capabilities set on gdb (expected)"
+
+EXPOSE 22
+
+CMD ["/usr/sbin/sshd", "-D"]

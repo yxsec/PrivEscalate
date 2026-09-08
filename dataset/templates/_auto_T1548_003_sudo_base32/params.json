@@ -1,0 +1,31 @@
+{
+  "template_id": "auto_T1548_003_sudo_base32",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "sudo misconfiguration allows running /usr/bin/base32 as root, enabling shell",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "easy",
+  "interaction_mode": "single_command",
+  "dedup_group": "sudo_file_read_encode",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "T1548_003_sudo_base32",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ],
+  "exploit_cmd": "base32 /path/to/input-file | base32 --decode",
+  "binary_path": "/usr/bin/base32"
+}

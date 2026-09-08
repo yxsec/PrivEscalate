@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_35749",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: RedStar 3.0 Desktop - 'Software Manager swmng.app' Local Privilege Escalation (OSVDB-116892)\n\nExploit source code (35749.txt):\n```\nThe root user is disabled on Red Star, and it doesn't look like there is a way to enable it.\nUnFortunately, they left a big security hole: the Software Manager (swmng.app),\nwhich runs as root through sudo and will install any RPM package, even if unsigned.\n\nTo get root, get this RPM package I made into Red Star through an ISO (if you're using a virtual machine) or USB key,\ndouble-click it to open it with the Software Manager, and click through the blue buttons until it’s done.\nAfter that, run rootsh to get a root shell.\nBeing a RedHat-based system (hinting on Fedora 15), SELinux will prevent you from doing some things,\nbut disabling it is a matter of running setenforce 0 as root.\n\n\nDownload: https://mega.co.nz/#!jgBT0RxZ!LQDEBBrbGxE6fag4d_A2C2cWj2PSNR_ZvnSW_UjRD5E\nMirror: https://gitlab.com/exploit-database/exploitdb-bin-sploits/-/raw/main/bin-sploits/35749.rpm (redstarroot.rpm)\n\n\n## Source: http://richardg867.wordpress.com/2015/01/01/notes-on-red-star-os-3-0/ & http://www.openwall.com/lists/oss-security/2015/01/09/1\n```",
+  "cve": "OSVDB-116892",
+  "exploitdb_id": "35749",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_35749",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

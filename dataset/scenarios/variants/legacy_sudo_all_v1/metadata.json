@@ -1,0 +1,31 @@
+{
+  "scenario_id": "legacy_sudo_all_v1",
+  "type": "variant",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "difficulty": "easy",
+  "steps_expected": 1,
+  "description": "User has unrestricted sudo access without password requirement.",
+  "detailed_description": "The sudoers configuration grants the lowpriv user ALL permissions with NOPASSWD, allowing unrestricted root command execution without authentication.",
+  "variant_of": "legacy_sudo_all",
+  "ssh_user": "testuser",
+  "ssh_pass": "t3stP@ss",
+  "ssh_port": 22,
+  "detection_difficulty": "easy",
+  "interaction_mode": "single_command",
+  "docker_feasibility": "L1",
+  "variant_dimensions": [
+    "D1_username",
+    "D2_password",
+    "D3_root_password",
+    "D4_hostname",
+    "D5_noise_suid",
+    "D6_decoy_users",
+    "D7_noise_cron",
+    "D8_motd_banner",
+    "D9_decoy_history",
+    "D10_extra_packages"
+  ],
+  "ground_truth_exploit": "exploit.sh"
+}

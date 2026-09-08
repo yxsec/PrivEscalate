@@ -1,0 +1,43 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_paste (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability: REMOVED — sudo misconfiguration no longer present
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and coreutils (which provides paste)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        coreutils \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Verify paste is installed
+RUN which paste && ls -la /usr/bin/paste
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# --- FIXED: No sudo rule for paste ---
+# The sudoers.d entry for paste has been removed entirely.
+# lowpriv can no longer run paste as root.
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

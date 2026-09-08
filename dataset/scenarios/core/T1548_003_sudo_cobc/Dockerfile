@@ -1,0 +1,48 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_cobc
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability: sudo misconfiguration allows running /usr/bin/cobc as root
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and GnuCOBOL compiler
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        gnucobol \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Verify cobc is installed
+RUN which cobc && ls -la /usr/bin/cobc
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# --- Configure sudo vulnerability ---
+# cobc can compile and execute COBOL programs. A COBOL program can call
+# SYSTEM to spawn a shell. When run via sudo as root:
+#   echo 'CALL "SYSTEM" USING "/bin/sh".' > /tmp/exploit.cob
+#   sudo cobc -xFj --frelax-syntax-checks /tmp/exploit.cob
+# This compiles and immediately executes the program, spawning a root shell.
+RUN echo "lowpriv ALL=(root) NOPASSWD: /usr/bin/cobc" > /etc/sudoers.d/cobc && \
+    chmod 440 /etc/sudoers.d/cobc
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

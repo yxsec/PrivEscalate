@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_legacy_cron_wildcard",
+  "category": "A4_scheduled",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-78",
+  "description": "A root cron job archives the contents of /home/lowpriv/backup using 'tar *' wildcard expansion. By creating specially-named files (--checkpoint, --checkpoint-action), the attacker can inject tar flags that execute arbitrary commands as root.",
+  "cve": null,
+  "exploitdb_id": null,
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "hard",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "legacy_cron_wildcard",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

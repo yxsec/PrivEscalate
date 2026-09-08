@@ -1,0 +1,50 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: SUID on xpad — FIXED
+# ATT&CK: T1548.001 | CWE: CWE-250
+# Vulnerability REMOVED: SUID bit NOT set on /usr/bin/xpad
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and xpad
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        xpad \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# If xpad is not available in bookworm, create the same binary as vulnerable version
+RUN if [ ! -f /usr/bin/xpad ]; then \
+        apt-get update && \
+        apt-get install -y gcc && \
+        echo '#include <unistd.h>\n#include <stdlib.h>\n#include <string.h>\nint main(int argc, char **argv) {\n  if (argc > 1 && strcmp(argv[1], "--shell") == 0) {\n    setuid(0); setgid(0); execl("/bin/sh", "sh", "-p", NULL);\n  }\n  return 0;\n}' > /tmp/xpad.c && \
+        gcc -o /usr/bin/xpad /tmp/xpad.c && \
+        rm -f /tmp/xpad.c && \
+        apt-get purge -y gcc && apt-get autoremove -y && \
+        rm -rf /var/lib/apt/lists/*; \
+    fi
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# FIXED: Ensure NO SUID bit on xpad
+RUN chmod u-s /usr/bin/xpad
+
+# Verify fix is in place (no SUID)
+RUN ! ls -la /usr/bin/xpad | grep -q "rws" && echo "SUID bit confirmed REMOVED from xpad"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

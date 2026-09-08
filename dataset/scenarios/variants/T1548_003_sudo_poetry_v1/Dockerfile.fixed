@@ -1,0 +1,48 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_poetry (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: sudo rule for poetry has been removed
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, python3, pip, and poetry
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        python3 \
+        python3-pip \
+        pipx \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Install poetry via pipx as root so it lands in a predictable location
+RUN PIPX_HOME=/opt/pipx PIPX_BIN_DIR=/usr/bin pipx install poetry && \
+    ls -la /usr/bin/poetry
+
+# Verify poetry is installed and working
+RUN /usr/bin/poetry --version
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# --- FIXED: No sudo rule for poetry ---
+# The sudoers.d file is NOT created, removing the vulnerability entirely.
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

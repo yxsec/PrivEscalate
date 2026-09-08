@@ -1,0 +1,70 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# FIXED version: sudo.bin NLSPATH Privilege Escalation
+# The vulnerability is removed: no sudoers entry for sudo.bin,
+# and SUID bit removed from sudo.bin copy.
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, build tools (for compiling the exploit), and bash
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        gcc \
+        libc6-dev \
+        bash \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Create the sudo.bin binary but WITHOUT SUID bit (fixed)
+RUN cp /usr/bin/sudo /usr/bin/sudo.bin && \
+    chmod 755 /usr/bin/sudo.bin && \
+    chown root:root /usr/bin/sudo.bin
+
+# Verify sudo.bin is in place WITHOUT SUID
+RUN ls -la /usr/bin/sudo.bin
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# --- NO sudoers entry for sudo.bin (vulnerability removed) ---
+# Do NOT create /etc/sudoers.d/sudo_bin
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Place the exploit source code in the lowpriv user's home directory (same as vulnerable)
+COPY --chmod=644 <<'EOF' /home/lowpriv/319.c
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define PATH_SUDO "/usr/bin/sudo.bin"
+
+int main(int argc, char **argv)
+{
+    printf("SUDO.BIN NLSPATH exploit scenario\n");
+    printf("Escalating privileges via sudo.bin...\n");
+    execl(PATH_SUDO, "sudo.bin", "/bin/bash", NULL);
+    perror("execl failed");
+    return 1;
+}
+EOF
+
+RUN chown lowpriv:lowpriv /home/lowpriv/319.c
+
+# Keep SUID on sudo itself (standard system)
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

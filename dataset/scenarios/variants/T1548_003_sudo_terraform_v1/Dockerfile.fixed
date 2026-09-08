@@ -1,0 +1,49 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_terraform (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability: REMOVED - sudo rule for terraform no longer present
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and dependencies
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        wget \
+        unzip \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Install terraform binary (specific version for reproducibility)
+RUN wget -q https://releases.hashicorp.com/terraform/1.5.7/terraform_1.5.7_linux_amd64.zip -O /tmp/terraform.zip && \
+    unzip /tmp/terraform.zip -d /usr/bin/ && \
+    chmod 755 /usr/bin/terraform && \
+    rm /tmp/terraform.zip
+
+# Verify terraform is installed
+RUN which terraform && ls -la /usr/bin/terraform && terraform version
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# --- FIXED: No sudo rule for terraform ---
+# The sudoers entry has been removed so testuser cannot run terraform as root
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

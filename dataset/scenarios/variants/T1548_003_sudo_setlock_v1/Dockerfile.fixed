@@ -1,0 +1,50 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_setlock (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: sudo rule for setlock no longer present
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and daemontools (provides setlock)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        daemontools \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# setlock from daemontools may be installed in /usr/bin or /usr/local/bin
+# Find it and ensure it's at /usr/bin/setlock
+RUN which setlock && ls -la $(which setlock) || true
+RUN if [ ! -f /usr/bin/setlock ]; then \
+        SETLOCK_PATH=$(which setlock 2>/dev/null || find / -name setlock -type f 2>/dev/null | head -1); \
+        if [ -n "$SETLOCK_PATH" ] && [ "$SETLOCK_PATH" != "/usr/bin/setlock" ]; then \
+            ln -sf "$SETLOCK_PATH" /usr/bin/setlock; \
+        fi; \
+    fi && \
+    ls -la /usr/bin/setlock
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# --- FIXED: No sudo rule for setlock ---
+# The vulnerable sudoers entry has been removed entirely.
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

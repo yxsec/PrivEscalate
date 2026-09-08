@@ -1,0 +1,41 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# FIXED version: sudo chmod/cp privilege removed
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, and coreutils (same packages as vulnerable)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        coreutils \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Verify chmod is installed
+RUN which chmod && ls -la /bin/chmod
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# --- FIXED: No sudoers entry for chmod or cp ---
+# The vulnerable sudoers.d/accellion file is NOT created.
+# lowpriv has no sudo privileges at all.
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo (standard)
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_39549",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Exim < 4.86.2 - Local Privilege Escalation (CVE-2016-1531)\n\nExploit source code (39549.txt):\n```\n=============================================\n- Advisory release date: 10.03.2016\n- Created by: Dawid Golunski\n- Severity: High/Critical\n=============================================\n\n\nI. VULNERABILITY\n-------------------------\n\nExim < 4.86.2        Local Root Privilege Escalation Exploit\n\n\nII. BACKGROUND\n-------------------------\n\n\"Exim is a message transfer agent (MTA) developed at the University of\nCambridge for use on Unix systems connected to the Internet. It is freely\navailable under the terms of the GNU General Public Licence. In style it is\nsimilar to Smail 3, but its facilities are more general. There is a great\ndeal of flexibility in the way mail can be routed, and there are extensive\nfacilities for checking incoming mail. Exim can be installed in place of\nSendmail, although the configuration of Exim is quite different.\"\n\nhttp://www.exim.org/\n\n\nIII. INTRODUCTION\n-------------------------\n\nWhen Exim installation has been compiled with Perl support and contains a\nperl_startup configuration variable it can be exploited by malicious local\nattackers to gain root privileges.\n\nIV. DESCRIPTION\n-------------------------\n\nThe vulnerability stems from Exim in versions below 4.86.2 not performing\nsanitization of the environment before loading a perl script defined\nwith perl_startup setting in exim config.\n\nperl_startup is usually used to load various helper scripts such as\nmail filters, gray listing scripts, mail virus scanners etc.\n\nFor the option to be supported, exim must have been compiled with Perl\nsupport, which can be verified with:\n\n[dawid@centos7 ~]$ exim -bV -v | grep i Perl\nSupport for: crypteq iconv() IPv6 PAM Perl Expand_dlfunc TCPwrappers OpenSSL\nContent_Scanning DKIM Old_Demime PRDR OCSP\n\n\nTo perform the attack, attacker can take advantage of the exim's sendmail\ninterface which links to an exim binary that has an SUID bit set on it by\ndefault as we can see below:\n\n[dawid@centos7 ~]$ ls -l /usr/sbin/sendmail.exim\nlrwxrwxrwx. 1 root root 4 Nov 30 00:45 /usr/sbin/sendmail.exim -> exim\n\n[dawid@centos7 ~]$ ls -l /usr/sbin/exim\n-rwsr-xr-x. 1 root root 1222416 Dec  7  2015 /usr/sbin/exim\n\n\nNormally, when exim sendmail interface starts up, it drops its root\nprivileges before giving control to the user (i.e entering mail contents for\nsending etc), however an attacker can make use of the following command line\nparameter which is available to all users:\n\n-ps    This  option  applies when an embedded Perl interpreter is linked with\n       Exim. It overrides the setting of the perl_at_start option, forcing the\n       starting of the interpreter to occur as soon as Exim is started.\n\n\nAs we can see from the documentation at:\n\nhttp://www.exim.org/exim-html-current/doc/html/spec_html/ch-embedded_perl.html\n\nthe perl_at_start option does the following:\n\n\"Setting perl_at_start (a boolean option) in the configuration requests a\nstartup when Exim is entered.\"\n\nTherefore it is possible to force the execution of the perl_startup script\ndefined in the Exim's\n```",
+  "cve": "CVE-2016-1531",
+  "exploitdb_id": "39549",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_39549",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

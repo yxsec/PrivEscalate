@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19080",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Debian suidmanager 0.18 - Command Execution (CVE-1999-1390;OSVDB-6332)\n\nExploit source code (19080.txt):\n```\nsource: https://www.securityfocus.com/bid/94/info\n\n/usr/bin/suidexec will execute arbitrary commands as root,\nas soon as just _one_ suid root shell script can be found\non the system: Just invoke\n\n/usr/bin/suidexec <your program> /path/to/script\n\n- it will happily execute your program with euid = 0. This\nis completely sufficient for doing arbitrary damage on the\nsystem.\n```",
+  "cve": "CVE-1999-1390;OSVDB-6332",
+  "exploitdb_id": "19080",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19080",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

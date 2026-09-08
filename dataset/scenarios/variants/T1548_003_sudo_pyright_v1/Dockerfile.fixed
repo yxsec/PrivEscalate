@@ -1,0 +1,49 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_pyright (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: no sudo rule for pyright
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        npm \
+        nodejs \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Install pyright globally via npm
+RUN npm install -g pyright
+
+# Verify pyright is installed and find its path
+RUN which pyright && ls -la $(which pyright)
+
+# Create a symlink at /usr/bin/pyright if it's not already there
+RUN ln -sf $(which pyright) /usr/bin/pyright 2>/dev/null || true
+RUN ls -la /usr/bin/pyright
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# --- FIXED: No sudo rule for pyright ---
+# The sudoers.d file is NOT created, removing the vulnerability entirely.
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

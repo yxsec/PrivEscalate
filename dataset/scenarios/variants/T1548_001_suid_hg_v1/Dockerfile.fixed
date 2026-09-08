@@ -1,0 +1,49 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: SUID on /usr/bin/hg — FIXED
+# ATT&CK: T1548.001 | CWE: CWE-250
+# Fix: SUID bit removed from /usr/bin/hg
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and mercurial (provides /usr/bin/hg)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        mercurial \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# Install the same wrapper binary but WITHOUT SUID bit
+RUN apt-get update && \
+    apt-get install -y gcc && \
+    echo '#include <unistd.h>\n#include <stdlib.h>\nint main(int argc, char **argv) { argv[0]="/usr/bin/hg.real"; execv("/usr/bin/hg.real", argv); return 1; }' > /tmp/hg_wrapper.c && \
+    mv /usr/bin/hg /usr/bin/hg.real && \
+    gcc -o /usr/bin/hg /tmp/hg_wrapper.c && \
+    chmod 755 /usr/bin/hg && \
+    chown root:root /usr/bin/hg && \
+    rm -f /tmp/hg_wrapper.c && \
+    apt-get purge -y gcc && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
+
+# Verify SUID bit is NOT set
+RUN test ! -u /usr/bin/hg && echo "SUID bit NOT set on /usr/bin/hg — fixed"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

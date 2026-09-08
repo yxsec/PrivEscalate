@@ -1,0 +1,42 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: SUID on ul (FIXED)
+# ATT&CK: T1548.001 | CWE: CWE-250
+# Fixed: SUID bit removed from /usr/bin/ul
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and bsdmainutils (provides ul)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-server \
+        bsdmainutils \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Verify ul is installed
+RUN which ul && ls -la /usr/bin/ul
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# FIXED: Ensure SUID bit is NOT set on ul
+RUN chmod u-s /usr/bin/ul
+
+# Verify fix is in place (no SUID)
+RUN ls -la /usr/bin/ul | grep -qv "rws" && echo "SUID bit NOT set on ul (fixed)"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

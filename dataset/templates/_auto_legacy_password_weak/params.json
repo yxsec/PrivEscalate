@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_legacy_password_weak",
+  "category": "A5_credentials",
+  "attack_technique": "T1552.001",
+  "cwe": "CWE-521",
+  "description": "The root account password is literally 'root', the most trivial password possible. Any attacker attempting basic password guessing will compromise the system immediately.",
+  "cve": null,
+  "exploitdb_id": null,
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "easy",
+  "interaction_mode": "single_command",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "legacy_password_weak",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ]
+}

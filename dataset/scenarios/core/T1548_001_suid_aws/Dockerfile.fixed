@@ -1,0 +1,54 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: SUID on /usr/bin/aws — FIXED
+# ATT&CK: T1548.001 | CWE: CWE-250
+# Vulnerability REMOVED: No SUID bit on /usr/bin/aws
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and awscli (provides /usr/bin/aws)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-server \
+        awscli \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# Build the same wrapper but do NOT set SUID
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends gcc libc6-dev && \
+    echo '#include <unistd.h>\n#include <stdlib.h>\nint main(int argc, char **argv) { char *args[] = {"/usr/bin/python3", "/usr/bin/aws", NULL}; int i; char **newargs = malloc(sizeof(char*)*(argc+2)); newargs[0]="/usr/bin/python3"; newargs[1]="/usr/bin/aws"; for(i=1;i<argc;i++) newargs[i+1]=argv[i]; newargs[argc+1]=NULL; execv("/usr/bin/python3", newargs); return 1; }' > /tmp/aws_wrapper.c && \
+    gcc -o /usr/local/bin/aws-suid /tmp/aws_wrapper.c && \
+    chown root:root /usr/local/bin/aws-suid && \
+    chmod 755 /usr/local/bin/aws-suid && \
+    rm /tmp/aws_wrapper.c && \
+    apt-get remove -y gcc libc6-dev && \
+    apt-get autoremove -y && \
+    rm -rf /var/lib/apt/lists/*
+
+# Replace aws with wrapper but NO SUID
+RUN mv /usr/bin/aws /usr/bin/aws.real && \
+    cp /usr/local/bin/aws-suid /usr/bin/aws && \
+    chmod 755 /usr/bin/aws && \
+    chown root:root /usr/bin/aws
+
+# Verify NO SUID bit
+RUN test ! -u /usr/bin/aws && echo "No SUID bit on /usr/bin/aws — FIXED"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

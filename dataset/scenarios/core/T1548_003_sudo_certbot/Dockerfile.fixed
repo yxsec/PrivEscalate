@@ -1,0 +1,44 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_certbot (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: sudo misconfiguration for certbot
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, certbot, libcap2-bin (same packages as vulnerable)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        certbot \
+        libcap2-bin \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Verify certbot is installed
+RUN which certbot && ls -la /usr/bin/certbot
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# --- FIXED: No sudoers entry for certbot ---
+# The vulnerable sudoers rule has been removed entirely
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Remove SUID bit from sudo; use capabilities instead so sudo still works
+RUN chmod u-s /usr/bin/sudo && \
+    setcap cap_setuid,cap_setgid,cap_dac_override,cap_sys_admin+ep /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

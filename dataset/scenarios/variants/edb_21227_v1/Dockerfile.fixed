@@ -1,0 +1,48 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# FIXED version: sudo_env_unsanitized (CVE-2002-0043)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Fix: Remove the dangerous env_keep and sudo privileges
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, postfix, and basic utilities (same packages)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        postfix \
+        coreutils \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Verify postfix and sudo are installed
+RUN which postfix && which sudo && ls -la /usr/bin/sudo
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# --- FIXED: No dangerous sudoers configuration ---
+# Do NOT add env_keep for MAIL_CONFIG/MAIL_DEBUG
+# Do NOT grant testuser sudo access to su/sh
+# No /etc/sudoers.d/mail_env file is created at all
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo (standard)
+RUN chmod u+s /usr/bin/sudo
+
+# Ensure postfix config directory exists
+RUN ls -la /etc/postfix/main.cf
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

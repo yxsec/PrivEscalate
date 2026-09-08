@@ -1,0 +1,45 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: FIXED - No SUID on atobm
+# ATT&CK: T1548.001 | CWE: CWE-250
+# Vulnerability REMOVED: SUID bit NOT set on /usr/bin/atobm
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and x11-apps (provides atobm)
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        openssh-server \
+        x11-apps \
+        python3 \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# Do NOT set SUID on atobm — ensure it's clean
+RUN chmod u-s /usr/bin/atobm
+
+# Do NOT create SUID rootbash
+RUN cp /bin/bash /usr/local/bin/rootbash && \
+    chmod 755 /usr/local/bin/rootbash && \
+    chown root:root /usr/local/bin/rootbash
+
+# Verify vulnerability is NOT present
+RUN ! ls -la /usr/bin/atobm | grep -q "rws" && echo "No SUID on atobm - FIXED"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

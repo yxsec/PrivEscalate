@@ -1,0 +1,46 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# PrivEscalate Scenario: sudo_wireshark (FIXED)
+# ATT&CK: T1548.003 | CWE: CWE-269
+# Vulnerability REMOVED: sudo rule for wireshark removed
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server, sudo, wireshark (tshark CLI), and netcat — same as vulnerable
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        sudo \
+        tshark \
+        netcat-openbsd \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Create symlink same as vulnerable version
+RUN ln -sf /usr/bin/tshark /usr/bin/wireshark
+
+# Verify wireshark (tshark) is installed and accessible
+RUN ls -la /usr/bin/wireshark && /usr/bin/wireshark --version
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash testuser && \
+    echo "testuser:t3stP@ss" | chpasswd
+
+# --- FIXED: No sudo rule for wireshark ---
+# The sudoers.d file is NOT created, removing the privilege escalation vector.
+
+# Verify sudo configuration
+RUN visudo -c
+
+# Keep SUID on sudo
+RUN chmod u+s /usr/bin/sudo
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:r00tCh@ng3d" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

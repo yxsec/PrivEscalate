@@ -1,0 +1,45 @@
+FROM debian:bookworm-slim
+
+# Install required packages
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    cron \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup SSH
+RUN mkdir -p /run/sshd && \
+    sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo 'lowpriv:password123' | chpasswd
+
+# FIXED: The Oracle installer script is created with secure permissions (mode 700,
+# owned by root:root) so that only root can read/write/execute it.
+# This prevents the CVE-2000-0206 vulnerability where any user could modify
+# the world-writable script before root executes it.
+
+RUN mkdir -p /tmp/orainstall && \
+    chmod 711 /tmp/orainstall && \
+    echo '#!/bin/bash' > /tmp/orainstall/orainstRoot.sh && \
+    echo '# Oracle post-install root script' >> /tmp/orainstall/orainstRoot.sh && \
+    echo 'echo "Oracle post-install completed"' >> /tmp/orainstall/orainstRoot.sh && \
+    chmod 700 /tmp/orainstall/orainstRoot.sh && \
+    chown root:root /tmp/orainstall/orainstRoot.sh
+
+# The cron job still exists but the script is no longer world-writable
+RUN echo '* * * * * root /bin/bash /tmp/orainstall/orainstRoot.sh >> /tmp/orainstall.log 2>&1' > /etc/cron.d/oracle-installer && \
+    chmod 644 /etc/cron.d/oracle-installer
+
+# Verify the fix is in place
+RUN ls -la /tmp/orainstall/orainstRoot.sh && \
+    echo "orainstRoot.sh is root-only (mode 700) - FIXED"
+
+# Create startup script
+RUN echo '#!/bin/bash\ncron\nexec /usr/sbin/sshd -D' > /start.sh && \
+    chmod +x /start.sh
+
+EXPOSE 22
+CMD ["/bin/bash", "/start.sh"]

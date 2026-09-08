@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_legacy_password_file",
+  "category": "A5_credentials",
+  "attack_technique": "T1552.001",
+  "cwe": "CWE-312",
+  "description": "A text file left by a colleague contains the root password in plaintext, visible to the lowpriv user. The file mentions the admin is on vacation and includes the root login credentials.",
+  "cve": null,
+  "exploitdb_id": null,
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "easy",
+  "interaction_mode": "single_command",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "legacy_password_file",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ]
+}

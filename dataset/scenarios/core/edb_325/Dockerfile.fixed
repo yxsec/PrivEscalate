@@ -1,0 +1,44 @@
+FROM debian:bookworm-slim
+
+# ============================================================
+# FIXED: SUID on lpr REMOVED
+# ATT&CK: T1548.001 | CWE: CWE-120 / CWE-250
+# Fix: Remove SUID bit from /usr/bin/lpr so that even if a
+#   buffer overflow exists, it cannot escalate to root.
+# ============================================================
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Install SSH server and lpr (cups-bsd provides /usr/bin/lpr)
+RUN apt-get update && \
+    apt-get install -y \
+        openssh-server \
+        cups-bsd \
+        cups-client \
+        gcc \
+        libc6-dev \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /run/sshd
+
+# Harden base image to ensure single vulnerability path
+RUN chmod 644 /etc/crontab 2>/dev/null || true ; \
+    rm -f /etc/sudoers.d/* 2>/dev/null || true
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo "lowpriv:password123" | chpasswd
+
+# FIX: Ensure lpr does NOT have SUID bit set
+RUN chown root:root /usr/bin/lpr && \
+    chmod u-s /usr/bin/lpr
+
+# Verify fix is in place (no SUID)
+RUN ! ls -la /usr/bin/lpr | grep -q "rws" && echo "SUID bit confirmed REMOVED from lpr"
+
+# Configure SSH
+RUN sed -i 's/#PermitRootLogin.*/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "root:aim8Du7h" | chpasswd
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

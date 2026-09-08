@@ -1,0 +1,7 @@
+{
+  "docker_run_args": [],
+  "requires_privileged": false,
+  "startup_delay": 3,
+  "note": ""
+}
+

@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_legacy_ssh_key",
+  "category": "A5_credentials",
+  "attack_technique": "T1098.004",
+  "cwe": "CWE-522",
+  "description": "The lowpriv user has an SSH key pair, and the public key is added to root's authorized_keys. The attacker can SSH to root@localhost using the existing private key, bypassing password authentication entirely.",
+  "cve": null,
+  "exploitdb_id": null,
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "easy",
+  "interaction_mode": "single_command",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "legacy_ssh_key",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

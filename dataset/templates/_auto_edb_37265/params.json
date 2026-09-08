@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_37265",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: OSSEC 2.7 < 2.8.1 - 'diff' Local Privilege Escalation (CVE-2015-3222;OSVDB-123222)\n\nExploit source code (37265.txt):\n```\nFix for CVE-2015-3222 which allows for root escalation via syscheck - https://github.com/ossec/ossec-hids/releases/tag/2.8.2\n\nAffected versions: 2.7 - 2.8.1\n\nBeginning is OSSEC 2.7 (d88cf1c9) a feature was added to syscheck, which\nis the daemon that monitors file changes on a system, called\n\"report_changes\". This feature is only available on *NIX systems. It's\npurpose is to help determine what about a file has changed. The logic to\ndo accomplish this is as follows which can be found in\nsrc/syscheck/seechanges.c:\n\n252 /* Run diff */\n253 date_of_change = File_DateofChange(old_location);\n254 snprintf(diff_cmd, 2048, \"diff \\\"%s\\\" \\\"%s\\\"> \\\"%s/local/%s/diff.%d\\\" \"\n255     \"2>/dev/null\",\n256     tmp_location, old_location,\n257     DIFF_DIR_PATH, filename + 1, (int)date_of_change);\n258 if (system(diff_cmd) != 256) {\n259     merror(\"%s: ERROR: Unable to run diff for %s\",\n260            ARGV0,  filename);\n261     return (NULL);\n262 }\n\nAbove, on line 258, the system() call is used to shell out to the\nsystem's \"diff\" command. The raw filename is passed in as an argument\nwhich presents an attacker with the possibility to run arbitrary code.\nSince the syscheck daemon runs as the root user so it can inspect any\nfile on the system for changes, any code run using this vulnerability\nwill also be run as the root user.\n\nAn example attack might be creating a file called \"foo-$(touch bar)\"\nwhich should create another file \"bar\".\n\nAgain, this vulnerability exists only on *NIX systems and is contingent\non the following criteria:\n\n1. A vulnerable version is in use.\n2. The OSSEC agent is configured to use syscheck to monitor the file\nsystem for changes.\n3. The list of directories monitored by syscheck includes those writable\nby underprivileged users.\n4. The \"report_changes\" option is enabled for any of those directories.\n\nThe fix for this is to create temporary trusted file names that symlink\nback to the original files before calling system() and running the\nsystem's \"diff\" command.\n```",
+  "cve": "CVE-2015-3222;OSVDB-123222",
+  "exploitdb_id": "37265",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_37265",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

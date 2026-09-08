@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_46362",
+  "category": "A4_polkit",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: snapd < 2.37 (Ubuntu) - 'dirty_sock' Local Privilege Escalation (2) (CVE-2019-7304)\n\nExploit source code (46362.py):\n```\n#!/usr/bin/env python3\n\n\"\"\"\n# dirty_sock: Privilege Escalation in Ubuntu (via snapd)\nIn January 2019, current versions of Ubuntu Linux were found to be vulnerable to local privilege escalation due to a bug in the snapd API. This repository contains the original exploit POC, which is being made available for research and education. For a detailed walkthrough of the vulnerability and the exploit, please refer to the <a href=\"https://initblog.com/2019/dirty-sock/\" target=\"_blank\"> blog posting here</a>.\n\nYou can easily check if your system is vulnerable. Run the command below. If your `snapd` is 2.37.1 or newer, you are safe.\n```\n$ snap version\n...\nsnapd   2.37.1\n...\n```\n\n# Usage\n## Version One (use in most cases)\nThis exploit bypasses access control checks to use a restricted API function (POST /v2/create-user) of the local snapd service. This queries the Ubuntu SSO for a username and public SSH key of a provided email address, and then creates a local user based on these value.\n\nSuccessful exploitation for this version requires an outbound Internet connection and an SSH service accessible via localhost.\n\nTo exploit, first create an account at the <a href=\"https://login.ubuntu.com/\" target=\"_blank\">Ubuntu SSO</a>. After confirming it, edit your profile and upload an SSH public key. Then, run the exploit like this (with the SSH private key corresponding to public key you uploaded):\n\n```\npython3 ./dirty_sockv1.py -u \"you@yourmail.com\" -k \"id_rsa\"\n\n[+] Slipped dirty sock on random socket file: /tmp/ktgolhtvdk;uid=0;\n[+] Binding to socket file...\n[+] Connecting to snapd API...\n[+] Sending payload...\n[+] Success! Enjoy your new account with sudo rights!\n\n[Script will automatically ssh to localhost with the SSH key here]\n```\n\n## Version Two (use in special cases)\nThis exploit bypasses access control checks to use a restricted API function (POST /v2/snaps) of the local snapd service. This allows the installation of arbitrary snaps. Snaps in \"devmode\" bypass the sandbox and may include an \"install hook\" that is run in the context of root at install time.\n\ndirty_sockv2 leverages the vulnerability to install an empty \"devmode\" snap including a hook that adds a new user to the local system. This user will have permissions to execute sudo commands.\n\nAs opposed to version one, this does not require the SSH service to be running. It will also work on newer versions of Ubuntu with no Internet connection at all, making it resilient to changes and effective in restricted environments.\n\nThis exploit should also be effective on non-Ubuntu systems that have installed snapd but that do not support the \"create-user\" API due to incompatible Linux shell syntax.\n\nSome older Ubuntu systems (like 16.04) may not have the snapd components installed that are required for sideloading. If this is the case, this version of the exploit may trigger it to install those dependencies. During that installation, snapd may upgrade itself to a non-vulnerable version. Testing shows that the\n```",
+  "cve": "CVE-2019-7304",
+  "exploitdb_id": "46362",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_46362",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

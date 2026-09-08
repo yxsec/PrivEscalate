@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_36564",
+  "category": "A5_dbus",
+  "attack_technique": "T1068",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Fedora 21 setroubleshootd 3.2.22 - Local Privilege Escalation (CVE-2015-1815;OSVDB-119966)\n\nExploit source code (36564.txt):\n```\nsetroubleshoot tries to find out which rpm a particular\nfile belongs to when it finds SELinux access violation reports.\nThe idea is probably to have convenient reports for the admin\nwhich type enforcement rules have to be relaxed. setroubleshoot\nruns as root (although in its own domain). In util.py\nwe have:\n\n\n266 def get_rpm_nvr_by_file_path_temporary(name):\n267     if name is None or not os.path.exists(name):\n268         return None\n269\n270     nvr = None\n271     try:\n272         import commands\n273         rc, output = commands.getstatusoutput(\"rpm -qf '%s'\" % name)\n274         if rc == 0:\n275             nvr = output\n276     except:\n277         syslog.syslog(syslog.LOG_ERR, \"failed to retrieve rpm info for %s\" %     name)\n278     return nvr\n\n(and other similar occurences)\n\nSo. Yes, thats correct: The SELinux system that is only there to protect you,\npasses attacker controlled data to sh -c (https://docs.python.org/2/library/commands.html)\ninside a daemon running as root. Sacken lassen...\n\nI attached a PoC which uses networkmanager's openvpn plugin to execute\narbitraty commands by triggering an access violation to a pathname\nwhich contains shell commands.\n\nThe setroubleshootd_t domain has quite a lot of allowed rules and transitions,\nso this can clearly count as privilege escalation. Furthermore a lot\nof admins run their system in permissive mode (full root) even when\nits shipped enforcing by default.\n\nAlso note that there are potentially remote vectors, if attackers\ncan control part of the filenames being created (web uploads, git, scp, ftp etc).\n\nSebastian\n\n\nPS: I am all for SELinux but theres something on the wrong way. I counted\nthe LOC, and the core SELinux (kernel) has a smaller codebase than whats\nframed around in python, running as root and mangling attacker controlled input.\nIOW, the system that wants to protect you has fewer code enforcing the rules\nthan code that potentially blows up your system. And that code is python,\nso let alone all the python modules and interpreter hat can have bugs on its own.\nDriving such a lane _can only lead to abyss_. And I am not saying that evil\npowers are creating an overly complex system to better hide their bugdoors\nwithin.\n\nPPS: bug-logo will follow :)\n\n--\n\n~ perl self.pl\n~ $_='print\"\\$_=\\47$_\\47;eval\"';eval\n~ krahmer () suse de - SuSE Security Team\n\n\n#!/usr/bin/perl\n\n#\n# Fedora21 setroubleshootd local root PoC\n#\n# (C) 2015 Sebastian Krahmer\n#\n# - requires polkit authorization to add/mod VPN connections\n#   to NetworkManager (default on desktop user)\n# - after execution of this script, which adds appropriate\n#   NM connection entries, try\n#\n#  $ nmcli c up vpn-FOOBAR\n#\n# a couple of times, until you see:\n#\n# logger[4062]: uid=0(root) gid=0(root) groups=0(root) context=system_u:system_r:setroubleshootd_t:...\n#\n# in the journalctl logs\n#\n# PS: I know in advance what the SELinux developers will say... :p\n#\n# I say: lulz!\n\n\n\n# create a pathname that setroubleshootd will eventually\n# query sh -c { rpm -q\n```",
+  "cve": "CVE-2015-1815;OSVDB-119966",
+  "exploitdb_id": "36564",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_36564",
+      "type": "core",
+      "difficulty": "hard"
+    }
+  ]
+}

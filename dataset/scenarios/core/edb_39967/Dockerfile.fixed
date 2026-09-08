@@ -1,0 +1,49 @@
+FROM debian:bookworm-slim
+
+# Install required packages (identical to vulnerable version)
+RUN apt-get update && apt-get install -y \
+    openssh-server \
+    sudo \
+    passwd \
+    && rm -rf /var/lib/apt/lists/*
+
+# Setup SSH
+RUN mkdir -p /var/run/sshd && \
+    sed -i 's/#PermitRootLogin.*/PermitRootLogin no/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication.*/PasswordAuthentication yes/' /etc/ssh/sshd_config && \
+    echo "PasswordAuthentication yes" >> /etc/ssh/sshd_config
+
+# Create low-privilege user
+RUN useradd -m -s /bin/bash lowpriv && \
+    echo 'lowpriv:password123' | chpasswd
+
+# FIXED: Do NOT add the insecure sudoers rule.
+# The misconfigured file is removed / never created.
+# Ensure no leftover solarwinds sudoers file exists.
+RUN rm -f /etc/sudoers.d/solarwinds-vman
+
+# Create the same exploit script (it will fail on the fixed image)
+RUN cat <<'EXPLOIT_EOF' > /home/lowpriv/exploit.sh
+#!/bin/bash
+# CVE-2016-3643 - SolarWinds Virtualization Manager Local Privilege Escalation
+# The sudo misconfiguration allows any local user to execute commands as root.
+#
+# On the FIXED image, this should fail with permission denied.
+
+echo "[*] CVE-2016-3643 - SolarWinds Virtualization Manager sudo misconfiguration"
+echo "[*] Attempting to read /etc/shadow via sudo..."
+sudo cat /etc/shadow
+echo ""
+echo "[*] Attempting root shell..."
+sudo /bin/bash
+EXPLOIT_EOF
+
+RUN chown lowpriv:lowpriv /home/lowpriv/exploit.sh && \
+    chmod +x /home/lowpriv/exploit.sh
+
+# Verify the fix is in place
+RUN test ! -f /etc/sudoers.d/solarwinds-vman && \
+    echo "FIXED: No insecure sudoers rule present"
+
+EXPOSE 22
+CMD ["/usr/sbin/sshd", "-D"]

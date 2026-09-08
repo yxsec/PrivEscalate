@@ -1,0 +1,30 @@
+{
+  "template_id": "auto_edb_33576",
+  "category": "A2_sudo",
+  "attack_technique": "T1548.003",
+  "cwe": "CWE-269",
+  "description": "Linux privilege escalation: Battery Life Toolkit 1.0.9 - 'bltk_sudo' Local Privilege Escalation\n\nExploit source code (33576.txt):\n```\nsource: https://www.securityfocus.com/bid/37996/info\n\nBattery Life Toolkit (BLTK) is prone to a local privilege-escalation vulnerability.\n\nA local attacker can exploit this issue to execute arbitrary code with superuser privileges, resulting in the complete compromise of the affected computer.\n\nThis issue affects BLTK 1.0.9; other versions may be vulnerable as well.\n\nThe following proof of concept is available:\n\n/usr/lib/bltk/bin/bltk_sudo /bin/bash\n```",
+  "cve": "",
+  "exploitdb_id": "33576",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "multi_step",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "edb_33576",
+      "type": "core",
+      "difficulty": "medium"
+    }
+  ]
+}

